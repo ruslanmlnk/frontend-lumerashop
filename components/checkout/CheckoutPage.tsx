@@ -1,0 +1,879 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, CreditCard, Loader2, Receipt, Truck, User } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import CheckoutEmptyState from '@/components/checkout/CheckoutEmptyState';
+import CheckoutHero from '@/components/checkout/CheckoutHero';
+import CheckoutProgress from '@/components/checkout/CheckoutProgress';
+import CheckoutSectionCard from '@/components/checkout/CheckoutSectionCard';
+import CheckoutSummary from '@/components/checkout/CheckoutSummary';
+import PickupPointSelector from '@/components/checkout/PickupPointSelector';
+import { cn, getCheckoutTheme } from '@/components/checkout/theme';
+import type {
+    CheckoutFormState,
+    CheckoutStartResponse,
+    CheckoutVariant,
+    PaymentProvider,
+    Step,
+} from '@/components/checkout/types';
+import { useCart } from '@/context/CartContext';
+import {
+    DEFAULT_SHIPPING_METHOD,
+    formatPickupPointAddress,
+    getPickupCarrierForMethod,
+    getShippingMethodById,
+    SHIPPING_METHODS,
+    type ShippingMethod,
+} from '@/lib/checkout-shipping';
+
+const formatPrice = (value: number) =>
+    `${value.toLocaleString('cs-CZ', {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+        maximumFractionDigits: 2,
+    })} Kč`;
+
+const submitHppForm = (actionUrl: string, fields: Record<string, string>) => {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = actionUrl;
+    form.style.display = 'none';
+
+    for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+};
+
+const getPaymentLabel = (provider: PaymentProvider) =>
+    provider === 'stripe' ? 'Online karta / Apple Pay (Stripe)' : 'Global Payments (GP webpay)';
+
+const getItemLabel = (count: number) => {
+    if (count === 1) return 'položka';
+    if (count < 5) return 'položky';
+    return 'položek';
+};
+
+const checkboxClassName = 'mt-[2px] h-4 w-4 accent-[#b98743]';
+
+type CheckoutPageProps = {
+    variant?: CheckoutVariant;
+    shippingMethods?: ShippingMethod[];
+};
+
+export default function CheckoutPage({ variant = 'minimal', shippingMethods = SHIPPING_METHODS }: CheckoutPageProps) {
+    const theme = getCheckoutTheme(variant);
+    const { cartItems, totalPrice } = useCart();
+    const availableShippingMethods = shippingMethods.length ? shippingMethods : SHIPPING_METHODS;
+    const [currentStep, setCurrentStep] = useState<Step>('contact');
+    const [completedSteps, setCompletedSteps] = useState<Step[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState<PaymentProvider | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [shippingErrorMessage, setShippingErrorMessage] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
+    const [formData, setFormData] = useState<CheckoutFormState>({
+        email: '',
+        phone: '',
+        createAccount: false,
+        firstName: '',
+        lastName: '',
+        country: 'CZ',
+        address: '',
+        city: '',
+        zip: '',
+        notes: '',
+        shippingMethod: availableShippingMethods[0]?.id ?? DEFAULT_SHIPPING_METHOD,
+        pickupPoint: null,
+        billingSameAsShipping: true,
+        billingFirstName: '',
+        billingLastName: '',
+        billingAddress: '',
+        billingCity: '',
+        billingZip: '',
+        isCompany: false,
+        companyName: '',
+        companyId: '',
+        vatId: '',
+        paymentProvider: 'stripe',
+        termsAccepted: false,
+        promoCode: '',
+    });
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        const fallbackMethod = availableShippingMethods[0]?.id ?? DEFAULT_SHIPPING_METHOD;
+
+        setFormData((prev) => {
+            if (availableShippingMethods.some((method) => method.id === prev.shippingMethod)) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                shippingMethod: fallbackMethod,
+                pickupPoint: null,
+            };
+        });
+    }, [availableShippingMethods]);
+
+    useEffect(() => {
+        const pickupCarrier = getPickupCarrierForMethod(formData.shippingMethod);
+
+        setFormData((prev) => {
+            if (!pickupCarrier && prev.pickupPoint) {
+                return { ...prev, pickupPoint: null };
+            }
+
+            if (pickupCarrier && prev.pickupPoint && prev.pickupPoint.carrier !== pickupCarrier) {
+                return { ...prev, pickupPoint: null };
+            }
+
+            return prev;
+        });
+    }, [formData.shippingMethod]);
+
+    const updateFormData = <K extends keyof CheckoutFormState>(field: K, value: CheckoutFormState[K]) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const nextStep = (step: Step, next: Step) => {
+        if (!completedSteps.includes(step)) {
+            setCompletedSteps((prev) => [...prev, step]);
+        }
+
+        setCurrentStep(next);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const goToStep = (step: Step) => {
+        if (completedSteps.includes(step) || step === 'contact') {
+            setCurrentStep(step);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const handleContinueFromShipping = () => {
+        const pickupCarrier = getPickupCarrierForMethod(formData.shippingMethod);
+
+        if (pickupCarrier && (!formData.pickupPoint || formData.pickupPoint.carrier !== pickupCarrier)) {
+            setShippingErrorMessage('Pro tento způsob dopravy musíte vybrat výdejní místo nebo box.');
+            return;
+        }
+
+        setShippingErrorMessage(null);
+        nextStep('shipping', 'billing');
+    };
+
+    const handleFinalSubmit = async () => {
+        if (!formData.termsAccepted) {
+            setErrorMessage('Musíte souhlasit s obchodními podmínkami.');
+            return;
+        }
+
+        if (cartItems.length === 0) {
+            setErrorMessage('Košík je prázdný. Přidejte produkty před platbou.');
+            return;
+        }
+
+        const provider = formData.paymentProvider;
+        setErrorMessage(null);
+
+        try {
+            setIsSubmitting(provider);
+
+            const response = await fetch('/api/payments/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    provider,
+                    items: cartItems,
+                    shipping: {
+                        methodId: formData.shippingMethod,
+                        label:
+                            getShippingMethodById(formData.shippingMethod, availableShippingMethods)?.label ||
+                            formData.shippingMethod,
+                        pickupPoint: formData.pickupPoint,
+                    },
+                    customer: {
+                        email: formData.email,
+                        phone: formData.phone,
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        address: formData.address,
+                        city: formData.city,
+                        zip: formData.zip,
+                        country: formData.country,
+                        notes: formData.notes,
+                    },
+                    billing: {
+                        sameAsShipping: formData.billingSameAsShipping,
+                        isCompany: formData.isCompany,
+                        firstName: formData.billingSameAsShipping ? formData.firstName : formData.billingFirstName,
+                        lastName: formData.billingSameAsShipping ? formData.lastName : formData.billingLastName,
+                        address: formData.billingSameAsShipping ? formData.address : formData.billingAddress,
+                        city: formData.billingSameAsShipping ? formData.city : formData.billingCity,
+                        zip: formData.billingSameAsShipping ? formData.zip : formData.billingZip,
+                        country: formData.country,
+                        companyName: formData.companyName,
+                        companyId: formData.companyId,
+                        vatId: formData.vatId,
+                    },
+                }),
+            });
+
+            const payload = (await response.json()) as CheckoutStartResponse;
+
+            if (!response.ok || payload.error) {
+                setErrorMessage(payload.error || 'Nepodařilo se zahájit platbu.');
+                return;
+            }
+
+            if (provider === 'stripe' && payload.redirectUrl) {
+                window.location.href = payload.redirectUrl;
+                return;
+            }
+
+            if (provider === 'global-payments' && payload.actionUrl && payload.fields) {
+                submitHppForm(payload.actionUrl, payload.fields);
+                return;
+            }
+
+            setErrorMessage('Platební URL nebyla vrácena.');
+        } catch {
+            setErrorMessage('Došlo k chybě při komunikaci se serverem.');
+        } finally {
+            setIsSubmitting(null);
+        }
+    };
+
+    const stepsInfo = useMemo(
+        () => [
+            { id: 'contact' as const, title: 'Kontakt', icon: User },
+            { id: 'shipping' as const, title: 'Doprava', icon: Truck },
+            { id: 'billing' as const, title: 'Fakturace', icon: Receipt },
+            { id: 'payment' as const, title: 'Platba', icon: CreditCard },
+        ],
+        [],
+    );
+
+    if (!isClient) return null;
+
+    const currentStepIndex = stepsInfo.findIndex((step) => step.id === currentStep);
+    const progress = ((currentStepIndex + 1) / stepsInfo.length) * 100;
+    const selectedShippingMethod =
+        getShippingMethodById(formData.shippingMethod, availableShippingMethods) ??
+        availableShippingMethods[0] ??
+        SHIPPING_METHODS[0];
+    const shippingPrice = selectedShippingMethod.price;
+    const orderTotal = totalPrice + shippingPrice;
+    const vatAmount = Number((orderTotal * 0.21).toFixed(2));
+    const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const isCustomerStage = currentStep === 'contact' || currentStep === 'shipping';
+    const description =
+        variant === 'minimal'
+            ? 'Čistší a klidnější pokladna v jednodušším rozvržení, ale stále ve stylu Lumera.'
+            : 'Vše důležité v jednom přehledu. Kontakt, doprava, fakturace i platba bez těžkopádného layoutu.';
+
+    const renderContactSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={1}
+            eyebrow="Krok 1"
+            title="Můj kontakt"
+            active={currentStep === 'contact'}
+            completed={completedSteps.includes('contact')}
+            onOpen={() => goToStep('contact')}
+            summary={completedSteps.includes('contact') ? `${formData.email} · ${formData.phone}` : undefined}
+        >
+            <div className={theme.field}>
+                <label className={theme.label}>E-mailová adresa *</label>
+                <input
+                    type="email"
+                    className={theme.input}
+                    placeholder="vase@adresa.cz"
+                    value={formData.email}
+                    onChange={(event) => updateFormData('email', event.target.value)}
+                />
+                <p className={theme.help}>Na tento e-mail pošleme potvrzení objednávky i další průběh.</p>
+            </div>
+
+            <div className={theme.field}>
+                <label className={theme.label}>Telefon pro dopravce *</label>
+                <input
+                    type="tel"
+                    className={theme.input}
+                    placeholder="+420 123 456 789"
+                    value={formData.phone}
+                    onChange={(event) => updateFormData('phone', event.target.value)}
+                />
+            </div>
+
+            <label className={theme.check}>
+                <input
+                    type="checkbox"
+                    className={checkboxClassName}
+                    checked={formData.createAccount}
+                    onChange={(event) => updateFormData('createAccount', event.target.checked)}
+                />
+                <span>Vytvořit účet po dokončení objednávky</span>
+            </label>
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={() => nextStep('contact', 'shipping')}
+                disabled={!formData.email || !formData.phone}
+            >
+                Pokračovat k dopravě
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const renderShippingSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={2}
+            eyebrow="Krok 2"
+            title="Doprava a doručení"
+            active={currentStep === 'shipping'}
+            completed={completedSteps.includes('shipping')}
+            onOpen={() => goToStep('shipping')}
+            summary={
+                completedSteps.includes('shipping') ? (
+                    <>
+                        <div>
+                            {formData.firstName} {formData.lastName}, {formData.address}, {formData.city} {formData.zip}
+                        </div>
+                        <div className="mt-1 text-[#7a7164]">{selectedShippingMethod.label}</div>
+                        {formData.pickupPoint && (
+                            <div className="mt-1 text-[12px] text-[#6b6257]">
+                                {formData.pickupPoint.name}
+                                {formatPickupPointAddress(formData.pickupPoint)
+                                    ? ` · ${formatPickupPointAddress(formData.pickupPoint)}`
+                                    : ''}
+                            </div>
+                        )}
+                    </>
+                ) : undefined
+            }
+        >
+            <div className={theme.inputGrid}>
+                <div className={theme.field}>
+                    <label className={theme.label}>Jméno *</label>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        value={formData.firstName}
+                        onChange={(event) => updateFormData('firstName', event.target.value)}
+                    />
+                </div>
+                <div className={theme.field}>
+                    <label className={theme.label}>Příjmení *</label>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        value={formData.lastName}
+                        onChange={(event) => updateFormData('lastName', event.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className={theme.inputGrid}>
+                <div className={theme.field}>
+                    <label className={theme.label}>Země *</label>
+                    <select
+                        className={theme.input}
+                        value={formData.country}
+                        disabled
+                        aria-disabled="true"
+                    >
+                        <option value="CZ">Česká republika</option>
+                    </select>
+                </div>
+                <div className={theme.field}>
+                    <label className={theme.label}>PSČ *</label>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        value={formData.zip}
+                        onChange={(event) => updateFormData('zip', event.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className={theme.field}>
+                <label className={theme.label}>Ulice a číslo popisné *</label>
+                <input
+                    type="text"
+                    className={theme.input}
+                    value={formData.address}
+                    onChange={(event) => updateFormData('address', event.target.value)}
+                />
+            </div>
+
+            <div className={theme.field}>
+                <label className={theme.label}>Město *</label>
+                <input
+                    type="text"
+                    className={theme.input}
+                    value={formData.city}
+                    onChange={(event) => updateFormData('city', event.target.value)}
+                />
+            </div>
+
+            <div className={theme.field}>
+                <label className={theme.label}>Poznámka k objednávce</label>
+                <textarea
+                    className={theme.textarea}
+                    placeholder="Upřesnění k doručení, jméno na zvonku a podobně."
+                    value={formData.notes}
+                    onChange={(event) => updateFormData('notes', event.target.value)}
+                />
+            </div>
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Výběr dopravy</p>
+                    <h3 className={theme.stageTitle}>Způsob doručení</h3>
+                </div>
+
+                {availableShippingMethods.map((method) => {
+                    const isSelected = formData.shippingMethod === method.id;
+                    const showPickupSelector = isSelected && Boolean(method.pickupCarrier);
+
+                    return (
+                        <div
+                            key={method.id}
+                            className={cn(
+                                'overflow-hidden rounded-[12px] border transition',
+                                isSelected ? theme.optionSelected : theme.optionIdle,
+                            )}
+                        >
+                        <button
+                            type="button"
+                            className="flex w-full items-start gap-3 p-3.5 text-left"
+                            onClick={() => {
+                                setShippingErrorMessage(null);
+                                updateFormData('shippingMethod', method.id);
+                            }}
+                        >
+                            <span className={theme.optionControl}>
+                                {isSelected && <span className="h-2 w-2 rounded-full bg-[#b98743]" />}
+                            </span>
+                            <span className={theme.optionCopy}>
+                                <span className={theme.optionTitle}>{method.label}</span>
+                                <span className={theme.optionMeta}>{method.description}</span>
+                            </span>
+                            <span className={theme.optionPrice}>
+                                {method.price === 0 ? 'Zdarma' : formatPrice(method.price)}
+                            </span>
+                        </button>
+                        {showPickupSelector && (
+                            <div className="border-t border-black/8 px-3.5 pb-3.5 pt-3">
+                                <PickupPointSelector
+                                    variant={variant}
+                                    displayMode="inline"
+                                    shippingMethodId={method.id}
+                                    country={formData.country}
+                                    selectedPoint={formData.pickupPoint}
+                                    onSelect={(pickupPoint) => {
+                                        setShippingErrorMessage(null);
+                                        updateFormData('pickupPoint', pickupPoint);
+                                    }}
+                                />
+                            </div>
+                        )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {shippingErrorMessage && <p className="text-[12px] leading-5 text-[#b42318]">{shippingErrorMessage}</p>}
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={handleContinueFromShipping}
+                disabled={
+                    !formData.firstName || !formData.lastName || !formData.address || !formData.city || !formData.zip
+                }
+            >
+                Pokračovat k fakturaci
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const renderBillingSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={3}
+            eyebrow="Krok 3"
+            title="Fakturační údaje"
+            active={currentStep === 'billing'}
+            completed={completedSteps.includes('billing')}
+            onOpen={() => goToStep('billing')}
+            summary={
+                completedSteps.includes('billing') ? (
+                    <>
+                        <div>
+                            {formData.billingSameAsShipping
+                                ? 'Stejná jako doručovací adresa'
+                                : `${formData.billingFirstName} ${formData.billingLastName}, ${formData.billingAddress}, ${formData.billingCity} ${formData.billingZip}`}
+                        </div>
+                        {formData.isCompany && (
+                            <div className="mt-1 text-[#7a7164]">
+                                {formData.companyName}
+                                {formData.companyId ? ` · IČ ${formData.companyId}` : ''}
+                            </div>
+                        )}
+                    </>
+                ) : undefined
+            }
+        >
+            <div className={theme.toggleGrid}>
+                <label className={cn(theme.check, theme.checkCard)}>
+                    <input
+                        type="checkbox"
+                        className={checkboxClassName}
+                        checked={formData.billingSameAsShipping}
+                        onChange={(event) => updateFormData('billingSameAsShipping', event.target.checked)}
+                    />
+                    <span>Fakturační adresa stejná jako doručovací</span>
+                </label>
+
+                <label className={cn(theme.check, theme.checkCard)}>
+                    <input
+                        type="checkbox"
+                        className={checkboxClassName}
+                        checked={formData.isCompany}
+                        onChange={(event) => updateFormData('isCompany', event.target.checked)}
+                    />
+                    <span>Nakupuji na firmu</span>
+                </label>
+            </div>
+
+            {formData.isCompany && (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Firma</p>
+                        <h3 className={theme.stageTitle}>Firemní identifikace</h3>
+                    </div>
+
+                    <div className={theme.field}>
+                        <label className={theme.label}>Název firmy *</label>
+                        <input
+                            type="text"
+                            className={theme.input}
+                            value={formData.companyName}
+                            onChange={(event) => updateFormData('companyName', event.target.value)}
+                        />
+                    </div>
+
+                    <div className={theme.inputGrid}>
+                        <div className={theme.field}>
+                            <label className={theme.label}>IČ *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.companyId}
+                                onChange={(event) => updateFormData('companyId', event.target.value)}
+                            />
+                        </div>
+                        <div className={theme.field}>
+                            <label className={theme.label}>DIČ</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.vatId}
+                                onChange={(event) => updateFormData('vatId', event.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!formData.billingSameAsShipping && (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Fakturace</p>
+                        <h3 className={theme.stageTitle}>Samostatná fakturační adresa</h3>
+                    </div>
+
+                    <div className={theme.inputGrid}>
+                        <div className={theme.field}>
+                            <label className={theme.label}>Jméno *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.billingFirstName}
+                                onChange={(event) => updateFormData('billingFirstName', event.target.value)}
+                            />
+                        </div>
+                        <div className={theme.field}>
+                            <label className={theme.label}>Příjmení *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.billingLastName}
+                                onChange={(event) => updateFormData('billingLastName', event.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={theme.field}>
+                        <label className={theme.label}>Ulice a číslo *</label>
+                        <input
+                            type="text"
+                            className={theme.input}
+                            value={formData.billingAddress}
+                            onChange={(event) => updateFormData('billingAddress', event.target.value)}
+                        />
+                    </div>
+
+                    <div className={theme.inputGrid}>
+                        <div className={theme.field}>
+                            <label className={theme.label}>Město *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.billingCity}
+                                onChange={(event) => updateFormData('billingCity', event.target.value)}
+                            />
+                        </div>
+                        <div className={theme.field}>
+                            <label className={theme.label}>PSČ *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.billingZip}
+                                onChange={(event) => updateFormData('billingZip', event.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <button type="button" className={theme.primary} onClick={() => nextStep('billing', 'payment')}>
+                Pokračovat k platbě
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const renderPaymentSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={4}
+            eyebrow="Krok 4"
+            title="Platba a potvrzení"
+            active={currentStep === 'payment'}
+            completed={completedSteps.includes('payment')}
+            onOpen={() => goToStep('payment')}
+            summary="Platební bránu a finální potvrzení vyberete v posledním kroku."
+        >
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Sleva</p>
+                    <h3 className={theme.stageTitle}>Dárkový nebo slevový kód</h3>
+                </div>
+
+                <div className={theme.inlineGrid}>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        placeholder="Kód kupónu"
+                        value={formData.promoCode}
+                        onChange={(event) => updateFormData('promoCode', event.target.value)}
+                    />
+                    <button type="button" className={theme.secondary}>
+                        Použít
+                    </button>
+                </div>
+            </div>
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Platba</p>
+                    <h3 className={theme.stageTitle}>Vyberte platební bránu</h3>
+                </div>
+
+                {([
+                    {
+                        value: 'stripe',
+                        title: 'Online karta / Apple Pay (Stripe)',
+                        copy: 'Rychlé dokončení objednávky s okamžitým potvrzením.',
+                    },
+                    {
+                        value: 'global-payments',
+                        title: 'Global Payments (GP webpay)',
+                        copy: 'Tradiční platební brána pro karty i lokální metody.',
+                    },
+                ] as const).map((option) => {
+                    const isSelected = formData.paymentProvider === option.value;
+
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            className={cn(theme.option, isSelected ? theme.optionSelected : theme.optionIdle)}
+                            onClick={() => updateFormData('paymentProvider', option.value)}
+                        >
+                            <span className={theme.optionControl}>
+                                {isSelected && <span className="h-2 w-2 rounded-full bg-[#b98743]" />}
+                            </span>
+                            <span className={theme.optionCopy}>
+                                <span className={theme.optionTitle}>{option.title}</span>
+                                <span className={theme.optionMeta}>{option.copy}</span>
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <label className={theme.check}>
+                <input
+                    type="checkbox"
+                    className={checkboxClassName}
+                    checked={formData.termsAccepted}
+                    onChange={(event) => updateFormData('termsAccepted', event.target.checked)}
+                />
+                <span>
+                    Souhlasím s{' '}
+                    <a href="/obchodni-podminky" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        obchodními podmínkami
+                    </a>{' '}
+                    a{' '}
+                    <a href="/ochrana-osobnich-udaju" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        ochranou osobních údajů
+                    </a>{' '}
+                    *
+                </span>
+            </label>
+
+            {errorMessage && (
+                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                    {errorMessage}
+                </p>
+            )}
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting !== null}
+            >
+                {isSubmitting ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        Přesměrování...
+                    </span>
+                ) : (
+                    `Objednat a zaplatit ${formatPrice(orderTotal)}`
+                )}
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    if (cartItems.length === 0) {
+        return (
+            <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
+                <Header />
+                <main className="flex-1 px-4 pb-20 pt-[170px] md:px-6 md:pt-[210px]">
+                    <div className="mx-auto max-w-[720px]">
+                        <CheckoutEmptyState variant={variant} />
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
+    return (
+        <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
+            <Header />
+
+            <main className="flex-1 px-4 pb-20 pt-[170px] md:px-6 md:pt-[210px]">
+                <div className="mx-auto grid max-w-[1120px] gap-5 md:gap-6">
+                    <CheckoutHero
+                        variant={variant}
+                        title="Pokladna"
+                        description={description}
+                        itemCount={itemCount}
+                        itemLabel={getItemLabel(itemCount)}
+                        shippingLabel={selectedShippingMethod.label}
+                    />
+
+                    <CheckoutProgress
+                        variant={variant}
+                        progress={progress}
+                        steps={stepsInfo}
+                        currentStep={currentStep}
+                        completedSteps={completedSteps}
+                        onStepSelect={goToStep}
+                    />
+
+                    <div className={theme.grid}>
+                        <div className={theme.main}>
+                            <section className={theme.stage}>
+                                <div>
+                                    <p className={theme.eyebrow}>{isCustomerStage ? 'Etapa 1 / 2' : 'Etapa 2 / 2'}</p>
+                                    <h2 className={theme.stageTitle}>
+                                        {isCustomerStage ? 'Kontakt a doprava' : 'Fakturace a platba'}
+                                    </h2>
+                                </div>
+
+                                {!isCustomerStage && (
+                                    <button type="button" className={theme.stageBack} onClick={() => goToStep('shipping')}>
+                                        <ArrowLeft size={14} />
+                                        Zpět na kontakt a dopravu
+                                    </button>
+                                )}
+                            </section>
+
+                            {isCustomerStage ? (
+                                <>
+                                    {renderContactSection()}
+                                    {renderShippingSection()}
+                                </>
+                            ) : (
+                                <>
+                                    {renderBillingSection()}
+                                    {renderPaymentSection()}
+                                </>
+                            )}
+                        </div>
+
+                        <CheckoutSummary
+                            variant={variant}
+                            cartItems={cartItems}
+                            itemCount={itemCount}
+                            itemLabel={getItemLabel(itemCount)}
+                            totalPrice={totalPrice}
+                            vatAmount={vatAmount}
+                            shippingPrice={shippingPrice}
+                            orderTotal={orderTotal}
+                            selectedShippingMethod={selectedShippingMethod}
+                            formData={formData}
+                            paymentLabel={getPaymentLabel(formData.paymentProvider)}
+                            formatPrice={formatPrice}
+                        />
+                    </div>
+                </div>
+            </main>
+
+            <Footer />
+        </div>
+    );
+}
+

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PPL Pickup Widget</title>
+  <link rel="stylesheet" href="https://www.ppl.cz/sources/map/main.css">
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #f8f8f8;
+      font-family: sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.84);
+      color: #111;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    #error {
+      position: absolute;
+      inset: auto 16px 16px 16px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(180, 35, 24, 0.18);
+      background: #fff4f2;
+      color: #b42318;
+      font-size: 12px;
+      line-height: 1.5;
+      z-index: 3;
+      display: none;
+    }
+
+    #error.visible {
+      display: block;
+    }
+
+    #ppl-parcelshop-map {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Načítám PPL mapu</div>
+  <div id="error"></div>
+  <div id="ppl-parcelshop-map" data-language="cs" data-mode="default"></div>
+
+  <script>
+    (function () {
+      var MESSAGE_TYPE = 'lumera:ppl-pickup-selected';
+      var ERROR_TYPE = 'lumera:ppl-pickup-error';
+      var params = new URLSearchParams(window.location.search);
+      var container = document.getElementById('ppl-parcelshop-map');
+      var loading = document.getElementById('loading');
+      var error = document.getElementById('error');
+      var country = params.get('country') === 'sk' ? 'sk' : 'cz';
+      var parcelshop = params.get('parcelshop');
+
+      container.setAttribute('data-country', country);
+      container.setAttribute('data-countries', country === 'sk' ? 'sk,cz' : 'cz,sk');
+
+      if (parcelshop) {
+        container.setAttribute('data-parcelshop', parcelshop);
+      }
+
+      function hideLoading() {
+        loading.classList.add('hidden');
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.classList.add('visible');
+        hideLoading();
+        window.parent.postMessage({ type: ERROR_TYPE, message: message }, window.location.origin);
+      }
+
+      var observer = new MutationObserver(function () {
+        if (container.children.length > 0) {
+          hideLoading();
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(container, { childList: true, subtree: true });
+
+      document.addEventListener('ppl-parcelshop-map', function (event) {
+        window.parent.postMessage({ type: MESSAGE_TYPE, payload: event.detail }, window.location.origin);
+      });
+
+      window.addEventListener('error', function (event) {
+        if (event.filename && event.filename.indexOf('ppl.cz/sources/map/main.js') !== -1) {
+          showError('Nepodařilo se načíst mapu PPL výdejních míst.');
+        }
+      });
+
+      window.setTimeout(function () {
+        hideLoading();
+      }, 8000);
+    })();
+  </script>
+  <script defer src="https://www.ppl.cz/sources/map/main.js"></script>
+</body>
+</html>

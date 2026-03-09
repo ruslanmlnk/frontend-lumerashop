@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>Lumera</title>
+    <link>http://localhost:3000</link>
+    <description>Google Merchant feed for Lumera</description>
+  <item>
+    <g:id>2</g:id>
+    <g:title>Pásek tmavo hnědý</g:title>
+    <g:description>ererfre</g:description>
+    <g:link>http://localhost:3000/product/pasek-tmavo-hnedy</g:link>
+    <g:image_link>http://localhost:3000/assets/products/pasek-tmavo-hnedy.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>900.00 CZK</g:price>
+    <g:sale_price>890.00 CZK</g:sale_price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Doplňky</g:product_type>
+  </item>
+  <item>
+    <g:id>14</g:id>
+    <g:title>Pánská taška Blue</g:title>
+    <g:description>Pánská taška Blue</g:description>
+    <g:link>http://localhost:3000/product/panska-taska-blue</g:link>
+    <g:image_link>http://localhost:3000/assets/products/viko-cerna.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>4190.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Pánské tašky</g:product_type>
+  </item>
+  <item>
+    <g:id>13</g:id>
+    <g:title>Batoh City</g:title>
+    <g:description>Batoh City</g:description>
+    <g:link>http://localhost:3000/product/batoh-city</g:link>
+    <g:image_link>http://localhost:3000/assets/products/elis-bezova.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>3290.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Batohy</g:product_type>
+  </item>
+  <item>
+    <g:id>12</g:id>
+    <g:title>Viko černá II</g:title>
+    <g:description>Viko černá II</g:description>
+    <g:link>http://localhost:3000/product/viko-cerna-2</g:link>
+    <g:image_link>http://localhost:3000/assets/products/viko-cerna.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2190.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>11</g:id>
+    <g:title>Olivia růžová II</g:title>
+    <g:description>Olivia růžová II</g:description>
+    <g:link>http://localhost:3000/product/olivia-ruzova-2</g:link>
+    <g:image_link>http://localhost:3000/assets/products/olivia-ruzova.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2890.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>10</g:id>
+    <g:title>Elis béžova II</g:title>
+    <g:description>Elis béžova II</g:description>
+    <g:link>http://localhost:3000/product/elis-bezova-2</g:link>
+    <g:image_link>http://localhost:3000/assets/products/elis-bezova.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2490.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>9</g:id>
+    <g:title>Pásek hnědý II</g:title>
+    <g:description>Pásek hnědý II</g:description>
+    <g:link>http://localhost:3000/product/pasek-hnedy-2</g:link>
+    <g:image_link>http://localhost:3000/assets/products/pasek-hnedy.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>890.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Doplňky</g:product_type>
+  </item>
+  <item>
+    <g:id>8</g:id>
+    <g:title>Viko černá</g:title>
+    <g:description>Viko černá</g:description>
+    <g:link>http://localhost:3000/product/viko-cerna</g:link>
+    <g:image_link>http://localhost:3000/assets/products/viko-cerna.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2190.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>7</g:id>
+    <g:title>Elis taupe</g:title>
+    <g:description>Elis taupe</g:description>
+    <g:link>http://localhost:3000/product/elis-taupe</g:link>
+    <g:image_link>http://localhost:3000/assets/products/elis-taupe.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2490.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>6</g:id>
+    <g:title>Elis béžova</g:title>
+    <g:description>Elis béžova</g:description>
+    <g:link>http://localhost:3000/product/elis-bezova</g:link>
+    <g:image_link>http://localhost:3000/assets/products/elis-bezova.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2490.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+  </item>
+  <item>
+    <g:id>5</g:id>
+    <g:title>Pásek taupe</g:title>
+    <g:description>Pásek taupe</g:description>
+    <g:link>http://localhost:3000/product/pasek-taupe</g:link>
+    <g:image_link>http://localhost:3000/assets/products/pasek-taupe.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>890.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Doplňky</g:product_type>
+  </item>
+  <item>
+    <g:id>4</g:id>
+    <g:title>Pásek černý</g:title>
+    <g:description>Pásek černý</g:description>
+    <g:link>http://localhost:3000/product/pasek-cerny</g:link>
+    <g:image_link>http://localhost:3000/assets/products/pasek-cerny.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>890.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Doplňky</g:product_type>
+  </item>
+  <item>
+    <g:id>3</g:id>
+    <g:title>Pásek hnědý</g:title>
+    <g:description>Pásek hnědý</g:description>
+    <g:link>http://localhost:3000/product/pasek-hnedy</g:link>
+    <g:image_link>http://localhost:3000/assets/products/pasek-hnedy.webp</g:image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>890.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>Doplňky</g:product_type>
+  </item>
+  <item>
+    <g:id>1</g:id>
+    <g:title>Italská shopper kabelka z pravé kuže Olivia růžová</g:title>
+    <g:description>Italská kabelka z pravé kůže Olivia v růžové barvě spojuje moderní eleganci a vysoce praktický design. Tato praktická, damská kabelka je vybavena dvojitými uchy, která umožňují pohodlné nošení v ruce i přes rameno. Díky vnitřnímu zapínání můžete snadno měnit její tvar podle aktuálního obsahu či nálady. Hlavní prostor se bezpečně uzavírá na zip a obsahuje jednu velkou kapsu na zip a tři menší kapsičky. Do kabelky se pohodlně vejdou i dokumenty formátu A4.</g:description>
+    <g:link>http://localhost:3000/product/olivia-ruzova</g:link>
+    <g:image_link>http://localhost:3000/assets/products/olivia-ruzova-1.webp</g:image_link>
+    <g:additional_image_link>http://localhost:3000/assets/products/olivia-ruzova-2.webp</g:additional_image_link>
+    <g:additional_image_link>http://localhost:3000/assets/products/olivia-ruzova-3.webp</g:additional_image_link>
+    <g:additional_image_link>http://localhost:3000/assets/products/olivia-ruzova-4.webp</g:additional_image_link>
+    <g:availability>in stock</g:availability>
+    <g:condition>new</g:condition>
+    <g:price>2199.00 CZK</g:price>
+    <g:brand>Lumera</g:brand>
+    <g:identifier_exists>yes</g:identifier_exists>
+    <g:product_type>Kabelky</g:product_type>
+    <g:mpn>00044rz</g:mpn>
+  </item>
+  </channel>
+</rss>

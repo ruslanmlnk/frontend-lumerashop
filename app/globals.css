@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #111111;
+  --lumera-white: #ffffff;
+  --lumera-black: #111111;
+  --lumera-gold: #c8a16a;
+  --lumera-gold-dark: #c09354;
+  --lumera-brown: #3b2f2f;
+  --lumera-muted: #8d97a8;
+  --lumera-border: #e5e7eb;
+  --lumera-sheet-xl: 1140px;
+  --lumera-sheet-lg: 940px;
+  --lumera-sheet-md: 720px;
+  --lumera-sheet-sm: 540px;
+  --lumera-sheet-xs: 340px;
+  --lumera-text-line-height: 1.6;
+  --lumera-btn-line-height: 1.4;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+@layer base {
+  html {
+    background: var(--background);
+    overflow-y: scroll;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  ::selection {
+    @apply bg-amber-100 text-amber-900;
+  }
+}
+
+.italic-selection ::selection {
+  font-style: italic;
+}
+
+body {
+  min-height: 100%;
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: var(--lumera-text-line-height);
+}
+
+.lumera-container {
+  width: 100%;
+  max-width: var(--lumera-sheet-xl);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .lumera-container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.lumera-btn {
+  display: inline-block;
+  padding: 10px 30px;
+  border: 0;
+  border-radius: 0;
+  background: var(--lumera-black);
+  color: var(--lumera-white);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--lumera-btn-line-height);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.lumera-btn:hover {
+  background: #1f1f1f;
+}
+
+.lumera-btn--light {
+  background: var(--lumera-white);
+  color: var(--lumera-black);
+}
+
+.lumera-btn--light:hover {
+  background: var(--lumera-black);
+  color: var(--lumera-white);
+}
+
+.lumera-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--lumera-black);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes lumera-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: lumera-fade-in 220ms ease-out;
+}

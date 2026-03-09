@@ -1,0 +1,318 @@
+import {
+    DEFAULT_LOCAL_ASSET_FALLBACK,
+    getLocalAssetPath,
+    getPayloadMediaProxyPath,
+    getRenderableAssetPath,
+} from '@/lib/local-assets';
+import { createLexicalRichTextFromText, renderLexicalToHTML } from '@/lib/payload-richtext';
+import type { Product, ProductFilterValue, ProductVariant } from '@/types/site';
+
+type PayloadListResponse<T> = {
+    docs?: T[];
+};
+
+type PayloadMediaDoc = {
+    url?: unknown;
+};
+
+type PayloadGalleryItem = {
+    imageUrl?: unknown;
+    image?: PayloadMediaDoc | number | null;
+};
+
+type PayloadFilterOption = {
+    name?: unknown;
+    slug?: unknown;
+    group?: {
+        name?: unknown;
+        slug?: unknown;
+    } | null;
+};
+
+type PayloadCategoryRelation = {
+    name?: unknown;
+    slug?: unknown;
+};
+
+type PayloadSubcategoryRelation = {
+    slug?: unknown;
+};
+
+type PayloadVariantDoc = {
+    id?: unknown;
+    name?: unknown;
+    slug?: unknown;
+    imageUrl?: unknown;
+    mainImage?: PayloadMediaDoc | number | null;
+    gallery?: PayloadGalleryItem[] | null;
+};
+
+type PayloadProductDoc = PayloadVariantDoc & {
+    price?: unknown;
+    oldPrice?: unknown;
+    purchaseCount?: unknown;
+    sku?: unknown;
+    description?: unknown;
+    descriptionContent?: unknown;
+    shortDescription?: unknown;
+    category?: PayloadCategoryRelation | number | null;
+    subcategories?: Array<PayloadSubcategoryRelation | number> | null;
+    specifications?: Array<{
+        key?: unknown;
+        value?: unknown;
+    }> | null;
+    filterOptions?: Array<PayloadFilterOption | number> | null;
+    highlights?: Array<{
+        text?: unknown;
+    }> | null;
+    variantProducts?: Array<PayloadVariantDoc | number> | null;
+    isFeatured?: unknown;
+    isRecommended?: unknown;
+    stockQuantity?: unknown;
+    stockStatus?: unknown;
+};
+
+const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
+
+const formatPrice = (value: number) => `${new Intl.NumberFormat('cs-CZ').format(value)} Kč`;
+
+const resolveUrl = (value: unknown, baseUrl: string): string | null => {
+    if (typeof value !== 'string' || value.length === 0) {
+        return null;
+    }
+
+    const normalizedValue = getLocalAssetPath(value);
+    if (!normalizedValue) {
+        return null;
+    }
+
+    if (normalizedValue.startsWith('/assets/')) {
+        return normalizedValue;
+    }
+
+    if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
+        if (normalizedValue.startsWith(baseUrl)) {
+            return getPayloadMediaProxyPath(normalizedValue);
+        }
+
+        return getRenderableAssetPath(normalizedValue, DEFAULT_LOCAL_ASSET_FALLBACK);
+    }
+
+    if (normalizedValue.startsWith('/')) {
+        return getPayloadMediaProxyPath(`${baseUrl}${normalizedValue}`);
+    }
+
+    return getPayloadMediaProxyPath(`${baseUrl}/${normalizedValue}`);
+};
+
+const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
+    if (!Array.isArray(gallery)) {
+        return [];
+    }
+
+    return gallery
+        .map((item) => {
+            const uploaded =
+                typeof item?.image === 'object' && item.image ? resolveUrl(item.image.url, baseUrl) : null;
+            const linked = resolveUrl(item?.imageUrl, baseUrl);
+            return uploaded || linked;
+        })
+        .filter((value): value is string => Boolean(value));
+};
+
+const resolvePrimaryImage = (doc: PayloadVariantDoc, baseUrl: string): string => {
+    const mainUploadUrl =
+        typeof doc.mainImage === 'object' && doc.mainImage ? resolveUrl(doc.mainImage.url, baseUrl) : null;
+    const imageUrl = resolveUrl(doc.imageUrl, baseUrl);
+    const galleryImage = resolveGallery(doc.gallery, baseUrl)[0];
+
+    return mainUploadUrl || imageUrl || galleryImage || DEFAULT_LOCAL_ASSET_FALLBACK;
+};
+
+const normalizeStockStatus = (value: unknown, quantity: unknown): Product['stockStatus'] => {
+    if (value === 'in-stock' || value === 'low-stock' || value === 'out-of-stock') {
+        return value;
+    }
+
+    const numericQuantity = typeof quantity === 'number' ? quantity : Number(quantity);
+    if (Number.isFinite(numericQuantity)) {
+        if (numericQuantity <= 0) return 'out-of-stock';
+        if (numericQuantity <= 3) return 'low-stock';
+    }
+
+    return 'in-stock';
+};
+
+const toSpecificationsObject = (specs: PayloadProductDoc['specifications']): Record<string, string> | undefined => {
+    if (!Array.isArray(specs) || specs.length === 0) {
+        return undefined;
+    }
+
+    const result: Record<string, string> = {};
+    for (const spec of specs) {
+        const key = typeof spec?.key === 'string' ? spec.key.trim() : '';
+        const value = typeof spec?.value === 'string' ? spec.value.trim() : '';
+        if (!key || !value) continue;
+        result[key] = value;
+    }
+
+    return Object.keys(result).length ? result : undefined;
+};
+
+const toFilterValues = (options: PayloadProductDoc['filterOptions']): ProductFilterValue[] | undefined => {
+    if (!Array.isArray(options) || options.length === 0) {
+        return undefined;
+    }
+
+    const result: ProductFilterValue[] = [];
+    for (const raw of options) {
+        if (!raw || typeof raw !== 'object') continue;
+
+        const option = typeof raw.name === 'string' ? raw.name.trim() : '';
+        const optionSlug = typeof raw.slug === 'string' ? raw.slug.trim() : undefined;
+        const group = typeof raw.group?.name === 'string' ? raw.group.name.trim() : '';
+        const groupSlug = typeof raw.group?.slug === 'string' ? raw.group.slug.trim() : undefined;
+
+        if (!group || !option) continue;
+
+        result.push({ group, option, groupSlug, optionSlug });
+    }
+
+    return result.length ? result : undefined;
+};
+
+const toHighlights = (highlights: PayloadProductDoc['highlights']): string[] | undefined => {
+    if (!Array.isArray(highlights) || highlights.length === 0) {
+        return undefined;
+    }
+
+    const result = highlights
+        .map((entry) => (typeof entry?.text === 'string' ? entry.text.trim() : ''))
+        .filter((value): value is string => Boolean(value));
+
+    return result.length ? result : undefined;
+};
+
+const mapVariantProduct = (doc: PayloadVariantDoc, baseUrl: string): ProductVariant | null => {
+    const id = doc.id != null ? String(doc.id) : '';
+    const name = typeof doc.name === 'string' ? doc.name.trim() : '';
+    const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
+
+    if (!id || !name || !slug) {
+        return null;
+    }
+
+    return {
+        id,
+        name,
+        slug,
+        image: resolvePrimaryImage(doc, baseUrl),
+    };
+};
+
+const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | null => {
+    const name = typeof doc.name === 'string' ? doc.name.trim() : '';
+    const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
+    const id = doc.id != null ? String(doc.id) : '';
+    const category =
+        typeof doc.category === 'object' && doc.category && typeof doc.category.name === 'string'
+            ? doc.category.name.trim()
+            : 'Nezařazené';
+    const categorySlug =
+        typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
+            ? doc.category.slug.trim()
+            : undefined;
+    const subcategorySlugs = Array.isArray(doc.subcategories)
+        ? doc.subcategories
+              .map((subcategory) =>
+                  subcategory && typeof subcategory === 'object' && typeof subcategory.slug === 'string'
+                      ? subcategory.slug.trim()
+                      : '',
+              )
+              .filter((value): value is string => Boolean(value))
+        : undefined;
+
+    if (!id || !name || !slug) {
+        return null;
+    }
+
+    const numericPrice = typeof doc.price === 'number' ? doc.price : Number(doc.price);
+    const price = Number.isFinite(numericPrice) ? formatPrice(Math.round(numericPrice)) : '0 Kč';
+
+    const numericOldPrice = typeof doc.oldPrice === 'number' ? doc.oldPrice : Number(doc.oldPrice);
+    const oldPrice =
+        Number.isFinite(numericOldPrice) && numericOldPrice > 0
+            ? formatPrice(Math.round(numericOldPrice))
+            : undefined;
+    const numericPurchaseCount =
+        typeof doc.purchaseCount === 'number' ? doc.purchaseCount : Number(doc.purchaseCount);
+
+    const image = resolvePrimaryImage(doc, baseUrl);
+    const gallery = resolveGallery(doc.gallery, baseUrl);
+    const descriptionHtml =
+        renderLexicalToHTML(doc.descriptionContent) ||
+        renderLexicalToHTML(createLexicalRichTextFromText(typeof doc.description === 'string' ? doc.description : ''));
+
+    const variants = Array.isArray(doc.variantProducts)
+        ? doc.variantProducts
+              .map((variant) =>
+                  variant && typeof variant === 'object' ? mapVariantProduct(variant, baseUrl) : null,
+              )
+              .filter((variant): variant is ProductVariant => Boolean(variant))
+        : undefined;
+
+    return {
+        id,
+        name,
+        price,
+        oldPrice,
+        purchaseCount:
+            Number.isFinite(numericPurchaseCount) && numericPurchaseCount > 0
+                ? Math.max(0, Math.floor(numericPurchaseCount))
+                : 0,
+        image,
+        slug,
+        category,
+        categorySlug,
+        subcategorySlugs: subcategorySlugs?.length ? subcategorySlugs : undefined,
+        sku: typeof doc.sku === 'string' ? doc.sku : undefined,
+        description: typeof doc.description === 'string' ? doc.description : undefined,
+        descriptionHtml: descriptionHtml || undefined,
+        shortDescription: typeof doc.shortDescription === 'string' ? doc.shortDescription : undefined,
+        gallery: gallery.length ? gallery : [image],
+        specifications: toSpecificationsObject(doc.specifications),
+        filterValues: toFilterValues(doc.filterOptions),
+        highlights: toHighlights(doc.highlights),
+        stockStatus: normalizeStockStatus(doc.stockStatus, doc.stockQuantity),
+        variants: variants?.length ? variants : undefined,
+        isFeatured: doc.isFeatured === true,
+        isRecommended: doc.isRecommended === true,
+    };
+};
+
+export async function fetchPayloadProducts(): Promise<Product[]> {
+    const baseUrlRaw = process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL;
+    const baseUrl = baseUrlRaw.replace(/\/+$/, '');
+
+    try {
+        const response = await fetch(
+            `${baseUrl}/api/products?where[status][equals]=published&depth=3&limit=500&sort=-updatedAt`,
+            {
+                cache: 'no-store',
+                next: { revalidate: 0 },
+            },
+        );
+
+        if (!response.ok) {
+            return [];
+        }
+
+        const payload = (await response.json()) as PayloadListResponse<PayloadProductDoc>;
+        const docs = Array.isArray(payload.docs) ? payload.docs : [];
+        return docs
+            .map((doc) => mapPayloadProduct(doc, baseUrl))
+            .filter((product): product is Product => Boolean(product));
+    } catch {
+        return [];
+    }
+}
