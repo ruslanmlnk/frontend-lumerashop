@@ -2,8 +2,8 @@ import { NavItem, Category, Product, Feature, BlogPost } from '../types/site';
 
 export const NAV_ITEMS: NavItem[] = [
     { label: 'Domů', href: '/' },
-    { label: 'Dámské kabelky', href: '/product-category/kabelky' },
-    { label: 'Pánské tašky', href: '/product-category/panske-tasky' },
+    { label: 'Dámské kabelky', href: '/product-category/dmsk-kabelky' },
+    { label: 'Pánské tašky', href: '/product-category/pnsk-taky' },
     {
         label: 'Batohy',
         href: '/product-category/batohy',
@@ -14,10 +14,10 @@ export const NAV_ITEMS: NavItem[] = [
     },
     {
         label: 'Doplňky',
-        href: '/product-category/doplnky',
+        href: '/product-category/doplky',
         dropdown: [
-            { label: 'Peněženky', href: '/product-category/doplnky?type=penezenky' },
-            { label: 'Pasky', href: '/product-category/doplnky?type=pasky' }
+            { label: 'Peněženky', href: '/product-category/doplky?type=penezenky' },
+            { label: 'Pasky', href: '/product-category/doplky?type=pasky' }
         ]
     },
     { label: 'O obchodě', href: '/o-nas' },
@@ -26,10 +26,10 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const HERO_CATEGORIES: Category[] = [
-    { name: 'Dámské Kabelky', bg: '/assets/bg/damske-kabelky.webp', product: '/assets/icons/cat-kabelky.webp', href: '/product-category/kabelky' },
-    { name: 'Pánské tašky', bg: '/assets/bg/panske-tasky.webp', product: '/assets/icons/cat-tasky.webp', href: '/product-category/panske-tasky' },
+    { name: 'Dámské Kabelky', bg: '/assets/bg/damske-kabelky.webp', product: '/assets/icons/cat-kabelky.webp', href: '/product-category/dmsk-kabelky' },
+    { name: 'Pánské tašky', bg: '/assets/bg/panske-tasky.webp', product: '/assets/icons/cat-tasky.webp', href: '/product-category/pnsk-taky' },
     { name: 'Batohy', bg: '/assets/bg/batohynew.webp', product: '/assets/icons/cat-batohy.webp', href: '/product-category/batohy' },
-    { name: 'Doplňky', bg: '/assets/bg/doplnky.webp', product: '/assets/icons/cat-doplnky.webp', href: '/product-category/doplnky' }
+    { name: 'Doplňky', bg: '/assets/bg/doplnky.webp', product: '/assets/icons/cat-doplnky.webp', href: '/product-category/doplky' }
 ];
 
 export const FEATURED_PRODUCTS: Product[] = [
@@ -141,3 +141,4 @@ export const BLOG_POSTS: BlogPost[] = [
         slug: "trendy-barvy"
     }
 ];
+
