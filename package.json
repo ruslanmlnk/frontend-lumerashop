@@ -6,9 +6,9 @@
     "node": ">=20.18.1"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "feed:google-merchant": "npm --prefix ../backend run feed:google-merchant"
