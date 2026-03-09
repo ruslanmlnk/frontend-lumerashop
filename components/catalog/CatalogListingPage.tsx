@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import CatalogHeader from '@/components/catalog/CatalogHeader';
 import ProductSort from '@/components/catalog/ProductSort';
@@ -44,7 +44,6 @@ export default function CatalogListingPage({
 }: CatalogListingPageProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [isReady, setIsReady] = useState(false);
     const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_RANGE);
     const [sortOrder, setSortOrder] = useState('popularity');
@@ -228,8 +227,10 @@ export default function CatalogListingPage({
             return;
         }
 
-        const nextParams = new URLSearchParams(searchParams.toString());
-        nextParams.delete('q');
+        const nextParams = new URLSearchParams();
+        if (selectedSubcategorySlug) {
+            nextParams.set('subcategory', selectedSubcategorySlug);
+        }
         const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
         router.push(nextUrl, { scroll: false });
     };
