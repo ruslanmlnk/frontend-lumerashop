@@ -33,6 +33,8 @@ export type CheckoutTotals = {
 export type CheckoutPayload = {
     provider: CheckoutProvider;
     items: CheckoutItemInput[];
+    promoCode?: string;
+    useBonusBalance?: boolean;
     shipping?: {
         methodId: ShippingMethodId;
         label?: string;

@@ -83,7 +83,6 @@ type PayloadProductDoc = PayloadVariantDoc & {
     highlights?: Array<{
         text?: unknown;
     }> | null;
-    reviews?: Array<PayloadReviewItem | number> | null;
     variantProducts?: Array<PayloadVariantDoc | number> | null;
     isFeatured?: unknown;
     isRecommended?: unknown;
@@ -228,7 +227,7 @@ const toHighlights = (highlights: PayloadProductDoc['highlights']): string[] | u
     return result.length ? result : undefined;
 };
 
-const toProductReviews = (reviews: PayloadProductDoc['reviews']): ProductReview[] | undefined => {
+const mapPayloadReviewDocs = (reviews: PayloadReviewItem[] | undefined): ProductReview[] | undefined => {
     if (!Array.isArray(reviews) || reviews.length === 0) {
         return undefined;
     }
@@ -236,7 +235,7 @@ const toProductReviews = (reviews: PayloadProductDoc['reviews']): ProductReview[
     const mapped: ProductReview[] = [];
 
     for (const [index, raw] of reviews.entries()) {
-        if (!raw || typeof raw !== 'object' || raw.show !== true) {
+        if (!raw || typeof raw !== 'object') {
             continue;
         }
 
@@ -388,7 +387,6 @@ const mapPayloadProduct = (
         specifications: includeDetails ? toSpecificationsObject(doc.specifications) : undefined,
         filterValues: toFilterValues(doc.filterOptions),
         highlights: includeDetails ? toHighlights(doc.highlights) : undefined,
-        reviews: includeDetails ? toProductReviews(doc.reviews) : undefined,
         stockStatus: normalizeStockStatus(doc.stockStatus, doc.stockQuantity),
         variants: variants?.length ? variants : undefined,
         isFeatured: doc.isFeatured === true,
@@ -464,5 +462,34 @@ export async function fetchPayloadProductBySlug(slug: string): Promise<Product |
         limit: 1,
     });
 
-    return product ?? null;
+    if (!product) {
+        return null;
+    }
+
+    const baseUrl = getPayloadBaseUrl();
+
+    try {
+        const response = await fetch(
+            `${baseUrl}/api/product-reviews?depth=0&limit=100&sort=-submittedAt&where[product][equals]=${encodeURIComponent(
+                product.id,
+            )}&where[show][equals]=true`,
+            {
+                next: { revalidate: PAYLOAD_PRODUCTS_REVALIDATE_SECONDS },
+            },
+        );
+
+        if (!response.ok) {
+            return product;
+        }
+
+        const payload = (await response.json()) as PayloadListResponse<PayloadReviewItem>;
+        const reviews = mapPayloadReviewDocs(Array.isArray(payload.docs) ? payload.docs : undefined);
+
+        return {
+            ...product,
+            reviews,
+        };
+    } catch {
+        return product;
+    }
 }

@@ -70,6 +70,14 @@ export default async function MyAccountPage() {
           </Link>
           .
         </p>
+
+        <div className="rounded-[18px] border border-[#111111]/8 bg-[#fffaf3] p-6">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#8b7f6e]">Bonusovy ucet</p>
+          <p className="mt-3 text-[30px] font-semibold text-[#111111]">{user.bonusBalance ?? 0} jednotek</p>
+          <p className="mt-2 text-[14px] leading-relaxed text-[#6b6257]">
+            Nasbirane bonusy muzes pouzit primo v pokladne po prihlaseni. Pri kazde zaplacene objednavce se ti pripisou dalsi podle aktualniho nastaveni obchodu.
+          </p>
+        </div>
       </div>
     </ProfileLayout>
   );

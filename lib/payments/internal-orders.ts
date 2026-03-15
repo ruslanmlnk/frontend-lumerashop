@@ -10,10 +10,18 @@ export type PaymentOrderSummary = {
     orderId: string;
     provider: CheckoutProvider;
     paymentStatus: PaymentOrderStatus;
+    userId: string;
     customerEmail: string;
     currency: string;
     total: number;
     purchaseCountRecorded: boolean;
+    bonusLedgerRecorded: boolean;
+    couponCode: string;
+    couponDiscountAmount: number;
+    bonusDiscountAmount: number;
+    discountedSubtotal: number;
+    bonusUnitsSpent: number;
+    bonusUnitsEarned: number;
     providerData: {
         stripeSessionId: string;
         stripePaymentIntentId: string;
@@ -31,6 +39,7 @@ export type CreatePaymentOrderInput = {
     subtotal: number;
     shippingTotal: number;
     total: number;
+    userId?: number | string;
     items: Array<{
         id?: number | string;
         name?: string;
@@ -41,6 +50,21 @@ export type CreatePaymentOrderInput = {
         unitPrice?: number;
         lineTotal?: number;
     }>;
+    coupon?: {
+        id?: number | string;
+        code?: string;
+        discountPercent?: number;
+        discountAmount?: number;
+    } | null;
+    discounts?: {
+        couponDiscountAmount?: number;
+        bonusDiscountAmount?: number;
+        discountedSubtotal?: number;
+    } | null;
+    loyalty?: {
+        bonusUnitsSpent?: number;
+        bonusUnitsEarned?: number;
+    } | null;
     customer: NonNullable<CheckoutPayload['customer']>;
     shipping?: {
         methodId?: string;

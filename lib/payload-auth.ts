@@ -7,6 +7,10 @@ export type AuthUser = {
   firstName?: string;
   lastName?: string;
   name?: string;
+  role?: string;
+  bonusBalance?: number;
+  earnedBonusTotal?: number;
+  spentBonusTotal?: number;
 };
 
 export type PayloadAuthConfig = {
@@ -103,6 +107,19 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
   const firstName = typeof record.firstName === 'string' ? record.firstName : undefined;
   const lastName = typeof record.lastName === 'string' ? record.lastName : undefined;
   const name = typeof record.name === 'string' ? record.name : undefined;
+  const role = typeof record.role === 'string' ? record.role : undefined;
+  const bonusBalanceRaw =
+    typeof record.bonusBalance === 'number' || typeof record.bonusBalance === 'string'
+      ? Number(record.bonusBalance)
+      : NaN;
+  const earnedBonusTotalRaw =
+    typeof record.earnedBonusTotal === 'number' || typeof record.earnedBonusTotal === 'string'
+      ? Number(record.earnedBonusTotal)
+      : NaN;
+  const spentBonusTotalRaw =
+    typeof record.spentBonusTotal === 'number' || typeof record.spentBonusTotal === 'string'
+      ? Number(record.spentBonusTotal)
+      : NaN;
 
   return {
     id: String(id),
@@ -110,6 +127,10 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
     firstName,
     lastName,
     name,
+    role,
+    bonusBalance: Number.isFinite(bonusBalanceRaw) ? Math.max(0, Math.floor(bonusBalanceRaw)) : 0,
+    earnedBonusTotal: Number.isFinite(earnedBonusTotalRaw) ? Math.max(0, Math.floor(earnedBonusTotalRaw)) : 0,
+    spentBonusTotal: Number.isFinite(spentBonusTotalRaw) ? Math.max(0, Math.floor(spentBonusTotalRaw)) : 0,
   };
 }
 

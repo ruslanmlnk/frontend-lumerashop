@@ -1,25 +1,157 @@
-'use client';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 
-const Orders = () => {
-    return (
-        <div className="space-y-6">
-            <div className="bg-blue-50 border-t-4 border-blue-400 p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-full">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="Value 13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <span className="text-[15px] text-blue-700">Zatím nebyly vytvořeny žádné objednávky.</span>
-                </div>
-                <Link
-                    href="/shop"
-                    className="bg-[#E1B12C] text-white px-6 py-2.5 font-bold text-[13px] hover:bg-[#c79a24] transition-colors rounded-sm"
-                >
-                    ZPĚT DO OBCHODU
-                </Link>
-            </div>
-        </div>
-    );
+import { getPayloadAuthConfig, parseJsonSafely } from '@/lib/payload-auth';
+
+type OrdersResponse = {
+    docs?: Array<{
+        id?: unknown;
+        orderId?: unknown;
+        paymentStatus?: unknown;
+        total?: unknown;
+        currency?: unknown;
+        createdAt?: unknown;
+        discounts?: {
+            couponCode?: unknown;
+        } | null;
+        loyalty?: {
+            bonusUnitsSpent?: unknown;
+            bonusUnitsEarned?: unknown;
+        } | null;
+    }>;
 };
 
-export default Orders;
+const formatMoney = (value: number, currency: string) =>
+    new Intl.NumberFormat('cs-CZ', {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 0,
+    }).format(value);
+
+const getStatusLabel = (value: string) => {
+    switch (value) {
+        case 'paid':
+            return 'Zaplaceno';
+        case 'failed':
+            return 'Platba selhala';
+        case 'canceled':
+            return 'Zruseno';
+        default:
+            return 'Ceka na potvrzeni';
+    }
+};
+
+export default async function Orders() {
+    const config = getPayloadAuthConfig();
+    const cookieStore = await cookies();
+    const token = config ? cookieStore.get(config.cookieName)?.value : '';
+
+    if (!config || !token) {
+        return (
+            <div className="space-y-6">
+                <div className="border-t-4 border-blue-400 bg-blue-50 p-4 text-[15px] text-blue-700">
+                    Pro zobrazeni objednavek je potreba byt prihlaseny.
+                </div>
+            </div>
+        );
+    }
+
+    try {
+        const response = await fetch(`${config.baseUrl}/api/orders?limit=50&sort=-createdAt`, {
+            headers: {
+                Authorization: `JWT ${token}`,
+            },
+            cache: 'no-store',
+        });
+
+        const payload = await parseJsonSafely<OrdersResponse>(response);
+        const docs = Array.isArray(payload?.docs) ? payload.docs : [];
+
+        if (!response.ok || docs.length === 0) {
+            return (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between border-t-4 border-blue-400 bg-blue-50 p-4">
+                        <span className="text-[15px] text-blue-700">Zatim nebyly vytvoreny zadne objednavky.</span>
+                        <Link
+                            href="/shop"
+                            className="rounded-sm bg-[#E1B12C] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#c79a24]"
+                        >
+                            ZPET DO OBCHODU
+                        </Link>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-4">
+                {docs.map((order, index) => {
+                    const orderId = typeof order.orderId === 'string' ? order.orderId : `OBJ-${index + 1}`;
+                    const paymentStatus =
+                        typeof order.paymentStatus === 'string' ? order.paymentStatus : 'pending';
+                    const total =
+                        typeof order.total === 'number' || typeof order.total === 'string'
+                            ? Number(order.total)
+                            : 0;
+                    const currency = typeof order.currency === 'string' ? order.currency : 'CZK';
+                    const couponCode =
+                        order.discounts && typeof order.discounts.couponCode === 'string'
+                            ? order.discounts.couponCode
+                            : '';
+                    const bonusEarned =
+                        order.loyalty &&
+                        (typeof order.loyalty.bonusUnitsEarned === 'number' ||
+                            typeof order.loyalty.bonusUnitsEarned === 'string')
+                            ? Number(order.loyalty.bonusUnitsEarned)
+                            : 0;
+                    const bonusSpent =
+                        order.loyalty &&
+                        (typeof order.loyalty.bonusUnitsSpent === 'number' ||
+                            typeof order.loyalty.bonusUnitsSpent === 'string')
+                            ? Number(order.loyalty.bonusUnitsSpent)
+                            : 0;
+                    const createdAt =
+                        typeof order.createdAt === 'string' ? new Date(order.createdAt) : null;
+
+                    return (
+                        <article key={orderId} className="rounded-[18px] border border-[#111111]/10 bg-white p-5 shadow-sm">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div className="space-y-1">
+                                    <h3 className="text-[18px] font-semibold text-[#111111]">{orderId}</h3>
+                                    <p className="text-[14px] text-[#6b6257]">{getStatusLabel(paymentStatus)}</p>
+                                    {createdAt ? (
+                                        <p className="text-[13px] text-[#8a8275]">
+                                            {createdAt.toLocaleDateString('cs-CZ')}
+                                        </p>
+                                    ) : null}
+                                </div>
+
+                                <div className="text-right">
+                                    <p className="text-[18px] font-semibold text-[#111111]">
+                                        {formatMoney(Number.isFinite(total) ? total : 0, currency)}
+                                    </p>
+                                    {couponCode ? (
+                                        <p className="text-[13px] text-[#6b6257]">Kupon: {couponCode}</p>
+                                    ) : null}
+                                    {bonusSpent > 0 || bonusEarned > 0 ? (
+                                        <p className="text-[13px] text-[#6b6257]">
+                                            {bonusSpent > 0 ? `-${bonusSpent} bonusu` : ''}
+                                            {bonusSpent > 0 && bonusEarned > 0 ? ' · ' : ''}
+                                            {bonusEarned > 0 ? `+${bonusEarned} bonusu` : ''}
+                                        </p>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </article>
+                    );
+                })}
+            </div>
+        );
+    } catch {
+        return (
+            <div className="rounded-[18px] border border-[#b42318]/10 bg-[#fff4f2] p-5 text-[15px] text-[#b42318]">
+                Nepodarilo se nacist objednavky. Zkus to prosim znovu o neco pozdeji.
+            </div>
+        );
+    }
+}

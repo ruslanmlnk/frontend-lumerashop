@@ -55,7 +55,11 @@ export default async function CheckoutSuccessPage({
     return (
         <div className="flex min-h-screen flex-col bg-white">
             <Header />
-            <ClearCartOnSuccess />
+            <ClearCartOnSuccess
+                paymentStatus={paymentStatus}
+                couponCode={order?.couponCode}
+                userId={order?.userId}
+            />
 
             <main className="flex flex-1 items-start pt-[180px] pb-20 md:pt-[220px]">
                 <div className="mx-auto w-full max-w-[820px] px-4 lg:px-0">

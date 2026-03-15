@@ -71,7 +71,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
 
   try {
-    const backendResponse = await fetch(`${config.baseUrl}/api/products/submit-review`, {
+    const backendResponse = await fetch(`${config.baseUrl}/api/product-reviews/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

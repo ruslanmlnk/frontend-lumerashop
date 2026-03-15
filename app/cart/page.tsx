@@ -1,43 +1,192 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import Header from '@/components/Header';
+import Link from 'next/link';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Check,
+    Minus,
+    Plus,
+    Shield,
+    ShoppingBag,
+    Tag,
+    Truck,
+    X,
+} from 'lucide-react';
+
+import type { CheckoutQuoteResponse } from '@/components/checkout/types';
 import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 import { useCart } from '@/context/CartContext';
+import {
+    PENDING_COUPON_EVENT,
+    clearPendingCoupon,
+    persistPendingCoupon,
+    readPendingCoupon,
+    sanitizeCouponCode,
+} from '@/lib/coupon-storage';
 import { getRenderableAssetPath } from '@/lib/local-assets';
-import { ArrowLeft, ArrowRight, Check, Minus, Plus, Shield, ShoppingBag, Tag, Truck, X } from 'lucide-react';
+
 import '@/app/cart-compact.css';
 
-const formatPrice = (value: number) => `${value.toLocaleString('cs-CZ')} Kč`;
+const formatPrice = (value: number) =>
+    `${value.toLocaleString('cs-CZ', {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+        maximumFractionDigits: 2,
+    })} Kc`;
 
 const getUnitLabel = (count: number) => {
     if (count === 1) return 'kus';
     if (count < 5) return 'kusy';
-    return 'kusů';
+    return 'kusu';
 };
 
 const getProductLabel = (count: number) => {
     if (count === 1) return 'produkt';
     if (count < 5) return 'produkty';
-    return 'produktů';
+    return 'produktu';
 };
 
 export default function CartPage() {
     const [isCouponOpen, setIsCouponOpen] = React.useState(false);
+    const [couponCode, setCouponCode] = React.useState('');
+    const [appliedCouponCode, setAppliedCouponCode] = React.useState('');
+    const [couponMessage, setCouponMessage] = React.useState('');
+    const [couponErrorMessage, setCouponErrorMessage] = React.useState('');
+    const [isQuoteLoading, setIsQuoteLoading] = React.useState(false);
+    const [quote, setQuote] = React.useState<CheckoutQuoteResponse | null>(null);
     const couponFieldId = React.useId();
-    const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
+
+    const { cartItems, removeFromCart, totalPrice, updateQuantity } = useCart();
 
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const productCount = cartItems.length;
-    const vatAmount = Number((totalPrice * 0.21).toFixed(2));
+    const subtotalPrice = totalPrice;
+    const couponDiscountAmount = quote?.discounts?.couponDiscountAmount ?? 0;
+    const discountedSubtotal = quote?.discounts?.discountedSubtotal ?? subtotalPrice;
+    const vatAmount = Number((discountedSubtotal * 0.21).toFixed(2));
 
     const perks = [
-        'Dopravu a platbu vyberete v pokladně',
-        '14 dní na vrácení bez složitostí',
-        'Souhrn se přepočítá okamžitě',
+        'Dopravu a platbu vyberete v pokladne',
+        '14 dni na vraceni bez slozitosti',
+        'Souhrn se prepocita okamzite',
     ];
+
+    const requestCartQuote = React.useCallback(
+        async (nextCouponCode: string) => {
+            const normalizedCode = sanitizeCouponCode(nextCouponCode);
+
+            if (!normalizedCode) {
+                setQuote(null);
+                setCouponMessage('');
+                setCouponErrorMessage('');
+                return;
+            }
+
+            setIsQuoteLoading(true);
+            setCouponMessage('');
+            setCouponErrorMessage('');
+
+            try {
+                const response = await fetch('/api/checkout/quote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: cartItems,
+                        promoCode: normalizedCode,
+                    }),
+                });
+
+                const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
+
+                if (!response.ok || payload?.error || !payload?.totals) {
+                    setQuote(null);
+                    setCouponErrorMessage(
+                        payload?.error ||
+                            'Kupon je ulozeny, ale sleva bude vypoctena az po prihlaseni v pokladne.',
+                    );
+                    return;
+                }
+
+                setQuote(payload);
+                if (payload.coupon) {
+                    setCouponMessage(
+                        `Kupon ${payload.coupon.code} je aktivni. Sleva ${formatPrice(payload.coupon.discountAmount)}.`,
+                    );
+                }
+            } catch {
+                setQuote(null);
+                setCouponErrorMessage('Slevu z kuponu se nepodarilo prepocitat.');
+            } finally {
+                setIsQuoteLoading(false);
+            }
+        },
+        [cartItems],
+    );
+
+    React.useEffect(() => {
+        const pendingCoupon = readPendingCoupon();
+        if (!pendingCoupon) {
+            return;
+        }
+
+        setCouponCode(pendingCoupon);
+        setAppliedCouponCode(pendingCoupon);
+        setIsCouponOpen(true);
+    }, []);
+
+    React.useEffect(() => {
+        const handleCouponPersisted = (event: Event) => {
+            const detail =
+                event instanceof CustomEvent && event.detail && typeof event.detail === 'object'
+                    ? (event.detail as { couponCode?: unknown })
+                    : {};
+            const nextCouponCode = sanitizeCouponCode(detail.couponCode);
+
+            if (!nextCouponCode) {
+                return;
+            }
+
+            setCouponCode(nextCouponCode);
+            setAppliedCouponCode(nextCouponCode);
+            setIsCouponOpen(true);
+        };
+
+        window.addEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+        return () => {
+            window.removeEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+        };
+    }, []);
+
+    React.useEffect(() => {
+        if (!appliedCouponCode) {
+            setQuote(null);
+            return;
+        }
+
+        void requestCartQuote(appliedCouponCode);
+    }, [appliedCouponCode, cartItems, requestCartQuote]);
+
+    const handleApplyCoupon = async () => {
+        const normalizedCode = sanitizeCouponCode(couponCode);
+
+        if (!normalizedCode) {
+            setCouponCode('');
+            setAppliedCouponCode('');
+            clearPendingCoupon();
+            setQuote(null);
+            setCouponMessage('');
+            setCouponErrorMessage('');
+            return;
+        }
+
+        persistPendingCoupon(normalizedCode);
+        setAppliedCouponCode(normalizedCode);
+    };
 
     if (cartItems.length === 0) {
         return (
@@ -50,17 +199,17 @@ export default function CartPage() {
                                 <ShoppingBag size={24} />
                             </div>
                             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#87755f]">
-                                Košík je prázdný
+                                Kosik je prazdny
                             </p>
                             <h1 className="mt-3 font-serif text-[30px] leading-none text-[#111] md:text-[38px]">
-                                Zatím tu nic není.
+                                Zatim tu nic neni.
                             </h1>
                             <p className="mx-auto mt-3 max-w-[440px] text-[13px] leading-6 text-[#6b6257]">
-                                Vyberte si produkt a vraťte se sem až budete chtít objednávku dokončit.
+                                Vyber si produkt a vrat se sem, az budes chtit objednavku dokoncit.
                             </p>
                             <div className="mt-6 flex justify-center">
                                 <Link href="/" className="cart-slim-primary max-w-[240px]">
-                                    Pokračovat v nákupu
+                                    Pokracovat v nakupu
                                     <ArrowRight size={15} />
                                 </Link>
                             </div>
@@ -81,24 +230,28 @@ export default function CartPage() {
                     <section className="cart-slim-top">
                         <div>
                             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#87755f]">
-                                Kontrola objednávky
+                                Kontrola objednavky
                             </p>
                             <h1 className="mt-2 font-serif text-[30px] leading-none text-[#111] md:text-[38px]">
-                                Nákupní košík
+                                Nakupni kosik
                             </h1>
                             <p className="mt-2.5 max-w-[44ch] text-[12px] leading-5 text-[#6b6257] md:text-[13px]">
-                                Všechno důležité na jednom místě, bez velkých bloků a zbytečných kroků.
+                                Pokud jsi prisel z QR kodu s kuponem, kod se ulozi automaticky a tady uvidis, jestli je uz sleva aktivni.
                             </p>
                         </div>
 
                         <div className="cart-slim-meta">
                             <div className="cart-slim-pill">
                                 <ShoppingBag size={12} />
-                                <span>{itemCount} {getUnitLabel(itemCount)}</span>
+                                <span>
+                                    {itemCount} {getUnitLabel(itemCount)}
+                                </span>
                             </div>
                             <div className="cart-slim-pill">
                                 <Tag size={12} />
-                                <span>{productCount} {getProductLabel(productCount)}</span>
+                                <span>
+                                    {productCount} {getProductLabel(productCount)}
+                                </span>
                             </div>
                         </div>
                     </section>
@@ -109,10 +262,10 @@ export default function CartPage() {
                                 <div className="cart-slim-panel-head">
                                     <div>
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7c7367]">
-                                            Položky
+                                            Polozky
                                         </p>
                                         <h2 className="mt-1 font-serif text-[19px] leading-none text-[#111]">
-                                            Obsah košíku
+                                            Obsah kosiku
                                         </h2>
                                     </div>
 
@@ -121,14 +274,14 @@ export default function CartPage() {
                                         className="hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6b6257] transition-colors hover:text-[#b98743] sm:inline-flex"
                                     >
                                         <ArrowLeft size={12} />
-                                        Pokračovat
+                                        Pokracovat
                                     </Link>
                                 </div>
 
                                 <div className="cart-slim-list-head hidden md:grid">
                                     <span>Produkt</span>
                                     <span className="text-center">Cena</span>
-                                    <span className="text-center">Množství</span>
+                                    <span className="text-center">Mnozstvi</span>
                                     <span className="text-right">Celkem</span>
                                     <span />
                                 </div>
@@ -155,15 +308,15 @@ export default function CartPage() {
 
                                                     <div className="min-w-0 flex-1">
                                                         <Link
-                                                            href={`/product/${item.id}`}
+                                                            href={`/product/${item.slug || item.id}`}
                                                             className="font-serif text-[17px] leading-[1.1] text-[#111] transition-colors hover:text-[#b98743]"
                                                         >
                                                             {item.name}
                                                         </Link>
 
                                                         <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                                            {item.sku && <span className="cart-slim-chip">Ref. {item.sku}</span>}
-                                                            {item.variant && <span className="cart-slim-chip">{item.variant}</span>}
+                                                            {item.sku ? <span className="cart-slim-chip">Ref. {item.sku}</span> : null}
+                                                            {item.variant ? <span className="cart-slim-chip">{item.variant}</span> : null}
                                                         </div>
 
                                                         <div className="mt-2.5 flex items-center justify-between gap-3 md:hidden">
@@ -187,7 +340,7 @@ export default function CartPage() {
                                                             type="button"
                                                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                                             className="cart-slim-quantity-button"
-                                                            aria-label={`Snížit množství ${item.name}`}
+                                                            aria-label={`Snizit mnozstvi ${item.name}`}
                                                         >
                                                             <Minus size={11} />
                                                         </button>
@@ -198,7 +351,7 @@ export default function CartPage() {
                                                             type="button"
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                             className="cart-slim-quantity-button"
-                                                            aria-label={`Zvýšit množství ${item.name}`}
+                                                            aria-label={`Zvysit mnozstvi ${item.name}`}
                                                         >
                                                             <Plus size={11} />
                                                         </button>
@@ -237,28 +390,45 @@ export default function CartPage() {
                                         <span className="cart-slim-icon-badge cart-slim-icon-badge-soft">
                                             <Tag size={12} />
                                         </span>
-                                        <span>{isCouponOpen ? 'Skrýt kupón' : 'Přidat kupón'}</span>
+                                        <span>{isCouponOpen ? 'Skryt kupon' : 'Pridat kupon'}</span>
                                     </button>
 
                                     {isCouponOpen ? (
                                         <div id={couponFieldId} className="cart-slim-coupon mt-3 animate-fadeIn">
                                             <input
                                                 type="text"
-                                                placeholder="Vložte kód"
+                                                placeholder="Vlozte kod"
+                                                value={couponCode}
+                                                onChange={(event) => setCouponCode(event.target.value)}
                                                 className="h-9 rounded-full border border-[#111]/10 bg-white px-4 text-[12px] text-[#111] outline-none transition-colors placeholder:text-[#92887a] focus:border-[#b98743]"
                                             />
                                             <button
                                                 type="button"
+                                                onClick={() => void handleApplyCoupon()}
                                                 className="h-9 rounded-full bg-[#111] px-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#b98743]"
                                             >
-                                                Použít
+                                                {isQuoteLoading ? 'Pockam...' : 'Pouzit'}
                                             </button>
                                         </div>
                                     ) : (
                                         <p className="mt-2 text-[12px] leading-5 text-[#6b6257]">
-                                            Kód můžete doplnit ještě před odesláním objednávky.
+                                            Kod muzes doplnit i pozdeji v pokladne.
                                         </p>
                                     )}
+
+                                    {appliedCouponCode ? (
+                                        <p className="mt-3 text-[12px] leading-5 text-[#6b6257]">
+                                            Ulozeny kod: <span className="font-semibold text-[#111]">{appliedCouponCode}</span>
+                                        </p>
+                                    ) : null}
+
+                                    {couponMessage ? (
+                                        <p className="mt-3 text-[12px] leading-5 text-[#1f6f43]">{couponMessage}</p>
+                                    ) : null}
+
+                                    {couponErrorMessage ? (
+                                        <p className="mt-3 text-[12px] leading-5 text-[#b42318]">{couponErrorMessage}</p>
+                                    ) : null}
                                 </div>
 
                                 <div className="cart-slim-panel cart-slim-panel-soft">
@@ -267,11 +437,9 @@ export default function CartPage() {
                                             <Truck size={12} />
                                         </span>
                                         <div>
-                                            <p className="text-[11px] font-semibold text-[#111]">
-                                                Doprava až v pokladně
-                                            </p>
+                                            <p className="text-[11px] font-semibold text-[#111]">Doprava az v pokladne</p>
                                             <p className="mt-1 text-[12px] leading-5 text-[#6b6257]">
-                                                Po pokračování vyberete metodu doručení i platební bránu.
+                                                Po pokracovani vyberes metodu doruceni i platebni branu.
                                             </p>
                                         </div>
                                     </div>
@@ -283,34 +451,41 @@ export default function CartPage() {
                             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7c7367]">
                                 Souhrn
                             </p>
-                            <h2 className="mt-2 font-serif text-[20px] leading-none text-[#111]">
-                                K zaplacení
-                            </h2>
+                            <h2 className="mt-2 font-serif text-[20px] leading-none text-[#111]">K zaplaceni</h2>
 
                             <div className="cart-slim-summary-rows mt-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7c7367]">
-                                        Mezisoučet
+                                        Mezisoucet
                                     </span>
                                     <span className="text-[14px] font-semibold text-[#111]">
-                                        {formatPrice(totalPrice)}
+                                        {formatPrice(subtotalPrice)}
                                     </span>
                                 </div>
+
+                                {couponDiscountAmount > 0 ? (
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7c7367]">
+                                            Sleva kupon
+                                        </span>
+                                        <span className="text-[14px] font-semibold text-[#111]">
+                                            - {formatPrice(couponDiscountAmount)}
+                                        </span>
+                                    </div>
+                                ) : null}
+
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7c7367]">
                                         Doprava
                                     </span>
-                                    <span className="text-[11px] font-semibold text-[#111]">
-                                        Dle volby
-                                    </span>
+                                    <span className="text-[11px] font-semibold text-[#111]">Dle volby</span>
                                 </div>
+
                                 <div className="flex items-center justify-between gap-4">
                                     <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7c7367]">
                                         DPH
                                     </span>
-                                    <span className="text-[11px] font-semibold text-[#111]">
-                                        {formatPrice(vatAmount)}
-                                    </span>
+                                    <span className="text-[11px] font-semibold text-[#111]">{formatPrice(vatAmount)}</span>
                                 </div>
                             </div>
 
@@ -320,10 +495,10 @@ export default function CartPage() {
                                 </p>
                                 <div className="mt-2 flex items-end justify-between gap-3">
                                     <span className="text-[24px] font-semibold leading-none text-[#111]">
-                                        {formatPrice(totalPrice)}
+                                        {formatPrice(discountedSubtotal)}
                                     </span>
                                     <span className="rounded-[10px] border border-[#111]/8 bg-white px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6b6257]">
-                                        Včetně DPH
+                                        Vcetne DPH
                                     </span>
                                 </div>
                             </div>
@@ -335,7 +510,7 @@ export default function CartPage() {
                                 </Link>
                                 <Link href="/" className="cart-slim-secondary">
                                     <ArrowLeft size={14} />
-                                    Pokračovat
+                                    Pokracovat
                                 </Link>
                             </div>
 
@@ -356,11 +531,9 @@ export default function CartPage() {
                                         <Shield size={12} />
                                     </span>
                                     <div>
-                                        <p className="text-[11px] font-semibold text-[#111]">
-                                            Bezpečné dokončení
-                                        </p>
+                                        <p className="text-[11px] font-semibold text-[#111]">Bezpecne dokonceni</p>
                                         <p className="mt-1 text-[11px] leading-5 text-[#6b6257]">
-                                            Objednávku odešlete až po potvrzení dopravy a platby v dalším kroku.
+                                            Pokud jsi prihlaseny, sleva z kuponu se prepocita uz tady a stejna zustane i v checkoutu.
                                         </p>
                                     </div>
                                 </div>

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Info, Shield } from 'lucide-react';
+
 import { getCheckoutTheme } from '@/components/checkout/theme';
 import type { CheckoutFormState, CheckoutVariant } from '@/components/checkout/types';
 import { formatPickupPointAddress, formatShippingPrice, type ShippingMethod } from '@/lib/checkout-shipping';
@@ -12,7 +13,10 @@ type CheckoutSummaryProps = {
     cartItems: CartItem[];
     itemCount: number;
     itemLabel: string;
-    totalPrice: number;
+    subtotalPrice: number;
+    couponDiscountAmount: number;
+    bonusDiscountAmount: number;
+    discountedSubtotal: number;
     vatAmount: number;
     shippingPrice: number;
     orderTotal: number;
@@ -20,6 +24,11 @@ type CheckoutSummaryProps = {
     formData: CheckoutFormState;
     paymentLabel: string;
     formatPrice: (value: number) => string;
+    loyaltySummary?: {
+        balance: number;
+        spent: number;
+        earned: number;
+    };
 };
 
 export default function CheckoutSummary({
@@ -27,7 +36,10 @@ export default function CheckoutSummary({
     cartItems,
     itemCount,
     itemLabel,
-    totalPrice,
+    subtotalPrice,
+    couponDiscountAmount,
+    bonusDiscountAmount,
+    discountedSubtotal,
     vatAmount,
     shippingPrice,
     orderTotal,
@@ -35,6 +47,7 @@ export default function CheckoutSummary({
     formData,
     paymentLabel,
     formatPrice,
+    loyaltySummary,
 }: CheckoutSummaryProps) {
     const theme = getCheckoutTheme(variant);
 
@@ -42,8 +55,8 @@ export default function CheckoutSummary({
         <aside className={theme.summary}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
-                    <p className={theme.eyebrow}>Přehled objednávky</p>
-                    <h2 className={theme.summaryTitle}>Košík a platba</h2>
+                    <p className={theme.eyebrow}>Prehled objednavky</p>
+                    <h2 className={theme.summaryTitle}>Kosik a platba</h2>
                 </div>
                 <div className={theme.pill}>
                     {itemCount} {itemLabel}
@@ -66,7 +79,7 @@ export default function CheckoutSummary({
 
                             <div className="min-w-0">
                                 <p className={theme.summaryName}>{item.name}</p>
-                                {itemMeta && <p className={theme.summaryMeta}>{itemMeta}</p>}
+                                {itemMeta ? <p className={theme.summaryMeta}>{itemMeta}</p> : null}
                             </div>
 
                             <p className={theme.summaryPrice}>{formatPrice(item.price * item.quantity)}</p>
@@ -78,10 +91,40 @@ export default function CheckoutSummary({
             <div className={theme.summaryRows}>
                 <div className={theme.summaryRow}>
                     <div className={theme.summaryRowLabel}>
-                        <span>Mezisoučet</span>
+                        <span>Mezisoucet</span>
                     </div>
-                    <span className={theme.summaryPrice}>{formatPrice(totalPrice)}</span>
+                    <span className={theme.summaryPrice}>{formatPrice(subtotalPrice)}</span>
                 </div>
+
+                {couponDiscountAmount > 0 ? (
+                    <div className={theme.summaryRow}>
+                        <div className={theme.summaryRowLabel}>
+                            <span>Kupon</span>
+                        </div>
+                        <span className={theme.summaryPrice}>- {formatPrice(couponDiscountAmount)}</span>
+                    </div>
+                ) : null}
+
+                {bonusDiscountAmount > 0 ? (
+                    <div className={theme.summaryRow}>
+                        <div className={theme.summaryRowLabel}>
+                            <span>Bonusy</span>
+                            {loyaltySummary?.spent ? (
+                                <small className={theme.summaryRowMeta}>{loyaltySummary.spent} jednotek</small>
+                            ) : null}
+                        </div>
+                        <span className={theme.summaryPrice}>- {formatPrice(bonusDiscountAmount)}</span>
+                    </div>
+                ) : null}
+
+                {couponDiscountAmount > 0 || bonusDiscountAmount > 0 ? (
+                    <div className={theme.summaryRow}>
+                        <div className={theme.summaryRowLabel}>
+                            <span>Po slevach</span>
+                        </div>
+                        <span className={theme.summaryPrice}>{formatPrice(discountedSubtotal)}</span>
+                    </div>
+                ) : null}
 
                 <div className={theme.summaryRow}>
                     <div className={theme.summaryRowLabel}>
@@ -94,14 +137,14 @@ export default function CheckoutSummary({
                     <div className={theme.summaryRowLabel}>
                         <span>Doprava</span>
                         <small className={theme.summaryRowMeta}>{selectedShippingMethod.label}</small>
-                        {formData.pickupPoint && (
+                        {formData.pickupPoint ? (
                             <small className={theme.summaryRowMeta}>
                                 {formData.pickupPoint.name}
                                 {formatPickupPointAddress(formData.pickupPoint)
                                     ? `, ${formatPickupPointAddress(formData.pickupPoint)}`
                                     : ''}
                             </small>
-                        )}
+                        ) : null}
                     </div>
                     <span className={theme.summaryPrice}>{formatShippingPrice(shippingPrice)}</span>
                 </div>
@@ -114,7 +157,7 @@ export default function CheckoutSummary({
 
             <div className={theme.note}>
                 <Info size={16} className="mt-[2px] shrink-0 text-[#b98743]" />
-                <p>Objednávku dokončíte přes zabezpečenou platební bránu. Všechny ceny jsou včetně DPH.</p>
+                <p>Objednavku dokoncite pres zabezpecenou platebni branu. Vsechny ceny jsou vcetne DPH.</p>
             </div>
 
             <div className="grid gap-2">
@@ -123,9 +166,19 @@ export default function CheckoutSummary({
                     <span>{paymentLabel}</span>
                 </div>
 
+                {loyaltySummary ? (
+                    <div className={theme.summarySelected}>
+                        <Info size={14} />
+                        <span>
+                            Bonusy: {loyaltySummary.balance} na uctu
+                            {loyaltySummary.earned > 0 ? `, +${loyaltySummary.earned} po objednavce` : ''}
+                        </span>
+                    </div>
+                ) : null}
+
                 <Link href="/cart" className={theme.secondary}>
                     <ArrowLeft size={14} />
-                    Zpět do košíku
+                    Zpet do kosiku
                 </Link>
             </div>
         </aside>

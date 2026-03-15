@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CreditCard, Loader2, Receipt, Truck, User } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -13,12 +13,21 @@ import PickupPointSelector from '@/components/checkout/PickupPointSelector';
 import { cn, getCheckoutTheme } from '@/components/checkout/theme';
 import type {
     CheckoutFormState,
+    CheckoutQuoteResponse,
     CheckoutStartResponse,
     CheckoutVariant,
     PaymentProvider,
     Step,
 } from '@/components/checkout/types';
 import { useCart } from '@/context/CartContext';
+import type { AuthUser } from '@/lib/payload-auth';
+import {
+    PENDING_COUPON_EVENT,
+    clearPendingCoupon,
+    persistPendingCoupon,
+    readPendingCoupon,
+    sanitizeCouponCode,
+} from '@/lib/coupon-storage';
 import {
     DEFAULT_SHIPPING_METHOD,
     formatPickupPointAddress,
@@ -62,13 +71,21 @@ const getItemLabel = (count: number) => {
 };
 
 const checkboxClassName = 'mt-[2px] h-4 w-4 accent-[#b98743]';
+const getUsedCouponsStorageKey = (userId: string) => `lumera_used_coupons:${userId}`;
 
 type CheckoutPageProps = {
     variant?: CheckoutVariant;
     shippingMethods?: ShippingMethod[];
+    currentUser?: AuthUser | null;
+    loyaltySettings?: CheckoutQuoteResponse['loyaltySettings'];
 };
 
-export default function CheckoutPage({ variant = 'minimal', shippingMethods = SHIPPING_METHODS }: CheckoutPageProps) {
+export default function CheckoutPage({
+    variant = 'minimal',
+    shippingMethods = SHIPPING_METHODS,
+    currentUser = null,
+    loyaltySettings,
+}: CheckoutPageProps) {
     const theme = getCheckoutTheme(variant);
     const { cartItems, totalPrice } = useCart();
     const availableShippingMethods = shippingMethods.length ? shippingMethods : SHIPPING_METHODS;
@@ -104,7 +121,14 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
         paymentProvider: 'stripe',
         termsAccepted: false,
         promoCode: '',
+        useBonusBalance: false,
     });
+    const [quote, setQuote] = useState<CheckoutQuoteResponse | null>(null);
+    const [appliedPromoCode, setAppliedPromoCode] = useState('');
+    const [couponMessage, setCouponMessage] = useState('');
+    const [couponErrorMessage, setCouponErrorMessage] = useState('');
+    const [isQuoteLoading, setIsQuoteLoading] = useState(false);
+    const autoAppliedCouponRef = useRef('');
 
     useEffect(() => {
         setIsClient(true);
@@ -146,6 +170,240 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
+    useEffect(() => {
+        if (!currentUser) {
+            return;
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            email: prev.email || currentUser.email,
+            firstName: prev.firstName || currentUser.firstName || '',
+            lastName: prev.lastName || currentUser.lastName || '',
+        }));
+    }, [currentUser]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        const pendingCoupon = readPendingCoupon();
+        if (!pendingCoupon) {
+            return;
+        }
+
+        setFormData((prev) => {
+            if (prev.promoCode) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                promoCode: pendingCoupon,
+            };
+        });
+
+        if (!currentUser?.id) {
+            setCouponErrorMessage((prev) => prev || 'Kupon je ulozeny. Po prihlaseni ho muzes rovnou pouzit.');
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleCouponPersisted = (event: Event) => {
+            const detail =
+                event instanceof CustomEvent && event.detail && typeof event.detail === 'object'
+                    ? (event.detail as { couponCode?: unknown })
+                    : {};
+            const couponCode = sanitizeCouponCode(detail.couponCode);
+
+            if (!couponCode) {
+                return;
+            }
+
+            setFormData((prev) => ({
+                ...prev,
+                promoCode: couponCode,
+            }));
+
+            if (currentUser?.id) {
+                autoAppliedCouponRef.current = couponCode;
+                void applyCouponCode(couponCode, { silent: true });
+            } else {
+                setCouponMessage('');
+                setCouponErrorMessage('Kupon je ulozeny. Po prihlaseni ho muzes rovnou pouzit.');
+            }
+        };
+
+        window.addEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+        return () => {
+            window.removeEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+        };
+    }, [currentUser?.id]);
+
+    const requestCheckoutQuote = async ({
+        promoCode = appliedPromoCode,
+        useBonusBalance = formData.useBonusBalance,
+    }: {
+        promoCode?: string;
+        useBonusBalance?: boolean;
+    }) => {
+        const response = await fetch('/api/checkout/quote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                items: cartItems,
+                shippingMethodId: formData.shippingMethod,
+                promoCode,
+                useBonusBalance,
+            }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
+
+        if (!response.ok || payload?.error || !payload?.totals) {
+            throw new Error(payload?.error || 'Nepodarilo se prepocitat objednavku.');
+        }
+
+        setQuote(payload);
+        return payload;
+    };
+
+    const applyCouponCode = async (rawCode: string, options?: { silent?: boolean }) => {
+        const normalizedCode = rawCode.trim().toUpperCase();
+
+        if (!normalizedCode) {
+            setAppliedPromoCode('');
+            setCouponErrorMessage('');
+            setCouponMessage('');
+            clearPendingCoupon();
+            setIsQuoteLoading(true);
+
+            try {
+                await requestCheckoutQuote({ promoCode: '', useBonusBalance: formData.useBonusBalance });
+            } catch {
+                // Keep previous quote if the reset request fails.
+            } finally {
+                setIsQuoteLoading(false);
+            }
+
+            return;
+        }
+
+        if (!currentUser?.id) {
+            setCouponMessage('');
+            if (!options?.silent) {
+                setCouponErrorMessage('Pro pouziti kuponu se musis prihlasit.');
+            }
+            persistPendingCoupon(normalizedCode);
+            return;
+        }
+
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = JSON.parse(
+                    localStorage.getItem(getUsedCouponsStorageKey(currentUser.id)) || '[]',
+                ) as string[];
+
+                if (saved.includes(normalizedCode)) {
+                    setCouponMessage('');
+                    setCouponErrorMessage('Tento kupon uz byl na tomto uctu lokalne oznacen jako pouzity.');
+                    clearPendingCoupon();
+                    return;
+                }
+            } catch {
+                // Ignore invalid local storage state and continue with server validation.
+            }
+        }
+
+        setCouponMessage('');
+        setCouponErrorMessage('');
+        setIsQuoteLoading(true);
+
+        try {
+            const payload = await requestCheckoutQuote({
+                promoCode: normalizedCode,
+                useBonusBalance: formData.useBonusBalance,
+            });
+
+            setAppliedPromoCode(normalizedCode);
+            persistPendingCoupon(normalizedCode);
+            if (!options?.silent) {
+                setCouponMessage(
+                    payload.coupon
+                        ? `Kupon ${payload.coupon.code} byl pouzit. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
+                        : 'Kupon byl ulozen.',
+                );
+            }
+        } catch (error) {
+            setCouponMessage('');
+            setCouponErrorMessage(error instanceof Error ? error.message : 'Kupon nelze pouzit.');
+
+            const message = error instanceof Error ? error.message : '';
+            if (/not found|not active|already been used/i.test(message)) {
+                clearPendingCoupon();
+            }
+        } finally {
+            setIsQuoteLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const run = async () => {
+            setIsQuoteLoading(true);
+
+            try {
+                const response = await fetch('/api/checkout/quote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items: cartItems,
+                        shippingMethodId: formData.shippingMethod,
+                        promoCode: appliedPromoCode,
+                        useBonusBalance: formData.useBonusBalance,
+                    }),
+                });
+
+                const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
+                if (!cancelled && response.ok && payload?.totals) {
+                    setQuote(payload);
+                }
+            } catch {
+                // Keep the last successful quote or fallback totals.
+            } finally {
+                if (!cancelled) {
+                    setIsQuoteLoading(false);
+                }
+            }
+        };
+
+        void run();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [appliedPromoCode, cartItems, formData.shippingMethod, formData.useBonusBalance]);
+
+    useEffect(() => {
+        if (!currentUser?.id) {
+            return;
+        }
+
+        const pendingCoupon = readPendingCoupon();
+        if (!pendingCoupon || appliedPromoCode || autoAppliedCouponRef.current === pendingCoupon) {
+            return;
+        }
+
+        autoAppliedCouponRef.current = pendingCoupon;
+        void applyCouponCode(pendingCoupon, { silent: true });
+    }, [appliedPromoCode, currentUser?.id, formData.shippingMethod, formData.useBonusBalance]);
+
     const nextStep = (step: Step, next: Step) => {
         if (!completedSteps.includes(step)) {
             setCompletedSteps((prev) => [...prev, step]);
@@ -172,6 +430,10 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
 
         setShippingErrorMessage(null);
         nextStep('shipping', 'billing');
+    };
+
+    const handleApplyCoupon = async () => {
+        await applyCouponCode(formData.promoCode);
     };
 
     const handleFinalSubmit = async () => {
@@ -230,6 +492,8 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
                         companyId: formData.companyId,
                         vatId: formData.vatId,
                     },
+                    promoCode: appliedPromoCode,
+                    useBonusBalance: formData.useBonusBalance,
                 }),
             });
 
@@ -276,10 +540,15 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
         getShippingMethodById(formData.shippingMethod, availableShippingMethods) ??
         availableShippingMethods[0] ??
         SHIPPING_METHODS[0];
-    const shippingPrice = selectedShippingMethod.price;
-    const orderTotal = totalPrice + shippingPrice;
+    const shippingPrice = quote?.totals?.shipping ?? selectedShippingMethod.price;
+    const subtotalPrice = quote?.totals?.subtotal ?? totalPrice;
+    const couponDiscountAmount = quote?.discounts?.couponDiscountAmount ?? 0;
+    const bonusDiscountAmount = quote?.discounts?.bonusDiscountAmount ?? 0;
+    const discountedSubtotal = quote?.discounts?.discountedSubtotal ?? subtotalPrice;
+    const orderTotal = quote?.totals?.total ?? discountedSubtotal + shippingPrice;
     const vatAmount = Number((orderTotal * 0.21).toFixed(2));
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const effectiveLoyaltySettings = quote?.loyaltySettings || loyaltySettings;
     const isCustomerStage = currentStep === 'contact' || currentStep === 'shipping';
     const description =
         variant === 'minimal'
@@ -785,6 +1054,189 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
         </CheckoutSectionCard>
     );
 
+    const renderEnhancedPaymentSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={4}
+            eyebrow="Krok 4"
+            title="Platba a potvrzeni"
+            active={currentStep === 'payment'}
+            completed={completedSteps.includes('payment')}
+            onOpen={() => goToStep('payment')}
+            summary="Platebni branu a finalni potvrzeni vyberete v poslednim kroku."
+        >
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Sleva</p>
+                    <h3 className={theme.stageTitle}>Darkovy nebo slevovy kod</h3>
+                </div>
+
+                <div className={theme.inlineGrid}>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        placeholder="Kod kuponu"
+                        value={formData.promoCode}
+                        onChange={(event) => updateFormData('promoCode', event.target.value)}
+                    />
+                    <button
+                        type="button"
+                        className={theme.secondary}
+                        onClick={handleApplyCoupon}
+                        disabled={isQuoteLoading}
+                    >
+                        {isQuoteLoading ? 'Pockam...' : 'Pouzit'}
+                    </button>
+                </div>
+
+                {appliedPromoCode ? (
+                    <p className="text-[13px] text-[#6b6257]">
+                        Aktivni kod: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
+                    </p>
+                ) : null}
+
+                {couponMessage ? (
+                    <p className="rounded-[12px] border border-[#1f6f43]/15 bg-[#f4fbf6] px-3 py-2.5 text-[12px] leading-5 text-[#1f6f43]">
+                        {couponMessage}
+                    </p>
+                ) : null}
+
+                {couponErrorMessage ? (
+                    <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                        {couponErrorMessage}
+                    </p>
+                ) : null}
+            </div>
+
+            {currentUser && effectiveLoyaltySettings?.bonusesEnabled ? (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Bonusy</p>
+                        <h3 className={theme.stageTitle}>Vyuziti bonusnich jednotek</h3>
+                    </div>
+
+                    <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
+                        <p>
+                            Na uctu mas{' '}
+                            <span className="font-semibold text-[#111111]">
+                                {quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0}
+                            </span>{' '}
+                            bonusnich jednotek.
+                        </p>
+                        <p className="mt-1 text-[12px] text-[#6b6257]">
+                            {effectiveLoyaltySettings.redemptionBonusUnits} bonusu ={' '}
+                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za kazdych{' '}
+                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech ziskas{' '}
+                            {effectiveLoyaltySettings.earningBonusUnits} bonusu.
+                        </p>
+                    </div>
+
+                    <label className={theme.check}>
+                        <input
+                            type="checkbox"
+                            className={checkboxClassName}
+                            checked={formData.useBonusBalance}
+                            onChange={(event) => updateFormData('useBonusBalance', event.target.checked)}
+                        />
+                        <span>Pouzit bonusni jednotky na tuto objednavku</span>
+                    </label>
+
+                    {formData.useBonusBalance ? (
+                        <p className="text-[13px] leading-5 text-[#6b6257]">
+                            Pri teto objednavce se pouzije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusu a odecte se{' '}
+                            {formatPrice(quote?.discounts?.bonusDiscountAmount ?? 0)}.
+                        </p>
+                    ) : null}
+
+                    <p className="text-[13px] leading-5 text-[#6b6257]">
+                        Po uspesne platbe se pripise {quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.
+                    </p>
+                </div>
+            ) : null}
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Platba</p>
+                    <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+                </div>
+
+                {([
+                    {
+                        value: 'stripe',
+                        title: 'Online karta / Apple Pay (Stripe)',
+                        copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
+                    },
+                    {
+                        value: 'global-payments',
+                        title: 'Global Payments (GP webpay)',
+                        copy: 'Tradicni platebni brana pro karty i lokalni metody.',
+                    },
+                ] as const).map((option) => {
+                    const isSelected = formData.paymentProvider === option.value;
+
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            className={cn(theme.option, isSelected ? theme.optionSelected : theme.optionIdle)}
+                            onClick={() => updateFormData('paymentProvider', option.value)}
+                        >
+                            <span className={theme.optionControl}>
+                                {isSelected && <span className="h-2 w-2 rounded-full bg-[#b98743]" />}
+                            </span>
+                            <span className={theme.optionCopy}>
+                                <span className={theme.optionTitle}>{option.title}</span>
+                                <span className={theme.optionMeta}>{option.copy}</span>
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <label className={theme.check}>
+                <input
+                    type="checkbox"
+                    className={checkboxClassName}
+                    checked={formData.termsAccepted}
+                    onChange={(event) => updateFormData('termsAccepted', event.target.checked)}
+                />
+                <span>
+                    Souhlasim s{' '}
+                    <a href="/obchodni-podminky" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        obchodnimi podminkami
+                    </a>{' '}
+                    a{' '}
+                    <a href="/ochrana-osobnich-udaju" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        ochranou osobnich udaju
+                    </a>{' '}
+                    *
+                </span>
+            </label>
+
+            {errorMessage && (
+                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                    {errorMessage}
+                </p>
+            )}
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting !== null}
+            >
+                {isSubmitting ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        Presmerovani...
+                    </span>
+                ) : (
+                    `Objednat a zaplatit ${formatPrice(orderTotal)}`
+                )}
+            </button>
+        </CheckoutSectionCard>
+    );
+
     if (cartItems.length === 0) {
         return (
             <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
@@ -849,7 +1301,7 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
                             ) : (
                                 <>
                                     {renderBillingSection()}
-                                    {renderPaymentSection()}
+                                    {renderEnhancedPaymentSection()}
                                 </>
                             )}
                         </div>
@@ -859,7 +1311,10 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
                             cartItems={cartItems}
                             itemCount={itemCount}
                             itemLabel={getItemLabel(itemCount)}
-                            totalPrice={totalPrice}
+                            subtotalPrice={subtotalPrice}
+                            couponDiscountAmount={couponDiscountAmount}
+                            bonusDiscountAmount={bonusDiscountAmount}
+                            discountedSubtotal={discountedSubtotal}
                             vatAmount={vatAmount}
                             shippingPrice={shippingPrice}
                             orderTotal={orderTotal}
@@ -867,6 +1322,15 @@ export default function CheckoutPage({ variant = 'minimal', shippingMethods = SH
                             formData={formData}
                             paymentLabel={getPaymentLabel(formData.paymentProvider)}
                             formatPrice={formatPrice}
+                            loyaltySummary={
+                                currentUser
+                                    ? {
+                                          balance: quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0,
+                                          spent: quote?.loyalty?.bonusUnitsSpent ?? 0,
+                                          earned: quote?.loyalty?.bonusUnitsEarned ?? 0,
+                                      }
+                                    : undefined
+                            }
                         />
                     </div>
                 </div>

@@ -1,34 +1,24 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Suspense } from "react";
+import { Cormorant_Garamond, Work_Sans } from "next/font/google";
 
+import CouponCapture from "@/components/CouponCapture";
 import { CartProvider } from "@/context/CartContext";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { fetchPayloadHeaderMenuItems } from "@/lib/payload-categories";
 
 import "./globals.css";
 
-const cormorantGaramond = localFont({
+const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-serif",
-  display: "swap",
-  src: [
-    {
-      path: "./fonts/CormorantGaramond-Variable.ttf",
-      weight: "300 700",
-      style: "normal",
-    },
-  ],
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const workSans = localFont({
+const workSans = Work_Sans({
   variable: "--font-sans",
-  display: "swap",
-  src: [
-    {
-      path: "./fonts/WorkSans-Variable.ttf",
-      weight: "100 900",
-      style: "normal",
-    },
-  ],
+  subsets: ["latin", "latin-ext"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +39,12 @@ export default async function RootLayout({
         className={`${cormorantGaramond.variable} ${workSans.variable} antialiased font-sans`}
       >
         <NavigationProvider initialMenuItems={menuItems}>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <Suspense fallback={null}>
+              <CouponCapture />
+            </Suspense>
+            {children}
+          </CartProvider>
         </NavigationProvider>
       </body>
     </html>
