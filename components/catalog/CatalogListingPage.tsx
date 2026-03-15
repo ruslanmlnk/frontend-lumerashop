@@ -27,6 +27,7 @@ type CatalogListingPageProps = {
     products: Product[];
     categoryItems: CatalogCategoryNavItem[];
     initialCategorySlug?: string | null;
+    initialCategoryGroupSlug?: string | null;
     initialSubcategorySlug?: string | null;
     searchQuery?: string | null;
 };
@@ -39,6 +40,7 @@ export default function CatalogListingPage({
     products,
     categoryItems,
     initialCategorySlug = null,
+    initialCategoryGroupSlug = null,
     initialSubcategorySlug = null,
     searchQuery = null,
 }: CatalogListingPageProps) {
@@ -49,6 +51,7 @@ export default function CatalogListingPage({
     const [sortOrder, setSortOrder] = useState('popularity');
     const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
     const selectedCategorySlug = initialCategorySlug ?? null;
+    const selectedCategoryGroupSlug = initialCategoryGroupSlug ?? null;
     const selectedSubcategorySlug = initialSubcategorySlug ?? null;
     const normalizedSearchQuery = searchQuery?.trim() || '';
 
@@ -56,11 +59,15 @@ export default function CatalogListingPage({
         setIsReady(false);
         const frame = window.requestAnimationFrame(() => setIsReady(true));
         return () => window.cancelAnimationFrame(frame);
-    }, [title, selectedCategorySlug, selectedSubcategorySlug]);
+    }, [title, selectedCategoryGroupSlug, selectedCategorySlug, selectedSubcategorySlug]);
 
     const scopedProducts = useMemo(() => {
         return products.filter((product) => {
             if (selectedCategorySlug && product.categorySlug !== selectedCategorySlug) {
+                return false;
+            }
+
+            if (selectedCategoryGroupSlug && product.categoryGroupSlug !== selectedCategoryGroupSlug) {
                 return false;
             }
 
@@ -70,7 +77,7 @@ export default function CatalogListingPage({
 
             return true;
         });
-    }, [products, selectedCategorySlug, selectedSubcategorySlug]);
+    }, [products, selectedCategoryGroupSlug, selectedCategorySlug, selectedSubcategorySlug]);
 
     const searchedProducts = useMemo(
         () => scopedProducts.filter((product) => matchesProductSearch(product, normalizedSearchQuery)),
@@ -227,12 +234,7 @@ export default function CatalogListingPage({
             return;
         }
 
-        const nextParams = new URLSearchParams();
-        if (selectedSubcategorySlug) {
-            nextParams.set('subcategory', selectedSubcategorySlug);
-        }
-        const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
-        router.push(nextUrl, { scroll: false });
+        router.push(pathname, { scroll: false });
     };
 
     return (
@@ -249,6 +251,7 @@ export default function CatalogListingPage({
                         <ShopSidebar
                             categoryItems={categoryItems}
                             selectedCategorySlug={selectedCategorySlug}
+                            selectedCategoryGroupSlug={selectedCategoryGroupSlug}
                             selectedSubcategorySlug={selectedSubcategorySlug}
                             priceRange={priceRange}
                             priceBounds={priceBounds}

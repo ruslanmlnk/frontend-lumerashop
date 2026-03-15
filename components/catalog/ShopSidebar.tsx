@@ -22,6 +22,7 @@ interface SidebarFilterGroup {
 interface ShopSidebarProps {
     categoryItems: CatalogCategoryNavItem[];
     selectedCategorySlug: string | null;
+    selectedCategoryGroupSlug?: string | null;
     selectedSubcategorySlug?: string | null;
     priceRange?: [number, number];
     priceBounds?: [number, number];
@@ -36,6 +37,7 @@ interface ShopSidebarProps {
 const ShopSidebarComponent = ({
     categoryItems,
     selectedCategorySlug,
+    selectedCategoryGroupSlug = null,
     selectedSubcategorySlug = null,
     priceRange = [0, 10000],
     priceBounds = [0, 10000],
@@ -55,6 +57,7 @@ const ShopSidebarComponent = ({
                     title="Kategorie produktu"
                     items={categoryItems}
                     selectedCategorySlug={selectedCategorySlug}
+                    selectedCategoryGroupSlug={selectedCategoryGroupSlug}
                     selectedSubcategorySlug={selectedSubcategorySlug}
                 />
 
@@ -134,6 +137,7 @@ const ShopSidebarComponent = ({
             priceBounds,
             priceRange,
             selectedCategorySlug,
+            selectedCategoryGroupSlug,
             selectedSubcategorySlug,
             filterGroups,
         ],

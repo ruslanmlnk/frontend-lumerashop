@@ -1,48 +1,34 @@
-import CatalogListingPage from '@/components/catalog/CatalogListingPage';
-import { notFound } from 'next/navigation';
-import {
-    fetchPayloadCatalogCategories,
-    findCatalogCategoryBySlug,
-    findCatalogSubcategoryBySlug,
-} from '@/lib/payload-categories';
-import { fetchPayloadProducts } from '@/lib/payload-products';
+import { redirect } from 'next/navigation';
+
+import { renderProductCategoryPage } from '../renderProductCategoryPage';
 
 type CategoryPageProps = {
     params: Promise<{ slug: string }>;
-    searchParams?: Promise<{ subcategory?: string; q?: string }>;
+    searchParams?: Promise<{ group?: string; subcategory?: string; q?: string }>;
 };
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
     const { slug } = await params;
     const resolvedSearchParams = searchParams ? await searchParams : undefined;
+    const selectedCategoryGroupSlug = resolvedSearchParams?.group?.trim() || null;
     const selectedSubcategorySlug = resolvedSearchParams?.subcategory?.trim() || null;
 
-    const [products, categoryItems] = await Promise.all([
-        fetchPayloadProducts(),
-        fetchPayloadCatalogCategories(),
-    ]);
+    if (selectedCategoryGroupSlug || selectedSubcategorySlug) {
+        const segments = ['/product-category', slug];
+        if (selectedCategoryGroupSlug) {
+            segments.push(selectedCategoryGroupSlug);
+        }
+        if (selectedSubcategorySlug) {
+            segments.push(selectedSubcategorySlug);
+        }
 
-    const category = findCatalogCategoryBySlug(categoryItems, slug);
-    if (!category) {
-        notFound();
+        const cleanPath = segments.join('/');
+        const search = resolvedSearchParams?.q?.trim() ? `?q=${encodeURIComponent(resolvedSearchParams.q.trim())}` : '';
+        redirect(`${cleanPath}${search}`);
     }
 
-    const subcategory = findCatalogSubcategoryBySlug(categoryItems, slug, selectedSubcategorySlug);
-    const title = subcategory?.name ?? category.name;
-
-    return (
-        <CatalogListingPage
-            title={title}
-            breadcrumbs={[
-                { label: 'Obchod', href: '/shop' },
-                { label: category.name, href: subcategory ? category.href : undefined },
-                ...(subcategory ? [{ label: subcategory.name }] : []),
-            ]}
-            products={products}
-            categoryItems={categoryItems}
-            initialCategorySlug={slug}
-            initialSubcategorySlug={subcategory?.slug ?? null}
-            searchQuery={resolvedSearchParams?.q?.trim() || null}
-        />
-    );
+    return renderProductCategoryPage({
+        categorySlug: slug,
+        searchQuery: resolvedSearchParams?.q?.trim() || null,
+    });
 }

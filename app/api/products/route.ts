@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured');
     const recommended = searchParams.get('recommended');
     const category = searchParams.get('category');
+    const categoryGroup = searchParams.get('group');
+    const subcategory = searchParams.get('subcategory');
     const query = searchParams.get('q');
 
     let result = products;
@@ -28,6 +30,14 @@ export async function GET(request: NextRequest) {
 
     if (category) {
         result = result.filter((product) => product.category === category);
+    }
+
+    if (categoryGroup) {
+        result = result.filter((product) => product.categoryGroupSlug === categoryGroup);
+    }
+
+    if (subcategory) {
+        result = result.filter((product) => product.subcategorySlugs?.includes(subcategory));
     }
 
     if (query) {

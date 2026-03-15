@@ -8,6 +8,7 @@ interface CategoryFilterProps {
     title?: string;
     items: CatalogCategoryNavItem[];
     selectedCategorySlug: string | null;
+    selectedCategoryGroupSlug?: string | null;
     selectedSubcategorySlug?: string | null;
 }
 
@@ -35,6 +36,7 @@ const CategoryFilterComponent = ({
     title = 'Kategorie produktu',
     items,
     selectedCategorySlug,
+    selectedCategoryGroupSlug = null,
     selectedSubcategorySlug = null,
 }: CategoryFilterProps) => {
     const [expanded, setExpanded] = useState<string[]>(readExpandedState);
@@ -47,8 +49,8 @@ const CategoryFilterComponent = ({
         }
     }, [expanded]);
 
-    const toggleExpand = (slug: string) => {
-        setExpanded((prev) => (prev.includes(slug) ? prev.filter((item) => item !== slug) : [...prev, slug]));
+    const toggleExpand = (key: string) => {
+        setExpanded((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
     };
 
     return (
@@ -63,8 +65,15 @@ const CategoryFilterComponent = ({
             <ul className="space-y-[6px]">
                 {items.map((item) => {
                     const hasChildren = Boolean(item.children?.length);
-                    const hasActiveChild = item.children?.some((child) => child.slug === selectedSubcategorySlug) ?? false;
-                    const isExpanded = expanded.includes(item.slug) || selectedCategorySlug === item.slug || hasActiveChild;
+                    const hasActiveChild =
+                        item.children?.some(
+                            (group) =>
+                                group.slug === selectedCategoryGroupSlug ||
+                                group.children?.some((child) => child.slug === selectedSubcategorySlug),
+                        ) ?? false;
+                    const categoryExpandKey = `category:${item.slug}`;
+                    const isExpanded =
+                        expanded.includes(categoryExpandKey) || selectedCategorySlug === item.slug || hasActiveChild;
                     const isActive = selectedCategorySlug === item.slug;
 
                     return (
@@ -74,7 +83,7 @@ const CategoryFilterComponent = ({
                                     <button
                                         type="button"
                                         aria-label={`Toggle ${item.name}`}
-                                        onClick={() => toggleExpand(item.slug)}
+                                        onClick={() => toggleExpand(categoryExpandKey)}
                                         className="flex h-[14px] w-[14px] items-center justify-center"
                                     >
                                         <svg
@@ -106,22 +115,87 @@ const CategoryFilterComponent = ({
 
                             {hasChildren && isExpanded && (
                                 <ul className="ml-[19px] space-y-[2px] pb-[6px]">
-                                    {item.children?.map((child) => {
-                                        const isChildActive = child.slug === selectedSubcategorySlug;
+                                    {item.children?.map((group) => {
+                                        const groupHasChildren = Boolean(group.children?.length);
+                                        const groupExpandKey = `group:${group.slug}`;
+                                        const hasActiveNestedChild =
+                                            group.children?.some((child) => child.slug === selectedSubcategorySlug) ?? false;
+                                        const isGroupExpanded =
+                                            expanded.includes(groupExpandKey) ||
+                                            selectedCategoryGroupSlug === group.slug ||
+                                            hasActiveNestedChild;
+                                        const isGroupActive = selectedCategoryGroupSlug === group.slug;
 
                                         return (
-                                            <li key={child.id}>
-                                                <Link
-                                                    href={child.href}
-                                                    scroll={false}
-                                                    className={`block py-[6px] text-[13px] leading-[18px] transition-colors duration-200 ${
-                                                        isChildActive
-                                                            ? 'font-medium text-black'
-                                                            : 'text-[#3f3f3f] hover:text-[#6f5640]'
-                                                    }`}
-                                                >
-                                                    {child.name}
-                                                </Link>
+                                            <li key={group.id}>
+                                                <div className="flex items-center gap-[5px] py-[6px]">
+                                                    {groupHasChildren ? (
+                                                        <button
+                                                            type="button"
+                                                            aria-label={`Toggle ${group.name}`}
+                                                            onClick={() => toggleExpand(groupExpandKey)}
+                                                            className="flex h-[14px] w-[14px] items-center justify-center"
+                                                        >
+                                                            <svg
+                                                                className={`transition-transform duration-200 ${
+                                                                    isGroupExpanded ? 'rotate-90' : ''
+                                                                }`}
+                                                                width="10"
+                                                                height="10"
+                                                                viewBox="0 0 10 10"
+                                                                fill="none"
+                                                                aria-hidden="true"
+                                                            >
+                                                                <path
+                                                                    d="M3 2 7 5 3 8V2Z"
+                                                                    fill={
+                                                                        isGroupActive || hasActiveNestedChild
+                                                                            ? '#111111'
+                                                                            : '#777777'
+                                                                    }
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    ) : (
+                                                        <span className="h-[14px] w-[14px]" />
+                                                    )}
+
+                                                    <Link
+                                                        href={group.href}
+                                                        scroll={false}
+                                                        className={`block py-[2px] text-[13px] leading-[18px] transition-colors duration-200 ${
+                                                            isGroupActive || hasActiveNestedChild
+                                                                ? 'font-medium text-black'
+                                                                : 'text-[#3f3f3f] hover:text-[#6f5640]'
+                                                        }`}
+                                                    >
+                                                        {group.name}
+                                                    </Link>
+                                                </div>
+
+                                                {groupHasChildren && isGroupExpanded ? (
+                                                    <ul className="ml-[19px] space-y-[2px] pb-[6px]">
+                                                        {group.children?.map((child) => {
+                                                            const isChildActive = child.slug === selectedSubcategorySlug;
+
+                                                            return (
+                                                                <li key={child.id}>
+                                                                    <Link
+                                                                        href={child.href}
+                                                                        scroll={false}
+                                                                        className={`block py-[6px] text-[13px] leading-[18px] transition-colors duration-200 ${
+                                                                            isChildActive
+                                                                                ? 'font-medium text-black'
+                                                                                : 'text-[#5a5a5a] hover:text-[#6f5640]'
+                                                                        }`}
+                                                                    >
+                                                                        {child.name}
+                                                                    </Link>
+                                                                </li>
+                                                            );
+                                                        })}
+                                                    </ul>
+                                                ) : null}
                                             </li>
                                         );
                                     })}

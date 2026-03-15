@@ -1,25 +1,220 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Loader2, Star } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+
+import type { ProductReview } from "@/types/site";
 
 type TabKey = "description" | "additional" | "reviews";
 
-interface ProductTabsProps {
+type ProductTabsProps = {
+  productId: string;
   contentHtml?: string;
   specifications?: Record<string, string>;
-}
+  reviews?: ProductReview[];
+};
 
-const ProductTabs = ({ contentHtml, specifications }: ProductTabsProps) => {
+type ViewerUser = {
+  email: string;
+  firstName?: string;
+  name?: string;
+};
+
+type ViewerState =
+  | {
+      status: "loading";
+      user: null;
+    }
+  | {
+      status: "authenticated";
+      user: ViewerUser;
+    }
+  | {
+      status: "anonymous";
+      user: null;
+    };
+
+type AuthMeResponse = {
+  user?: ViewerUser | null;
+};
+
+type ReviewSubmitResponse = {
+  message?: string;
+  error?: string;
+};
+
+type ReviewStarsProps = {
+  value: number;
+  interactive?: boolean;
+  onChange?: (value: number) => void;
+};
+
+const formatReviewDate = (value?: string) => {
+  if (!value) {
+    return null;
+  }
+
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("cs-CZ", {
+    dateStyle: "long",
+  }).format(new Date(timestamp));
+};
+
+const getViewerLabel = (user: ViewerUser | null) => {
+  if (!user) {
+    return "";
+  }
+
+  if (typeof user.firstName === "string" && user.firstName.trim().length > 0) {
+    return user.firstName.trim();
+  }
+
+  if (typeof user.name === "string" && user.name.trim().length > 0) {
+    return user.name.trim();
+  }
+
+  return user.email;
+};
+
+const ReviewStars = ({ value, interactive = false, onChange }: ReviewStarsProps) => {
+  return (
+    <div className="flex items-center gap-1.5">
+      {Array.from({ length: 5 }, (_, index) => {
+        const starValue = index + 1;
+        const active = starValue <= value;
+        const icon = (
+          <Star
+            className={`h-5 w-5 transition ${
+              active ? "fill-[#c8a16a] text-[#c8a16a]" : "fill-transparent text-[#c9c2b8]"
+            }`}
+          />
+        );
+
+        if (!interactive) {
+          return <span key={starValue}>{icon}</span>;
+        }
+
+        return (
+          <button
+            key={starValue}
+            type="button"
+            onClick={() => onChange?.(starValue)}
+            className="rounded-full p-0.5 focus:outline-none focus:ring-2 focus:ring-[#c8a16a]/40"
+            aria-label={`Select ${starValue} star${starValue === 1 ? "" : "s"}`}
+          >
+            {icon}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const ProductTabs = ({ productId, contentHtml, specifications, reviews }: ProductTabsProps) => {
   const [activeTab, setActiveTab] = useState<TabKey>("description");
+  const [viewer, setViewer] = useState<ViewerState>({ status: "loading", user: null });
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const specEntries = useMemo(() => Object.entries(specifications ?? {}), [specifications]);
+  const approvedReviews = reviews ?? [];
+  const viewerLabel = getViewerLabel(viewer.user);
+
+  useEffect(() => {
+    if (activeTab !== "reviews" || viewer.status !== "loading") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadViewer = async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+        const payload = (await response.json().catch(() => null)) as AuthMeResponse | null;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (payload?.user) {
+          setViewer({ status: "authenticated", user: payload.user });
+          return;
+        }
+
+        setViewer({ status: "anonymous", user: null });
+      } catch {
+        if (!cancelled) {
+          setViewer({ status: "anonymous", user: null });
+        }
+      }
+    };
+
+    void loadViewer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, viewer.status]);
+
+  const handleReviewSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedComment = comment.trim();
+    if (trimmedComment.length < 3) {
+      setSuccessMessage("");
+      setErrorMessage("Review text must be at least 3 characters long.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch(`/api/products/${productId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rating,
+          comment: trimmedComment,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as ReviewSubmitResponse | null;
+
+      if (!response.ok) {
+        setErrorMessage(payload?.error || "Unable to submit your review right now.");
+        return;
+      }
+
+      setComment("");
+      setRating(5);
+      setSuccessMessage(payload?.message || "Review submitted successfully and is awaiting approval.");
+    } catch {
+      setErrorMessage("Unable to submit your review right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="w-full text-[#111111]">
       <div className="no-scrollbar flex w-full overflow-x-auto border-b border-[#d4d4d4] pt-[10px]">
         {[
           { key: "description", label: "Popis" },
-          { key: "additional", label: "Další informace" },
-          { key: "reviews", label: "Hodnocení (0)" },
+          { key: "additional", label: "Dalsi informace" },
+          { key: "reviews", label: `Hodnoceni (${approvedReviews.length})` },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
 
@@ -51,7 +246,7 @@ const ProductTabs = ({ contentHtml, specifications }: ProductTabsProps) => {
         {activeTab === "additional" && (
           <div className="animate-fadeIn">
             <h2 className="mb-[20px] font-serif text-[34px] font-normal leading-[1.1] lg:text-[42px]">
-              {"Další informace"}
+              Dalsi informace
             </h2>
             {specEntries.length > 0 ? (
               <div className="overflow-hidden border border-[#ececec]">
@@ -69,7 +264,7 @@ const ProductTabs = ({ contentHtml, specifications }: ProductTabsProps) => {
               </div>
             ) : (
               <p className="text-[16px] leading-[1.6] text-[#111111]">
-                {"Žádné další informace nejsou k dispozici."}
+                Zadne dalsi informace nejsou k dispozici.
               </p>
             )}
           </div>
@@ -78,11 +273,128 @@ const ProductTabs = ({ contentHtml, specifications }: ProductTabsProps) => {
         {activeTab === "reviews" && (
           <div className="animate-fadeIn">
             <h2 className="mb-[20px] font-serif text-[34px] font-normal leading-[1.1] lg:text-[42px]">
-              {"Hodnocení"}
+              Hodnoceni
             </h2>
-            <p className="text-[16px] leading-[1.6] text-[#111111]">
-              {"Zatím zde nejsou žádné recenze."}
-            </p>
+
+            {approvedReviews.length > 0 ? (
+              <div className="grid gap-4">
+                {approvedReviews.map((review) => {
+                  const formattedDate = formatReviewDate(review.submittedAt);
+
+                  return (
+                    <article
+                      key={review.id}
+                      className="rounded-[18px] border border-[#111111]/10 bg-[#faf7f2] p-5 md:p-6"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <p className="text-[16px] font-semibold text-[#111111]">{review.author}</p>
+                          {formattedDate && (
+                            <time className="mt-1 block text-[13px] text-[#6b645d]" dateTime={review.submittedAt}>
+                              {formattedDate}
+                            </time>
+                          )}
+                        </div>
+                        <ReviewStars value={review.rating} />
+                      </div>
+
+                      <p className="mt-4 text-[15px] leading-[1.7] text-[#302b27]">{review.comment}</p>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[16px] leading-[1.6] text-[#111111]">
+                Zatim tu nejsou zadne schvalene recenze.
+              </p>
+            )}
+
+            <div className="mt-10 border-t border-[#111111]/10 pt-8">
+              <h3 className="font-serif text-[28px] font-normal leading-[1.15] text-[#111111]">
+                Napis vlastni recenzi
+              </h3>
+
+              {viewer.status === "loading" ? (
+                <div className="mt-4 flex items-center gap-3 text-[15px] text-[#5f584e]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Kontroluji prihlaseni...</span>
+                </div>
+              ) : viewer.status === "anonymous" ? (
+                <div className="mt-4 rounded-[18px] border border-[#111111]/10 bg-[#fffaf3] p-5 text-[15px] leading-[1.7] text-[#3c352f]">
+                  Pro odeslani recenze se prosim{" "}
+                  <Link href="/my-account" className="font-semibold text-[#c8a16a] underline-offset-4 hover:underline">
+                    prihlas
+                  </Link>
+                  .
+                </div>
+              ) : (
+                <form className="mt-5 grid gap-5" onSubmit={handleReviewSubmit}>
+                  <div className="rounded-[18px] border border-[#111111]/10 bg-white p-5 md:p-6">
+                    <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-[#7f776e]">
+                      Prihlasen jako
+                    </p>
+                    <p className="mt-2 text-[16px] text-[#111111]">{viewerLabel}</p>
+                  </div>
+
+                  <div>
+                    <label className="mb-3 block text-[15px] font-medium text-[#111111]">
+                      Tvoje hodnoceni
+                    </label>
+                    <ReviewStars value={rating} interactive onChange={setRating} />
+                    <p className="mt-2 text-[13px] text-[#6b645d]">{rating} z 5 hvezd</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="product-review-comment" className="mb-3 block text-[15px] font-medium text-[#111111]">
+                      Tvoje recenze
+                    </label>
+                    <textarea
+                      id="product-review-comment"
+                      value={comment}
+                      onChange={(event) => setComment(event.target.value)}
+                      placeholder="Co se ti na produktu libi? Jak jsi spokojen(a)?"
+                      rows={5}
+                      maxLength={2000}
+                      className="min-h-[148px] w-full rounded-[18px] border border-[#d8d1c8] bg-white px-4 py-3 text-[15px] leading-[1.7] text-[#111111] outline-none transition focus:border-[#c8a16a]"
+                    />
+                    <p className="mt-2 text-[13px] text-[#6b645d]">{comment.trim().length}/2000</p>
+                  </div>
+
+                  {errorMessage && (
+                    <p className="rounded-[14px] border border-[#d97c7c]/30 bg-[#fff3f3] px-4 py-3 text-[14px] text-[#9a3f3f]">
+                      {errorMessage}
+                    </p>
+                  )}
+
+                  {successMessage && (
+                    <p className="rounded-[14px] border border-[#9cc9a7]/40 bg-[#f4fbf5] px-4 py-3 text-[14px] text-[#2d6a3d]">
+                      {successMessage}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-4">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="inline-flex min-w-[210px] items-center justify-center gap-2 rounded-full bg-[#111111] px-6 py-3 text-[13px] font-medium uppercase tracking-[0.18em] text-white transition hover:bg-[#2d2d2d] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Odesilam...
+                        </>
+                      ) : (
+                        "Odeslat recenzi"
+                      )}
+                    </button>
+
+                    <p className="text-[13px] leading-[1.6] text-[#6b645d]">
+                      Recenze se na webu zobrazi az po schvaleni v administraci.
+                    </p>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         )}
       </div>

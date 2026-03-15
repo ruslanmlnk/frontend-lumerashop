@@ -69,6 +69,79 @@ const Header = () => {
     };
   }, []);
 
+  const renderDesktopChildren = (items: NavItem[], level = 1) => {
+    const containerClass =
+      level === 1
+        ? 'invisible absolute left-0 top-full z-50 min-w-[220px] border border-[#e8d0ab] bg-[#C8A16A] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/top:visible group-hover/top:opacity-100'
+        : 'invisible absolute left-full top-[-1px] z-50 ml-[1px] min-w-[220px] border border-[#e8d0ab] bg-[#B88E56] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/sub:visible group-hover/sub:opacity-100';
+
+    return (
+      <div className={containerClass}>
+        <div className="py-1">
+          {items.map((item) => {
+            const hasChildren = Boolean(item.children?.length);
+
+            return (
+              <div key={`${level}-${item.href}`} className="group/sub relative">
+                <Link
+                  href={item.href}
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-[#b07f40]"
+                >
+                  <span>{item.label}</span>
+                  {hasChildren ? <ArrowRight size={14} className="shrink-0" /> : null}
+                </Link>
+
+                {hasChildren ? renderDesktopChildren(item.children ?? [], level + 1) : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMobileItems = (items: NavItem[], depth = 0) =>
+    items.map((item) => {
+      const itemKey = `${depth}:${item.href}`;
+      const isExpanded = expandedItems.includes(itemKey);
+      const hasChildren = Boolean(item.children?.length);
+      const rowClass = depth === 0 ? 'py-[10px]' : depth === 1 ? 'py-[8px]' : 'py-[6px]';
+      const linkClass =
+        depth === 0
+          ? 'flex-1 text-[22px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]'
+          : depth === 1
+            ? 'flex-1 text-[18px] font-light leading-[1.4] text-white/70 transition-colors hover:text-[#c8a16a]'
+            : 'flex-1 text-[16px] font-light leading-[1.5] text-white/55 transition-colors hover:text-[#c8a16a]';
+      const childWrapClass = depth === 0 ? 'space-y-3 pb-4 pl-4 pt-2' : 'space-y-2 pb-3 pl-5 pt-2';
+
+      return (
+        <div key={itemKey} className="group border-b border-white/5 last:border-0">
+          <div className={`flex items-center justify-between ${rowClass}`}>
+            <Link href={item.href} onClick={() => setIsOpen(false)} className={linkClass}>
+              {item.label}
+            </Link>
+            {hasChildren ? (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleExpand(itemKey);
+                }}
+                className="flex h-10 w-12 items-center justify-end text-white/40 transition-colors hover:text-white"
+              >
+                <ChevronDown
+                  size={20}
+                  className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+            ) : null}
+          </div>
+
+          {hasChildren && isExpanded ? <div className={childWrapClass}>{renderMobileItems(item.children ?? [], depth + 1)}</div> : null}
+        </div>
+      );
+    });
+
   return (
     <>
       <header
@@ -148,14 +221,17 @@ const Header = () => {
         {desktopMenuItems.length > 0 ? (
         <nav className="mx-auto hidden h-[53px] max-w-[1140px] px-4 md:block lg:px-0">
           <ul className="flex h-full items-center justify-center gap-[52px] font-sans text-[#111111]">
-            {desktopMenuItems.map((item) => (
-              <li key={item.href} className="group relative flex h-full items-center">
+            {desktopMenuItems.map((item) => {
+              const hasChildren = Boolean(item.children?.length);
+
+              return (
+              <li key={item.href} className="group/top relative flex h-full items-center">
                 <Link
                   href={item.href}
                   className="flex h-full items-center whitespace-nowrap py-[10px] text-[15px] font-[400] leading-[1] tracking-[0.04em] transition-colors hover:text-[#C8A16A]"
                 >
                   {item.label}
-                  {item.dropdown && (
+                  {hasChildren && (
                     <span
                       aria-hidden="true"
                       className="inline-block h-4 w-4 shrink-0 bg-contain bg-center bg-no-repeat"
@@ -164,23 +240,9 @@ const Header = () => {
                   )}
                 </Link>
 
-                {item.dropdown && (
-                  <div className="invisible absolute left-0 top-full z-50 w-[170px] border border-[#e8d0ab] bg-[#C8A16A] opacity-0 transition-all duration-300 group-hover:visible group-hover:opacity-100">
-                    <div className="py-1">
-                      {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className="block px-4 py-2.5 text-[16px] font-medium text-white transition-colors hover:bg-[#b99159]"
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {hasChildren ? renderDesktopChildren(item.children ?? []) : null}
               </li>
-            ))}
+            )})}
           </ul>
         </nav>
         ) : null}
@@ -218,53 +280,7 @@ const Header = () => {
                 </div>
 
                 <nav className="mb-10 flex flex-col space-y-1 px-[30px]">
-                  {mobileMenuItems.map((item) => {
-                    const isExpanded = expandedItems.includes(item.href);
-
-                    return (
-                      <div key={item.href} className="group border-b border-white/5 last:border-0">
-                        <div className="flex items-center justify-between py-[10px]">
-                          <Link
-                            href={item.href}
-                            onClick={() => setIsOpen(false)}
-                            className="flex-1 text-[22px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]"
-                          >
-                            {item.label}
-                          </Link>
-                          {item.dropdown && (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleExpand(item.href);
-                              }}
-                              className="flex h-10 w-12 items-center justify-end text-white/40 transition-colors hover:text-white"
-                            >
-                              <ChevronDown
-                                size={20}
-                                className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                              />
-                            </button>
-                          )}
-                        </div>
-
-                        {item.dropdown && isExpanded && (
-                          <div className="space-y-4 pb-4 pl-4 pt-2">
-                            {item.dropdown.map((sub) => (
-                              <Link
-                                key={sub.href}
-                                href={sub.href}
-                                onClick={() => setIsOpen(false)}
-                                className="block text-[18px] font-light text-white/60 transition-colors hover:text-[#c8a16a]"
-                              >
-                                {sub.label}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {renderMobileItems(mobileMenuItems)}
                 </nav>
 
                 <div className="mb-10 px-[30px]">

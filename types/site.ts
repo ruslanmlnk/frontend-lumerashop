@@ -12,6 +12,14 @@ export interface ProductVariant {
     name: string;
 }
 
+export interface ProductReview {
+    id: string;
+    author: string;
+    rating: number;
+    comment: string;
+    submittedAt?: string;
+}
+
 export interface Product {
     id: string;
     name: string;
@@ -22,6 +30,8 @@ export interface Product {
     slug: string;
     category: string;
     categorySlug?: string;
+    categoryGroup?: string;
+    categoryGroupSlug?: string;
     subcategorySlugs?: string[];
     sku?: string;
     description?: string;
@@ -33,6 +43,7 @@ export interface Product {
     highlights?: string[];
     stockStatus?: 'in-stock' | 'low-stock' | 'out-of-stock';
     variants?: ProductVariant[];
+    reviews?: ProductReview[];
     isFeatured?: boolean;
     isRecommended?: boolean;
 }
@@ -40,7 +51,7 @@ export interface Product {
 export interface NavItem {
     label: string;
     href: string;
-    dropdown?: NavItem[];
+    children?: NavItem[];
 }
 
 export interface Category {
@@ -57,12 +68,20 @@ export interface CatalogSubcategoryNavItem {
     href: string;
 }
 
-export interface CatalogCategoryNavItem {
+export interface CatalogCategoryGroupNavItem {
     id: string;
     name: string;
     slug: string;
     href: string;
     children?: CatalogSubcategoryNavItem[];
+}
+
+export interface CatalogCategoryNavItem {
+    id: string;
+    name: string;
+    slug: string;
+    href: string;
+    children?: CatalogCategoryGroupNavItem[];
 }
 
 export interface Feature {

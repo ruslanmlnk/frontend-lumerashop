@@ -61,6 +61,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const gallery = product.gallery?.length ? product.gallery : [product.image];
   const descriptionHtml = product.descriptionHtml || '';
   const specifications = product.specifications;
+  const reviews = product.reviews;
   const variants = product.variants ?? [];
   const recommendedProducts = products
     .filter((item) => item.isRecommended && item.slug !== product.slug)
@@ -111,7 +112,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </section>
 
           <section className="mb-16 mt-[36px]">
-            <ProductTabs contentHtml={descriptionHtml} specifications={specifications} />
+            <ProductTabs
+              productId={product.id}
+              contentHtml={descriptionHtml}
+              specifications={specifications}
+              reviews={reviews}
+            />
           </section>
 
           <div className="mt-[20px] hidden md:block">

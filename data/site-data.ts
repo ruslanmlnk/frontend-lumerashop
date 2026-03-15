@@ -7,7 +7,7 @@ export const NAV_ITEMS: NavItem[] = [
     {
         label: 'Batohy',
         href: '/product-category/batohy',
-        dropdown: [
+        children: [
             { label: 'Kožené batohy', href: '/product-category/batohy?type=kozene' },
             { label: 'Mestske batohy', href: '/product-category/batohy?type=mestske' }
         ]
@@ -15,7 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
     {
         label: 'Doplňky',
         href: '/product-category/doplky',
-        dropdown: [
+        children: [
             { label: 'Peněženky', href: '/product-category/doplky?type=penezenky' },
             { label: 'Pasky', href: '/product-category/doplky?type=pasky' }
         ]

@@ -5,7 +5,7 @@ import {
     getRenderableAssetPath,
 } from '@/lib/local-assets';
 import { createLexicalRichTextFromText, renderLexicalToHTML } from '@/lib/payload-richtext';
-import type { Product, ProductFilterValue, ProductVariant } from '@/types/site';
+import type { Product, ProductFilterValue, ProductReview, ProductVariant } from '@/types/site';
 
 type PayloadListResponse<T> = {
     docs?: T[];
@@ -34,6 +34,11 @@ type PayloadCategoryRelation = {
     slug?: unknown;
 };
 
+type PayloadCategoryGroupRelation = {
+    name?: unknown;
+    slug?: unknown;
+};
+
 type PayloadSubcategoryRelation = {
     slug?: unknown;
 };
@@ -47,6 +52,16 @@ type PayloadVariantDoc = {
     gallery?: PayloadGalleryItem[] | null;
 };
 
+type PayloadReviewItem = {
+    id?: unknown;
+    authorName?: unknown;
+    authorEmail?: unknown;
+    rating?: unknown;
+    comment?: unknown;
+    show?: unknown;
+    submittedAt?: unknown;
+};
+
 type PayloadProductDoc = PayloadVariantDoc & {
     price?: unknown;
     oldPrice?: unknown;
@@ -56,6 +71,7 @@ type PayloadProductDoc = PayloadVariantDoc & {
     descriptionContent?: unknown;
     shortDescription?: unknown;
     category?: PayloadCategoryRelation | number | null;
+    categoryGroup?: PayloadCategoryGroupRelation | number | null;
     subcategories?: Array<PayloadSubcategoryRelation | number> | null;
     specifications?: Array<{
         key?: unknown;
@@ -65,6 +81,7 @@ type PayloadProductDoc = PayloadVariantDoc & {
     highlights?: Array<{
         text?: unknown;
     }> | null;
+    reviews?: Array<PayloadReviewItem | number> | null;
     variantProducts?: Array<PayloadVariantDoc | number> | null;
     isFeatured?: unknown;
     isRecommended?: unknown;
@@ -193,6 +210,53 @@ const toHighlights = (highlights: PayloadProductDoc['highlights']): string[] | u
     return result.length ? result : undefined;
 };
 
+const toProductReviews = (reviews: PayloadProductDoc['reviews']): ProductReview[] | undefined => {
+    if (!Array.isArray(reviews) || reviews.length === 0) {
+        return undefined;
+    }
+
+    const mapped: ProductReview[] = [];
+
+    for (const [index, raw] of reviews.entries()) {
+        if (!raw || typeof raw !== 'object' || raw.show !== true) {
+            continue;
+        }
+
+        const rating = typeof raw.rating === 'number' ? raw.rating : Number(raw.rating);
+        const comment = typeof raw.comment === 'string' ? raw.comment.trim() : '';
+        const authorName = typeof raw.authorName === 'string' ? raw.authorName.trim() : '';
+        const authorEmail = typeof raw.authorEmail === 'string' ? raw.authorEmail.trim() : '';
+        const submittedAt =
+            typeof raw.submittedAt === 'string' && raw.submittedAt.trim().length > 0
+                ? raw.submittedAt.trim()
+                : undefined;
+        const id = raw.id != null ? String(raw.id) : `review-${index}`;
+
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length === 0) {
+            continue;
+        }
+
+        mapped.push({
+            id,
+            author: authorName || authorEmail || 'Customer',
+            rating,
+            comment,
+            submittedAt,
+        });
+    }
+
+    if (mapped.length === 0) {
+        return undefined;
+    }
+
+    return mapped.sort((left, right) => {
+        const leftTime = left.submittedAt ? Date.parse(left.submittedAt) : 0;
+        const rightTime = right.submittedAt ? Date.parse(right.submittedAt) : 0;
+
+        return rightTime - leftTime;
+    });
+};
+
 const mapVariantProduct = (doc: PayloadVariantDoc, baseUrl: string): ProductVariant | null => {
     const id = doc.id != null ? String(doc.id) : '';
     const name = typeof doc.name === 'string' ? doc.name.trim() : '';
@@ -221,6 +285,14 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
     const categorySlug =
         typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
             ? doc.category.slug.trim()
+            : undefined;
+    const categoryGroup =
+        typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.name === 'string'
+            ? doc.categoryGroup.name.trim()
+            : undefined;
+    const categoryGroupSlug =
+        typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.slug === 'string'
+            ? doc.categoryGroup.slug.trim()
             : undefined;
     const subcategorySlugs = Array.isArray(doc.subcategories)
         ? doc.subcategories
@@ -274,6 +346,8 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
         slug,
         category,
         categorySlug,
+        categoryGroup,
+        categoryGroupSlug,
         subcategorySlugs: subcategorySlugs?.length ? subcategorySlugs : undefined,
         sku: typeof doc.sku === 'string' ? doc.sku : undefined,
         description: typeof doc.description === 'string' ? doc.description : undefined,
@@ -283,6 +357,7 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
         specifications: toSpecificationsObject(doc.specifications),
         filterValues: toFilterValues(doc.filterOptions),
         highlights: toHighlights(doc.highlights),
+        reviews: toProductReviews(doc.reviews),
         stockStatus: normalizeStockStatus(doc.stockStatus, doc.stockQuantity),
         variants: variants?.length ? variants : undefined,
         isFeatured: doc.isFeatured === true,
