@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import CatalogHeader from '@/components/catalog/CatalogHeader';
@@ -33,6 +34,46 @@ type CatalogListingPageProps = {
 };
 
 const DEFAULT_RANGE: [number, number] = [0, 10000];
+const PRODUCTS_PER_PAGE = 12;
+
+const buildVisiblePages = (currentPage: number, totalPages: number) => {
+    if (totalPages <= 7) {
+        return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+
+    if (currentPage <= 3) {
+        pages.add(2);
+        pages.add(3);
+        pages.add(4);
+    }
+
+    if (currentPage >= totalPages - 2) {
+        pages.add(totalPages - 1);
+        pages.add(totalPages - 2);
+        pages.add(totalPages - 3);
+    }
+
+    const sortedPages = Array.from(pages)
+        .filter((page) => page >= 1 && page <= totalPages)
+        .sort((left, right) => left - right);
+
+    const visiblePages: Array<number | string> = [];
+
+    for (let index = 0; index < sortedPages.length; index += 1) {
+        const current = sortedPages[index];
+        const previous = sortedPages[index - 1];
+
+        if (index > 0 && previous != null && current - previous > 1) {
+            visiblePages.push(`ellipsis-${previous}-${current}`);
+        }
+
+        visiblePages.push(current);
+    }
+
+    return visiblePages;
+};
 
 export default function CatalogListingPage({
     title,
@@ -46,14 +87,17 @@ export default function CatalogListingPage({
 }: CatalogListingPageProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const listingTopRef = useRef<HTMLDivElement | null>(null);
     const [isReady, setIsReady] = useState(false);
     const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_RANGE);
     const [sortOrder, setSortOrder] = useState('popularity');
     const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
+    const [currentPage, setCurrentPage] = useState(1);
     const selectedCategorySlug = initialCategorySlug ?? null;
     const selectedCategoryGroupSlug = initialCategoryGroupSlug ?? null;
     const selectedSubcategorySlug = initialSubcategorySlug ?? null;
     const normalizedSearchQuery = searchQuery?.trim() || '';
+    const selectedFiltersKey = useMemo(() => JSON.stringify(selectedFilters), [selectedFilters]);
 
     useEffect(() => {
         setIsReady(false);
@@ -216,6 +260,34 @@ export default function CatalogListingPage({
         return results;
     }, [priceRange, searchedProducts, selectedFilters, sortOrder]);
 
+    const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [
+        normalizedSearchQuery,
+        priceRange,
+        selectedCategoryGroupSlug,
+        selectedCategorySlug,
+        selectedSubcategorySlug,
+        selectedFiltersKey,
+        sortOrder,
+    ]);
+
+    useEffect(() => {
+        setCurrentPage((previousPage) => Math.min(previousPage, totalPages));
+    }, [totalPages]);
+
+    const paginatedProducts = useMemo(() => {
+        const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+        return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+    }, [currentPage, filteredProducts]);
+
+    const paginationItems = useMemo(() => buildVisiblePages(currentPage, totalPages), [currentPage, totalPages]);
+
+    const visibleRangeStart = filteredProducts.length === 0 ? 0 : (currentPage - 1) * PRODUCTS_PER_PAGE + 1;
+    const visibleRangeEnd = Math.min(currentPage * PRODUCTS_PER_PAGE, filteredProducts.length);
+
     const sidebarFilterGroups = useMemo(
         () =>
             filterGroups.map((group) => ({
@@ -226,6 +298,23 @@ export default function CatalogListingPage({
             })),
         [filterGroups, selectedFilters],
     );
+
+    const changePage = (page: number) => {
+        const nextPage = Math.max(1, Math.min(page, totalPages));
+
+        if (nextPage === currentPage) {
+            return;
+        }
+
+        setCurrentPage(nextPage);
+
+        window.requestAnimationFrame(() => {
+            const top = listingTopRef.current?.getBoundingClientRect().top ?? 0;
+            if (top < 0) {
+                listingTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    };
 
     const handleResetListing = () => {
         clearAllFilters();
@@ -264,14 +353,80 @@ export default function CatalogListingPage({
                         />
 
                         <div className="min-w-0 flex-1">
+                            <div ref={listingTopRef} />
                             <ProductSort value={sortOrder} onChange={setSortOrder} totalResults={filteredProducts.length} />
 
                             {filteredProducts.length > 0 ? (
-                                <div className="grid min-h-[780px] grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3">
-                                    {filteredProducts.map((product) => (
+                                <>
+                                    <div className="mb-6 flex flex-col gap-3 text-[13px] text-[#6f675d] sm:flex-row sm:items-center sm:justify-between">
+                                        <p>
+                                            Zobrazeno {visibleRangeStart}-{visibleRangeEnd} z {filteredProducts.length} produktů
+                                        </p>
+                                        {totalPages > 1 ? (
+                                            <p>
+                                                Strana {currentPage} z {totalPages}
+                                            </p>
+                                        ) : null}
+                                    </div>
+
+                                    <div className="grid min-h-[780px] grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3">
+                                    {paginatedProducts.map((product) => (
                                         <ProductCard key={product.id} product={product} />
                                     ))}
-                                </div>
+                                    </div>
+
+                                    {totalPages > 1 ? (
+                                        <nav
+                                            className="mt-12 flex flex-wrap items-center justify-center gap-2"
+                                            aria-label="Catalog pagination"
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={() => changePage(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#111111]/10 px-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#111111] transition hover:border-[#c8a16a] hover:text-[#c8a16a] disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                                Předchozí
+                                            </button>
+
+                                            {paginationItems.map((item) =>
+                                                typeof item === 'number' ? (
+                                                    <button
+                                                        key={item}
+                                                        type="button"
+                                                        onClick={() => changePage(item)}
+                                                        aria-current={item === currentPage ? 'page' : undefined}
+                                                        className={`inline-flex h-11 min-w-11 items-center justify-center rounded-full px-4 text-[14px] font-semibold transition ${
+                                                            item === currentPage
+                                                                ? 'bg-[#111111] text-white'
+                                                                : 'border border-[#111111]/10 text-[#111111] hover:border-[#c8a16a] hover:text-[#c8a16a]'
+                                                        }`}
+                                                    >
+                                                        {item}
+                                                    </button>
+                                                ) : (
+                                                    <span
+                                                        key={item}
+                                                        className="inline-flex h-11 min-w-11 items-center justify-center text-[14px] text-[#8a837a]"
+                                                    >
+                                                        …
+                                                    </span>
+                                                ),
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={() => changePage(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#111111]/10 px-4 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#111111] transition hover:border-[#c8a16a] hover:text-[#c8a16a] disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                Další
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </nav>
+                                    ) : null}
+                                </>
                             ) : (
                                 <div className="flex min-h-[320px] flex-col items-center justify-start pt-14 text-center">
                                     {normalizedSearchQuery ? (

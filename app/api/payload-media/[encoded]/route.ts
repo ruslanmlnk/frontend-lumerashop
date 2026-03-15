@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
+const MEDIA_REVALIDATE_SECONDS = 31536000;
 
 const getPayloadBaseUrl = (): string =>
   (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
@@ -52,8 +53,7 @@ export async function GET(
   }
 
   const upstream = await fetch(targetUrl.toString(), {
-    cache: 'no-store',
-    next: { revalidate: 0 },
+    next: { revalidate: MEDIA_REVALIDATE_SECONDS },
   });
 
   if (!upstream.ok || !upstream.body) {

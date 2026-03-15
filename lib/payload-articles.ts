@@ -9,6 +9,7 @@ import { renderLexicalToHTML } from '@/lib/payload-richtext';
 import type { BlogPost } from '@/types/site';
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
+const PAYLOAD_ARTICLES_REVALIDATE_SECONDS = 300;
 
 type PayloadMediaDoc = {
     url?: unknown;
@@ -107,8 +108,7 @@ export async function fetchPayloadArticles(): Promise<BlogPost[]> {
 
     try {
         const response = await fetch(`${baseUrl}/api/article?limit=100&sort=-updatedAt`, {
-            cache: 'no-store',
-            next: { revalidate: 0 },
+            next: { revalidate: PAYLOAD_ARTICLES_REVALIDATE_SECONDS },
         });
 
         if (!response.ok) {

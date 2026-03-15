@@ -49,6 +49,7 @@ type PayloadSubcategoryDoc = {
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
+const PAYLOAD_CATEGORIES_REVALIDATE_SECONDS = 300;
 
 const getPayloadBaseUrl = () => (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
 
@@ -126,16 +127,13 @@ export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?
     try {
         const [categoriesResponse, categoryGroupsResponse, subcategoriesResponse] = await Promise.all([
             fetch(`${baseUrl}/api/categories?depth=0&limit=200&sort=sortOrder`, {
-                cache: 'no-store',
-                next: { revalidate: 0 },
+                next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
             fetch(`${baseUrl}/api/category-groups?depth=1&limit=500&sort=sortOrder`, {
-                cache: 'no-store',
-                next: { revalidate: 0 },
+                next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
             fetch(`${baseUrl}/api/subcategories?depth=1&limit=1000&sort=sortOrder`, {
-                cache: 'no-store',
-                next: { revalidate: 0 },
+                next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
         ]);
 

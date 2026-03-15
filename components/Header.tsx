@@ -176,6 +176,7 @@ const Header = () => {
                   src="/assets/logo.webp"
                   alt="LUMERA"
                   fill
+                  sizes="80px"
                   className="object-contain"
                   priority
                 />
@@ -379,6 +380,7 @@ const Header = () => {
                               src={getRenderableAssetPath(item.image)}
                               alt={item.name}
                               fill
+                              sizes="64px"
                               className="object-contain p-2"
                             />
                           </div>

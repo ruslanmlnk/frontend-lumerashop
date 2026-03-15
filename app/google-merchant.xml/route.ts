@@ -1,6 +1,7 @@
 import { generateGoogleMerchantXml } from '@/lib/google-merchant-feed';
 
 export const runtime = 'nodejs';
+export const revalidate = 3600;
 
 export async function GET() {
     const xml = await generateGoogleMerchantXml();

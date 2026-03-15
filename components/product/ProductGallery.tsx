@@ -37,6 +37,7 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
                 alt={`${productName} image ${index + 1}`}
                 fill
                 priority={index === 0}
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-contain"
               />
             </div>
@@ -88,6 +89,7 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
                 src={image}
                 alt={`${productName} thumbnail ${index + 1}`}
                 fill
+                sizes="100px"
                 className="object-contain p-1"
               />
             </button>

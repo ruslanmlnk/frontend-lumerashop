@@ -1,5 +1,14 @@
+import 'server-only';
+
+import { unstable_cache } from 'next/cache';
+
 import type { Product } from '../types/site';
-import { DEFAULT_LOCAL_ASSET_FALLBACK, getLocalAssetPath, getRenderableAssetPath } from './local-assets';
+import {
+    DEFAULT_LOCAL_ASSET_FALLBACK,
+    getLocalAssetPath,
+    getPayloadMediaProxyPath,
+} from './local-assets';
+import { getSiteUrl, toAbsoluteSiteUrl } from './site-url';
 
 type PayloadListResponse<T> = {
     docs?: T[];
@@ -35,12 +44,9 @@ export type PayloadFeedProductDoc = {
         | null;
 };
 
-const DEFAULT_SITE_URL = 'http://localhost:3000';
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const DEFAULT_BRAND = 'Lumera';
-
-export const getSiteUrl = () =>
-    (process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, '');
+export const MERCHANT_FEED_REVALIDATE_SECONDS = 3600;
 
 export const getPayloadApiUrl = () =>
     (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
@@ -58,12 +64,6 @@ const escapeXml = (value: string) =>
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
-
-const toAbsoluteUrl = (value: string, siteUrl: string) => {
-    if (!value) return '';
-    if (/^https?:\/\//i.test(value)) return value;
-    return `${siteUrl}${value.startsWith('/') ? value : `/${value}`}`;
-};
 
 const toGoogleAvailability = (status: Product['stockStatus']) =>
     status === 'out-of-stock' ? 'out of stock' : 'in stock';
@@ -99,17 +99,17 @@ const resolvePayloadAssetUrl = (value: unknown, baseUrl: string): string | null 
 
     if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
         if (normalized.startsWith(baseUrl)) {
-            return normalized;
+            return getPayloadMediaProxyPath(normalized);
         }
 
-        return getRenderableAssetPath(normalized, DEFAULT_LOCAL_ASSET_FALLBACK);
+        return normalized;
     }
 
     if (normalized.startsWith('/')) {
-        return `${baseUrl}${normalized}`;
+        return getPayloadMediaProxyPath(`${baseUrl}${normalized}`);
     }
 
-    return `${baseUrl}/${normalized}`;
+    return getPayloadMediaProxyPath(`${baseUrl}/${normalized}`);
 };
 
 const resolvePayloadGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
@@ -187,7 +187,7 @@ const fetchMerchantProducts = async (): Promise<Product[]> => {
         const response = await fetch(
             `${payloadApiUrl}/api/products?where[status][equals]=published&depth=2&limit=500&sort=-updatedAt`,
             {
-                cache: 'no-store',
+                next: { revalidate: MERCHANT_FEED_REVALIDATE_SECONDS },
             },
         );
 
@@ -219,7 +219,10 @@ const buildProductItemXml = (product: Product, siteUrl: string, populatedCategor
     const additionalImages = gallery
         .filter((image) => image !== product.image)
         .slice(0, 10)
-        .map((image) => `    <g:additional_image_link>${escapeXml(toAbsoluteUrl(image, siteUrl))}</g:additional_image_link>`)
+        .map(
+            (image) =>
+                `    <g:additional_image_link>${escapeXml(toAbsoluteSiteUrl(image, siteUrl))}</g:additional_image_link>`,
+        )
         .join('\n');
     const mpn = product.sku ? `    <g:mpn>${escapeXml(product.sku)}</g:mpn>` : '';
 
@@ -229,7 +232,7 @@ const buildProductItemXml = (product: Product, siteUrl: string, populatedCategor
         `    <g:title>${escapeXml(product.name)}</g:title>`,
         `    <g:description>${escapeXml(description)}</g:description>`,
         `    <g:link>${escapeXml(`${siteUrl}/product/${product.slug}`)}</g:link>`,
-        `    <g:image_link>${escapeXml(toAbsoluteUrl(product.image, siteUrl))}</g:image_link>`,
+        `    <g:image_link>${escapeXml(toAbsoluteSiteUrl(product.image, siteUrl))}</g:image_link>`,
         additionalImages,
         `    <g:availability>${toGoogleAvailability(product.stockStatus)}</g:availability>`,
         '    <g:condition>new</g:condition>',
@@ -278,7 +281,20 @@ export const buildGoogleMerchantXml = (products: Product[], siteUrl = getSiteUrl
     ].join('\n');
 };
 
+const getCachedGoogleMerchantXml = unstable_cache(
+    async (siteUrl: string) => {
+        const products = await fetchMerchantProducts();
+        return buildGoogleMerchantXml(products, siteUrl);
+    },
+    ['google-merchant-xml'],
+    { revalidate: MERCHANT_FEED_REVALIDATE_SECONDS },
+);
+
 export const generateGoogleMerchantXml = async (siteUrl = getSiteUrl()) => {
+    return getCachedGoogleMerchantXml(siteUrl);
+};
+
+export const generateFreshGoogleMerchantXml = async (siteUrl = getSiteUrl()) => {
     const products = await fetchMerchantProducts();
     return buildGoogleMerchantXml(products, siteUrl);
 };

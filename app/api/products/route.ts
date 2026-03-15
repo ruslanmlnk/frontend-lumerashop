@@ -3,9 +3,7 @@ import { fetchPayloadProducts } from '@/lib/payload-products';
 import { matchesProductSearch } from '@/lib/product-search';
 
 export async function GET(request: NextRequest) {
-    const products = await fetchPayloadProducts();
     const searchParams = request.nextUrl.searchParams;
-
     const slug = searchParams.get('slug');
     const featured = searchParams.get('featured');
     const recommended = searchParams.get('recommended');
@@ -13,6 +11,7 @@ export async function GET(request: NextRequest) {
     const categoryGroup = searchParams.get('group');
     const subcategory = searchParams.get('subcategory');
     const query = searchParams.get('q');
+    const products = await fetchPayloadProducts({ includeDetails: Boolean(slug) });
 
     let result = products;
 

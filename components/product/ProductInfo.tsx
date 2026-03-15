@@ -136,6 +136,7 @@ const ProductInfo = ({
                   src={variant.image}
                   alt={variant.name}
                   fill
+                  sizes="70px"
                   className="object-contain p-[2px]"
                 />
               </Link>

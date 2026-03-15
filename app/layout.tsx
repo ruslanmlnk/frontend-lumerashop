@@ -1,24 +1,34 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Work_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
 import { CartProvider } from "@/context/CartContext";
 import { NavigationProvider } from "@/context/NavigationContext";
-import { ProductsProvider } from "@/context/ProductsContext";
 import { fetchPayloadHeaderMenuItems } from "@/lib/payload-categories";
-import { fetchPayloadProducts } from "@/lib/payload-products";
 
 import "./globals.css";
 
-const cormorantGaramond = Cormorant_Garamond({
+const cormorantGaramond = localFont({
   variable: "--font-serif",
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  src: [
+    {
+      path: "./fonts/CormorantGaramond-Variable.ttf",
+      weight: "300 700",
+      style: "normal",
+    },
+  ],
 });
 
-const workSans = Work_Sans({
+const workSans = localFont({
   variable: "--font-sans",
-  subsets: ["latin", "latin-ext"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  src: [
+    {
+      path: "./fonts/WorkSans-Variable.ttf",
+      weight: "100 900",
+      style: "normal",
+    },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -32,19 +42,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [products, menuItems] = await Promise.all([
-    fetchPayloadProducts(),
-    fetchPayloadHeaderMenuItems(),
-  ]);
+  const menuItems = await fetchPayloadHeaderMenuItems();
   return (
     <html lang="cs">
       <body
         className={`${cormorantGaramond.variable} ${workSans.variable} antialiased font-sans`}
       >
         <NavigationProvider initialMenuItems={menuItems}>
-          <ProductsProvider initialProducts={products}>
-            <CartProvider>{children}</CartProvider>
-          </ProductsProvider>
+          <CartProvider>{children}</CartProvider>
         </NavigationProvider>
       </body>
     </html>

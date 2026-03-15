@@ -1,3 +1,5 @@
+import 'server-only';
+
 import {
     DEFAULT_LOCAL_ASSET_FALLBACK,
     getLocalAssetPath,
@@ -90,6 +92,22 @@ type PayloadProductDoc = PayloadVariantDoc & {
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
+const PAYLOAD_PRODUCTS_REVALIDATE_SECONDS = 300;
+const PRODUCT_LIST_DEPTH = 2;
+const PRODUCT_DETAIL_DEPTH = 3;
+
+type FetchPayloadProductsOptions = {
+    includeDetails?: boolean;
+    featuredOnly?: boolean;
+    recommendedOnly?: boolean;
+    slug?: string;
+    limit?: number;
+    sort?: string;
+};
+
+type MapPayloadProductOptions = {
+    includeDetails?: boolean;
+};
 
 const formatPrice = (value: number) => `${new Intl.NumberFormat('cs-CZ').format(value)} Kč`;
 
@@ -274,7 +292,12 @@ const mapVariantProduct = (doc: PayloadVariantDoc, baseUrl: string): ProductVari
     };
 };
 
-const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | null => {
+const mapPayloadProduct = (
+    doc: PayloadProductDoc,
+    baseUrl: string,
+    options: MapPayloadProductOptions = {},
+): Product | null => {
+    const { includeDetails = false } = options;
     const name = typeof doc.name === 'string' ? doc.name.trim() : '';
     const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
     const id = doc.id != null ? String(doc.id) : '';
@@ -321,17 +344,25 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
 
     const image = resolvePrimaryImage(doc, baseUrl);
     const gallery = resolveGallery(doc.gallery, baseUrl);
-    const descriptionHtml =
-        renderLexicalToHTML(doc.descriptionContent) ||
-        renderLexicalToHTML(createLexicalRichTextFromText(typeof doc.description === 'string' ? doc.description : ''));
-
-    const variants = Array.isArray(doc.variantProducts)
-        ? doc.variantProducts
-              .map((variant) =>
-                  variant && typeof variant === 'object' ? mapVariantProduct(variant, baseUrl) : null,
-              )
-              .filter((variant): variant is ProductVariant => Boolean(variant))
+    const description =
+        typeof doc.description === 'string' && doc.description.trim().length > 0 ? doc.description : undefined;
+    const shortDescription =
+        typeof doc.shortDescription === 'string' && doc.shortDescription.trim().length > 0
+            ? doc.shortDescription
+            : undefined;
+    const descriptionHtml = includeDetails
+        ? renderLexicalToHTML(doc.descriptionContent) ||
+          renderLexicalToHTML(createLexicalRichTextFromText(typeof doc.description === 'string' ? doc.description : ''))
         : undefined;
+
+    const variants =
+        includeDetails && Array.isArray(doc.variantProducts)
+            ? doc.variantProducts
+                  .map((variant) =>
+                      variant && typeof variant === 'object' ? mapVariantProduct(variant, baseUrl) : null,
+                  )
+                  .filter((variant): variant is ProductVariant => Boolean(variant))
+            : undefined;
 
     return {
         id,
@@ -350,14 +381,14 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
         categoryGroupSlug,
         subcategorySlugs: subcategorySlugs?.length ? subcategorySlugs : undefined,
         sku: typeof doc.sku === 'string' ? doc.sku : undefined,
-        description: typeof doc.description === 'string' ? doc.description : undefined,
+        description,
         descriptionHtml: descriptionHtml || undefined,
-        shortDescription: typeof doc.shortDescription === 'string' ? doc.shortDescription : undefined,
+        shortDescription,
         gallery: gallery.length ? gallery : [image],
-        specifications: toSpecificationsObject(doc.specifications),
+        specifications: includeDetails ? toSpecificationsObject(doc.specifications) : undefined,
         filterValues: toFilterValues(doc.filterOptions),
-        highlights: toHighlights(doc.highlights),
-        reviews: toProductReviews(doc.reviews),
+        highlights: includeDetails ? toHighlights(doc.highlights) : undefined,
+        reviews: includeDetails ? toProductReviews(doc.reviews) : undefined,
         stockStatus: normalizeStockStatus(doc.stockStatus, doc.stockQuantity),
         variants: variants?.length ? variants : undefined,
         isFeatured: doc.isFeatured === true,
@@ -365,18 +396,46 @@ const mapPayloadProduct = (doc: PayloadProductDoc, baseUrl: string): Product | n
     };
 };
 
-export async function fetchPayloadProducts(): Promise<Product[]> {
-    const baseUrlRaw = process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL;
-    const baseUrl = baseUrlRaw.replace(/\/+$/, '');
+const getPayloadBaseUrl = () => (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
+
+const buildProductQuery = ({
+    includeDetails = false,
+    featuredOnly = false,
+    recommendedOnly = false,
+    slug,
+    limit = 500,
+    sort = '-updatedAt',
+}: FetchPayloadProductsOptions = {}) => {
+    const params = new URLSearchParams();
+
+    params.set('depth', String(includeDetails ? PRODUCT_DETAIL_DEPTH : PRODUCT_LIST_DEPTH));
+    params.set('limit', String(limit));
+    params.set('sort', sort);
+    params.set('where[status][equals]', 'published');
+
+    if (featuredOnly) {
+        params.set('where[isFeatured][equals]', 'true');
+    }
+
+    if (recommendedOnly) {
+        params.set('where[isRecommended][equals]', 'true');
+    }
+
+    if (slug) {
+        params.set('where[slug][equals]', slug);
+    }
+
+    return params.toString();
+};
+
+export async function fetchPayloadProducts(options: FetchPayloadProductsOptions = {}): Promise<Product[]> {
+    const baseUrl = getPayloadBaseUrl();
+    const query = buildProductQuery(options);
 
     try {
-        const response = await fetch(
-            `${baseUrl}/api/products?where[status][equals]=published&depth=3&limit=500&sort=-updatedAt`,
-            {
-                cache: 'no-store',
-                next: { revalidate: 0 },
-            },
-        );
+        const response = await fetch(`${baseUrl}/api/products?${query}`, {
+            next: { revalidate: PAYLOAD_PRODUCTS_REVALIDATE_SECONDS },
+        });
 
         if (!response.ok) {
             return [];
@@ -385,9 +444,25 @@ export async function fetchPayloadProducts(): Promise<Product[]> {
         const payload = (await response.json()) as PayloadListResponse<PayloadProductDoc>;
         const docs = Array.isArray(payload.docs) ? payload.docs : [];
         return docs
-            .map((doc) => mapPayloadProduct(doc, baseUrl))
+            .map((doc) => mapPayloadProduct(doc, baseUrl, { includeDetails: options.includeDetails }))
             .filter((product): product is Product => Boolean(product));
     } catch {
         return [];
     }
+}
+
+export async function fetchPayloadProductBySlug(slug: string): Promise<Product | null> {
+    const normalizedSlug = slug.trim();
+
+    if (!normalizedSlug) {
+        return null;
+    }
+
+    const [product] = await fetchPayloadProducts({
+        includeDetails: true,
+        slug: normalizedSlug,
+        limit: 1,
+    });
+
+    return product ?? null;
 }

@@ -1,11 +1,13 @@
 import 'server-only';
 
+const PAYLOAD_REVALIDATE_SECONDS = 300;
+
 export async function getGlobal(slug: string) {
     const baseUrl = process.env.PAYLOAD_API_URL || 'http://127.0.0.1:3001';
 
     try {
         const res = await fetch(`${baseUrl}/api/globals/${slug}?depth=1`, {
-            next: { revalidate: 60 }, // Cache for 60 seconds
+            next: { revalidate: PAYLOAD_REVALIDATE_SECONDS },
         });
 
         if (!res.ok) {

@@ -49,6 +49,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                 src={post.image}
                                 alt={post.title}
                                 fill
+                                sizes="(min-width: 1024px) 900px, 100vw"
                                 className="object-cover"
                                 priority
                             />

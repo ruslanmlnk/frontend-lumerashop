@@ -25,7 +25,8 @@ function stripTrailingSlash(value: string): string {
 }
 
 export function getPayloadAuthConfig(): PayloadAuthConfig | null {
-  const baseUrlRaw = process.env.PAYLOAD_API_URL?.trim();
+  const baseUrlRaw =
+    process.env.PAYLOAD_API_URL?.trim() || process.env.NEXT_PUBLIC_PAYLOAD_API_URL?.trim();
   if (!baseUrlRaw) {
     return null;
   }

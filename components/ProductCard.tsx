@@ -11,6 +11,16 @@ type ProductCardProps = {
 };
 
 const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps) => {
+    const secondaryImage = product.gallery?.find((image) => image && image !== product.image);
+    const hasSecondaryImage = Boolean(secondaryImage);
+
+    const primaryImageClasses = hasSecondaryImage
+        ? 'object-contain transition-all duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-0'
+        : 'object-contain transition-transform duration-700 ease-out group-hover:scale-[1.035]';
+
+    const secondaryImageClasses =
+        'object-contain opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-100';
+
     if (variant === 'featured') {
         return (
             <div className="group flex h-full flex-col bg-transparent px-[18px] pb-[19px] pt-[30px] transition-transform duration-300 ease-out will-change-transform hover:-translate-y-[3px]">
@@ -20,8 +30,19 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                             src={product.image}
                             alt={product.name}
                             fill
-                            className="object-contain transition-transform duration-700 ease-out group-hover:scale-[1.035]"
+                            sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 50vw"
+                            className={primaryImageClasses}
                         />
+                        {secondaryImage ? (
+                            <Image
+                                src={secondaryImage}
+                                alt=""
+                                aria-hidden="true"
+                                fill
+                                sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 50vw"
+                                className={secondaryImageClasses}
+                            />
+                        ) : null}
                     </div>
                 </Link>
 
@@ -58,8 +79,23 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-[1.04] md:p-0"
+                    sizes="(min-width: 1024px) 320px, (min-width: 768px) 33vw, 50vw"
+                    className={
+                        hasSecondaryImage
+                            ? 'object-contain p-2 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-0 md:p-0'
+                            : 'object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-[1.04] md:p-0'
+                    }
                 />
+                {secondaryImage ? (
+                    <Image
+                        src={secondaryImage}
+                        alt=""
+                        aria-hidden="true"
+                        fill
+                        sizes="(min-width: 1024px) 320px, (min-width: 768px) 33vw, 50vw"
+                        className="object-contain p-2 opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100 md:p-0"
+                    />
+                ) : null}
             </Link>
             <div className="flex flex-grow flex-col items-center px-1 text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
                 <h3

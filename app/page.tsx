@@ -68,8 +68,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const homePageData = (await getGlobal('home-page')) as HomePageGlobal | null;
-  const products = await fetchPayloadProducts();
+  const [homePageData, products] = await Promise.all([
+    getGlobal('home-page') as Promise<HomePageGlobal | null>,
+    fetchPayloadProducts(),
+  ]);
   const featuredProducts = products.filter((product) => product.isFeatured);
   const recommendedProducts = products.filter((product) => product.isRecommended);
   const popularProducts = sortProductsByPopularity(products);
@@ -250,7 +252,13 @@ export default async function Home() {
                       </Link>
                     </h3>
                     <Link href={`/blog/${post.slug}`} className="relative mb-[20px] block h-[240px] w-full">
-                      <Image src={post.image} alt={post.title} fill className="object-cover" />
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        fill
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        className="object-cover"
+                      />
                     </Link>
                     <p
                       className="text-[14px] leading-[1.6] text-[#111111] md:text-[16px]"
@@ -279,6 +287,7 @@ export default async function Home() {
                   src="/assets/bg/cta-home.webp"
                   alt="Objevte Lumera"
                   fill
+                  sizes="100vw"
                   className="object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-black/50" />
