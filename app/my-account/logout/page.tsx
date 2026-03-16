@@ -1,11 +1,11 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getPayloadAuthConfig } from '@/lib/payload-auth';
+import { getPayloadAuthConfig, resolveSecureAuthCookie } from '@/lib/payload-auth';
 
 export default async function LogoutPage() {
   const config = getPayloadAuthConfig();
   const cookieName = config?.cookieName || process.env.PAYLOAD_AUTH_COOKIE?.trim() || 'lumera_auth';
-  const secureCookie = config?.secureCookie ?? process.env.NODE_ENV === 'production';
+  const secureCookie = resolveSecureAuthCookie();
 
   const cookieStore = await cookies();
   cookieStore.set({

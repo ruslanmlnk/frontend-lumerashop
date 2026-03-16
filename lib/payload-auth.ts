@@ -43,6 +43,70 @@ function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
 }
 
+function parseBooleanEnv(value: string | undefined): boolean | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+
+  if (['0', 'false', 'no', 'off'].includes(normalized)) {
+    return false;
+  }
+
+  return undefined;
+}
+
+function inferSecureCookieFromUrl(value: string | undefined): boolean | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return undefined;
+  }
+}
+
+export function resolveSecureAuthCookie(request?: Pick<NextRequest, 'headers' | 'nextUrl'>): boolean {
+  const envOverride = parseBooleanEnv(process.env.PAYLOAD_AUTH_COOKIE_SECURE);
+  if (typeof envOverride === 'boolean') {
+    return envOverride;
+  }
+
+  const forwardedProto = request?.headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+  if (forwardedProto === 'https') {
+    return true;
+  }
+
+  if (forwardedProto === 'http') {
+    return false;
+  }
+
+  const requestProtocol = request?.nextUrl?.protocol?.replace(/:$/, '').toLowerCase();
+  if (requestProtocol === 'https') {
+    return true;
+  }
+
+  if (requestProtocol === 'http') {
+    return false;
+  }
+
+  const siteUrlSecure = inferSecureCookieFromUrl(
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim(),
+  );
+  if (typeof siteUrlSecure === 'boolean') {
+    return siteUrlSecure;
+  }
+
+  return process.env.NODE_ENV === 'production';
+}
+
 export function getPayloadAuthConfig(): PayloadAuthConfig | null {
   const baseUrlRaw =
     process.env.PAYLOAD_API_URL?.trim() || process.env.NEXT_PUBLIC_PAYLOAD_API_URL?.trim();
@@ -57,7 +121,7 @@ export function getPayloadAuthConfig(): PayloadAuthConfig | null {
     baseUrl: stripTrailingSlash(baseUrlRaw),
     collection,
     cookieName,
-    secureCookie: process.env.NODE_ENV === 'production',
+    secureCookie: resolveSecureAuthCookie(),
   };
 }
 

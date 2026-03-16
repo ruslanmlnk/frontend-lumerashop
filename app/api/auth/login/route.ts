@@ -7,6 +7,7 @@ import {
   isValidEmail,
   normalizeEmail,
   parseJsonSafely,
+  resolveSecureAuthCookie,
   sanitizeAuthUser,
 } from '@/lib/payload-auth';
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       name: config.cookieName,
       value: token,
       httpOnly: true,
-      secure: config.secureCookie,
+      secure: resolveSecureAuthCookie(request),
       sameSite: 'lax',
       path: '/',
       maxAge: getAuthCookieMaxAge(remember),
