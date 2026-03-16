@@ -40,6 +40,40 @@ export const DEFAULT_LOCAL_ASSET_FALLBACK = "/assets/products/olivia-ruzova.webp
 export const isRemoteAssetPath = (value: string): boolean =>
   value.startsWith("http://") || value.startsWith("https://");
 
+const isPrivateHostname = (hostname: string): boolean => {
+  const normalized = hostname.trim().toLowerCase();
+
+  if (
+    normalized === "localhost" ||
+    normalized === "0.0.0.0" ||
+    normalized.endsWith(".local") ||
+    normalized.endsWith(".internal")
+  ) {
+    return true;
+  }
+
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(normalized)) {
+    return false;
+  }
+
+  const octets = normalized.split(".").map((part) => Number(part));
+  const [first = 0, second = 0] = octets;
+
+  if (first === 10 || first === 127) {
+    return true;
+  }
+
+  if (first === 169 && second === 254) {
+    return true;
+  }
+
+  if (first === 172 && second >= 16 && second <= 31) {
+    return true;
+  }
+
+  return first === 192 && second === 168;
+};
+
 export const getLocalAssetPath = (value: string | null | undefined): string | null => {
   if (typeof value !== "string") {
     return null;
@@ -72,3 +106,29 @@ export const getRenderableAssetPath = (
 
 export const getPayloadMediaProxyPath = (value: string): string =>
   `/api/payload-media/${encodeURIComponent(value)}`;
+
+export const shouldProxyPayloadMedia = (baseUrl: string): boolean => {
+  try {
+    return isPrivateHostname(new URL(baseUrl).hostname);
+  } catch {
+    return true;
+  }
+};
+
+export const getAbsolutePayloadAssetUrl = (value: string, baseUrl: string): string => {
+  if (isRemoteAssetPath(value)) {
+    return value;
+  }
+
+  return new URL(value.startsWith("/") ? value : `/${value.replace(/^\/+/, "")}`, `${baseUrl}/`).toString();
+};
+
+export const getRenderablePayloadMediaPath = (value: string, baseUrl: string): string => {
+  const absoluteUrl = getAbsolutePayloadAssetUrl(value, baseUrl);
+
+  if (shouldProxyPayloadMedia(baseUrl)) {
+    return getPayloadMediaProxyPath(absoluteUrl);
+  }
+
+  return absoluteUrl;
+};

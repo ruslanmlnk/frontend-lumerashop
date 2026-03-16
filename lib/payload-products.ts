@@ -2,10 +2,11 @@ import 'server-only';
 
 import {
     DEFAULT_LOCAL_ASSET_FALLBACK,
+    getRenderablePayloadMediaPath,
     getLocalAssetPath,
-    getPayloadMediaProxyPath,
     getRenderableAssetPath,
 } from '@/lib/local-assets';
+import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 import { createLexicalRichTextFromText, renderLexicalToHTML } from '@/lib/payload-richtext';
 import type { Product, ProductFilterValue, ProductReview, ProductVariant } from '@/types/site';
 
@@ -95,6 +96,78 @@ const PAYLOAD_PRODUCTS_REVALIDATE_SECONDS = 300;
 const PRODUCT_LIST_DEPTH = 2;
 const PRODUCT_DETAIL_DEPTH = 3;
 
+const PRODUCT_LIST_SELECT: PayloadSelect = {
+    id: true,
+    name: true,
+    slug: true,
+    price: true,
+    oldPrice: true,
+    purchaseCount: true,
+    sku: true,
+    description: true,
+    shortDescription: true,
+    category: {
+        name: true,
+        slug: true,
+    },
+    categoryGroup: {
+        name: true,
+        slug: true,
+    },
+    subcategories: {
+        slug: true,
+    },
+    specifications: {
+        key: true,
+        value: true,
+    },
+    filterOptions: {
+        name: true,
+        slug: true,
+        group: {
+            name: true,
+            slug: true,
+        },
+    },
+    highlights: {
+        text: true,
+    },
+    mainImage: {
+        url: true,
+    },
+    gallery: {
+        image: {
+            url: true,
+        },
+    },
+    isFeatured: true,
+    isRecommended: true,
+    stockQuantity: true,
+    stockStatus: true,
+};
+
+const PRODUCT_DETAIL_SELECT: PayloadSelect = {
+    ...PRODUCT_LIST_SELECT,
+    descriptionContent: true,
+    variantProducts: {
+        id: true,
+        name: true,
+        slug: true,
+        mainImage: {
+            url: true,
+        },
+        gallery: {
+            image: {
+                url: true,
+            },
+        },
+    },
+};
+
+const PRODUCT_SLUG_SELECT: PayloadSelect = {
+    slug: true,
+};
+
 type FetchPayloadProductsOptions = {
     includeDetails?: boolean;
     featuredOnly?: boolean;
@@ -102,6 +175,7 @@ type FetchPayloadProductsOptions = {
     slug?: string;
     limit?: number;
     sort?: string;
+    select?: PayloadSelect;
 };
 
 type MapPayloadProductOptions = {
@@ -126,17 +200,17 @@ const resolveUrl = (value: unknown, baseUrl: string): string | null => {
 
     if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
         if (normalizedValue.startsWith(baseUrl)) {
-            return getPayloadMediaProxyPath(normalizedValue);
+            return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
         }
 
         return getRenderableAssetPath(normalizedValue, DEFAULT_LOCAL_ASSET_FALLBACK);
     }
 
     if (normalizedValue.startsWith('/')) {
-        return getPayloadMediaProxyPath(`${baseUrl}${normalizedValue}`);
+        return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
     }
 
-    return getPayloadMediaProxyPath(`${baseUrl}/${normalizedValue}`);
+    return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
 };
 
 const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
@@ -403,6 +477,7 @@ const buildProductQuery = ({
     slug,
     limit = 500,
     sort = '-updatedAt',
+    select,
 }: FetchPayloadProductsOptions = {}) => {
     const params = new URLSearchParams();
 
@@ -422,6 +497,8 @@ const buildProductQuery = ({
     if (slug) {
         params.set('where[slug][equals]', slug);
     }
+
+    appendPayloadSelectParams(params, 'select', select || (includeDetails ? PRODUCT_DETAIL_SELECT : PRODUCT_LIST_SELECT));
 
     return params.toString();
 };
@@ -444,6 +521,35 @@ export async function fetchPayloadProducts(options: FetchPayloadProductsOptions 
         return docs
             .map((doc) => mapPayloadProduct(doc, baseUrl, { includeDetails: options.includeDetails }))
             .filter((product): product is Product => Boolean(product));
+    } catch {
+        return [];
+    }
+}
+
+export async function fetchPayloadProductSlugs(limit = 500): Promise<string[]> {
+    const baseUrl = getPayloadBaseUrl();
+    const params = new URLSearchParams();
+    params.set('depth', '0');
+    params.set('limit', String(limit));
+    params.set('sort', '-updatedAt');
+    params.set('where[status][equals]', 'published');
+    appendPayloadSelectParams(params, 'select', PRODUCT_SLUG_SELECT);
+
+    try {
+        const response = await fetch(`${baseUrl}/api/products?${params.toString()}`, {
+            next: { revalidate: PAYLOAD_PRODUCTS_REVALIDATE_SECONDS },
+        });
+
+        if (!response.ok) {
+            return [];
+        }
+
+        const payload = (await response.json()) as PayloadListResponse<{ slug?: unknown }>;
+        const docs = Array.isArray(payload.docs) ? payload.docs : [];
+
+        return docs
+            .map((doc) => (typeof doc.slug === 'string' ? doc.slug.trim() : ''))
+            .filter((slug): slug is string => Boolean(slug));
     } catch {
         return [];
     }

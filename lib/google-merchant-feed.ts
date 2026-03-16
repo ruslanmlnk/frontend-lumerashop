@@ -6,8 +6,9 @@ import type { Product } from '../types/site';
 import {
     DEFAULT_LOCAL_ASSET_FALLBACK,
     getLocalAssetPath,
-    getPayloadMediaProxyPath,
+    getRenderablePayloadMediaPath,
 } from './local-assets';
+import { appendPayloadSelectParams, type PayloadSelect } from './payload-select';
 import { getSiteUrl, toAbsoluteSiteUrl } from './site-url';
 
 type PayloadListResponse<T> = {
@@ -47,6 +48,29 @@ export type PayloadFeedProductDoc = {
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const DEFAULT_BRAND = 'Lumera';
 export const MERCHANT_FEED_REVALIDATE_SECONDS = 3600;
+
+const FEED_PRODUCT_SELECT: PayloadSelect = {
+    id: true,
+    name: true,
+    slug: true,
+    price: true,
+    oldPrice: true,
+    sku: true,
+    description: true,
+    shortDescription: true,
+    stockStatus: true,
+    mainImage: {
+        url: true,
+    },
+    gallery: {
+        image: {
+            url: true,
+        },
+    },
+    category: {
+        name: true,
+    },
+};
 
 export const getPayloadApiUrl = () =>
     (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
@@ -99,17 +123,17 @@ const resolvePayloadAssetUrl = (value: unknown, baseUrl: string): string | null 
 
     if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
         if (normalized.startsWith(baseUrl)) {
-            return getPayloadMediaProxyPath(normalized);
+            return getRenderablePayloadMediaPath(normalized, baseUrl);
         }
 
         return normalized;
     }
 
     if (normalized.startsWith('/')) {
-        return getPayloadMediaProxyPath(`${baseUrl}${normalized}`);
+        return getRenderablePayloadMediaPath(normalized, baseUrl);
     }
 
-    return getPayloadMediaProxyPath(`${baseUrl}/${normalized}`);
+    return getRenderablePayloadMediaPath(normalized, baseUrl);
 };
 
 const resolvePayloadGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
@@ -182,14 +206,18 @@ export const mapPayloadFeedProducts = (docs: PayloadFeedProductDoc[], baseUrl: s
 
 const fetchMerchantProducts = async (): Promise<Product[]> => {
     const payloadApiUrl = getPayloadApiUrl();
+    const params = new URLSearchParams({
+        'where[status][equals]': 'published',
+        depth: '2',
+        limit: '500',
+        sort: '-updatedAt',
+    });
+    appendPayloadSelectParams(params, 'select', FEED_PRODUCT_SELECT);
 
     try {
-        const response = await fetch(
-            `${payloadApiUrl}/api/products?where[status][equals]=published&depth=2&limit=500&sort=-updatedAt`,
-            {
-                next: { revalidate: MERCHANT_FEED_REVALIDATE_SECONDS },
-            },
-        );
+        const response = await fetch(`${payloadApiUrl}/api/products?${params.toString()}`, {
+            next: { revalidate: MERCHANT_FEED_REVALIDATE_SECONDS },
+        });
 
         if (!response.ok) {
             return [];

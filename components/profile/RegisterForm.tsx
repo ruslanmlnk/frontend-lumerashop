@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 type RegisterApiResponse = {
   error?: string;
@@ -11,7 +10,6 @@ type RegisterApiResponse = {
 };
 
 const RegisterForm = () => {
-  const router = useRouter();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -59,8 +57,8 @@ const RegisterForm = () => {
       }
 
       setSuccessMessage('Account created. You are now signed in.');
-      router.replace('/my-account');
-      router.refresh();
+      window.location.replace('/my-account');
+      return;
     } catch {
       setErrorMessage('Registration service is currently unavailable.');
       setIsSubmitting(false);

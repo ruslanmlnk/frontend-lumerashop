@@ -1,15 +1,31 @@
 import 'server-only';
 import {
     DEFAULT_LOCAL_ASSET_FALLBACK,
+    getRenderablePayloadMediaPath,
     getLocalAssetPath,
-    getPayloadMediaProxyPath,
     getRenderableAssetPath,
 } from '@/lib/local-assets';
+import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 import { renderLexicalToHTML } from '@/lib/payload-richtext';
 import type { BlogPost } from '@/types/site';
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const PAYLOAD_ARTICLES_REVALIDATE_SECONDS = 300;
+
+const ARTICLE_LIST_SELECT: PayloadSelect = {
+    slug: true,
+    title: true,
+    mainImage: {
+        url: true,
+    },
+    description: true,
+    updatedAt: true,
+};
+
+const ARTICLE_DETAIL_SELECT: PayloadSelect = {
+    ...ARTICLE_LIST_SELECT,
+    content: true,
+};
 
 type PayloadMediaDoc = {
     url?: unknown;
@@ -28,6 +44,12 @@ type PayloadListResponse<T> = {
     docs?: T[];
 };
 
+type FetchPayloadArticlesOptions = {
+    includeContent?: boolean;
+    limit?: number;
+    slug?: string;
+};
+
 const resolveUrl = (value: unknown, baseUrl: string): string => {
     if (typeof value !== 'string' || value.length === 0) {
         return DEFAULT_LOCAL_ASSET_FALLBACK;
@@ -44,16 +66,16 @@ const resolveUrl = (value: unknown, baseUrl: string): string => {
 
     if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
         if (normalizedValue.startsWith(baseUrl)) {
-            return getPayloadMediaProxyPath(normalizedValue);
+            return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
         }
         return getRenderableAssetPath(normalizedValue, DEFAULT_LOCAL_ASSET_FALLBACK);
     }
 
     if (normalizedValue.startsWith('/')) {
-        return getPayloadMediaProxyPath(`${baseUrl}${normalizedValue}`);
+        return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
     }
 
-    return getPayloadMediaProxyPath(`${baseUrl}/${normalizedValue}`);
+    return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
 };
 
 const resolveArticleImage = (doc: PayloadArticleDoc, baseUrl: string): string => {
@@ -102,12 +124,26 @@ const mapPayloadArticle = (doc: PayloadArticleDoc, baseUrl: string): BlogPost | 
     };
 };
 
-export async function fetchPayloadArticles(): Promise<BlogPost[]> {
+export async function fetchPayloadArticles(options: FetchPayloadArticlesOptions = {}): Promise<BlogPost[]> {
     const baseUrlRaw = process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL;
     const baseUrl = baseUrlRaw.replace(/\/+$/, '');
+    const params = new URLSearchParams({
+        limit: String(options.limit ?? 100),
+        sort: '-updatedAt',
+    });
+
+    if (options.slug) {
+        params.set('where[slug][equals]', options.slug);
+    }
+
+    appendPayloadSelectParams(
+        params,
+        'select',
+        options.includeContent ? ARTICLE_DETAIL_SELECT : ARTICLE_LIST_SELECT,
+    );
 
     try {
-        const response = await fetch(`${baseUrl}/api/article?limit=100&sort=-updatedAt`, {
+        const response = await fetch(`${baseUrl}/api/article?${params.toString()}`, {
             next: { revalidate: PAYLOAD_ARTICLES_REVALIDATE_SECONDS },
         });
 

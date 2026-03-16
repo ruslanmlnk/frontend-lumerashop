@@ -7,9 +7,7 @@ import { ChevronRight, Calendar, Tag, User } from 'lucide-react';
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-
-    const posts = await fetchPayloadArticles();
-    const post = posts.find(p => p.slug === slug);
+    const [post] = await fetchPayloadArticles({ includeContent: true, slug, limit: 1 });
 
     if (!post) {
         return (

@@ -4,6 +4,7 @@ import type {
     CatalogSubcategoryNavItem,
     NavItem,
 } from '@/types/site';
+import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 
 type PayloadListResponse<T> = {
     docs?: T[];
@@ -50,6 +51,35 @@ type PayloadSubcategoryDoc = {
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const PAYLOAD_CATEGORIES_REVALIDATE_SECONDS = 300;
+
+const CATEGORY_SELECT: PayloadSelect = {
+    id: true,
+    name: true,
+    slug: true,
+    createdAt: true,
+    showInMenu: true,
+    sortOrder: true,
+};
+
+const CATEGORY_GROUP_SELECT: PayloadSelect = {
+    ...CATEGORY_SELECT,
+    category: {
+        id: true,
+        slug: true,
+    },
+};
+
+const SUBCATEGORY_SELECT: PayloadSelect = {
+    ...CATEGORY_SELECT,
+    categoryGroup: {
+        id: true,
+        slug: true,
+    },
+    category: {
+        id: true,
+        slug: true,
+    },
+};
 
 const getPayloadBaseUrl = () => (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
 
@@ -123,16 +153,23 @@ const mapSubcategory = (
 
 export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?: boolean }): Promise<CatalogCategoryNavItem[]> {
     const baseUrl = getPayloadBaseUrl();
+    const categoriesParams = new URLSearchParams({ depth: '0', limit: '200', sort: 'sortOrder' });
+    const categoryGroupsParams = new URLSearchParams({ depth: '1', limit: '500', sort: 'sortOrder' });
+    const subcategoriesParams = new URLSearchParams({ depth: '1', limit: '1000', sort: 'sortOrder' });
+
+    appendPayloadSelectParams(categoriesParams, 'select', CATEGORY_SELECT);
+    appendPayloadSelectParams(categoryGroupsParams, 'select', CATEGORY_GROUP_SELECT);
+    appendPayloadSelectParams(subcategoriesParams, 'select', SUBCATEGORY_SELECT);
 
     try {
         const [categoriesResponse, categoryGroupsResponse, subcategoriesResponse] = await Promise.all([
-            fetch(`${baseUrl}/api/categories?depth=0&limit=200&sort=sortOrder`, {
+            fetch(`${baseUrl}/api/categories?${categoriesParams.toString()}`, {
                 next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
-            fetch(`${baseUrl}/api/category-groups?depth=1&limit=500&sort=sortOrder`, {
+            fetch(`${baseUrl}/api/category-groups?${categoryGroupsParams.toString()}`, {
                 next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
-            fetch(`${baseUrl}/api/subcategories?depth=1&limit=1000&sort=sortOrder`, {
+            fetch(`${baseUrl}/api/subcategories?${subcategoriesParams.toString()}`, {
                 next: { revalidate: PAYLOAD_CATEGORIES_REVALIDATE_SECONDS },
             }),
         ]);

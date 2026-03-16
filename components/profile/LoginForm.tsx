@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 type LoginApiResponse = {
   error?: string;
 };
 
 const LoginForm = () => {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -42,8 +40,8 @@ const LoginForm = () => {
         return;
       }
 
-      router.replace('/my-account');
-      router.refresh();
+      window.location.replace('/my-account');
+      return;
     } catch {
       setErrorMessage('Login service is currently unavailable.');
       setIsSubmitting(false);

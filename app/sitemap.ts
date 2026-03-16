@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache';
 
 import { fetchPayloadArticles } from '@/lib/payload-articles';
 import { fetchPayloadCatalogCategories } from '@/lib/payload-categories';
-import { fetchPayloadProducts } from '@/lib/payload-products';
+import { fetchPayloadProductSlugs } from '@/lib/payload-products';
 import { getSiteUrl, toAbsoluteSiteUrl } from '@/lib/site-url';
 import type { CatalogCategoryNavItem } from '@/types/site';
 
@@ -80,7 +80,7 @@ const dedupeEntries = (entries: SitemapEntry[]) => {
 const getCachedSitemapEntries = unstable_cache(
     async (siteUrl: string): Promise<MetadataRoute.Sitemap> => {
         const [products, categories, articles] = await Promise.all([
-            fetchPayloadProducts(),
+            fetchPayloadProductSlugs(),
             fetchPayloadCatalogCategories(),
             fetchPayloadArticles(),
         ]);
@@ -94,8 +94,8 @@ const getCachedSitemapEntries = unstable_cache(
             priority: route.priority,
         }));
 
-        const productEntries = products.map<SitemapEntry>((product) => ({
-            url: toAbsoluteSiteUrl(`/product/${product.slug}`, siteUrl),
+        const productEntries = products.map<SitemapEntry>((slug) => ({
+            url: toAbsoluteSiteUrl(`/product/${slug}`, siteUrl),
             lastModified,
             changeFrequency: 'weekly',
             priority: 0.7,

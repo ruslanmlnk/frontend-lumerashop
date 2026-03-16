@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 
 import GeneralInfoLayout from '@/components/info/GeneralInfoLayout'
-import { getLocalAssetPath, getPayloadMediaProxyPath, getRenderableAssetPath } from '@/lib/local-assets'
+import {
+  getLocalAssetPath,
+  getRenderableAssetPath,
+  getRenderablePayloadMediaPath,
+} from '@/lib/local-assets'
 import { getGlobal } from '@/lib/payload-data'
 import { renderLexicalToHTML } from '@/lib/payload-richtext'
 
@@ -85,17 +89,17 @@ const resolveUrl = (value: unknown, baseUrl: string): string | null => {
 
   if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
     if (normalizedValue.startsWith(baseUrl)) {
-      return getPayloadMediaProxyPath(normalizedValue)
+      return getRenderablePayloadMediaPath(normalizedValue, baseUrl)
     }
 
     return getRenderableAssetPath(normalizedValue, normalizedValue)
   }
 
   if (normalizedValue.startsWith('/')) {
-    return getPayloadMediaProxyPath(`${baseUrl}${normalizedValue}`)
+    return getRenderablePayloadMediaPath(normalizedValue, baseUrl)
   }
 
-  return getPayloadMediaProxyPath(`${baseUrl}/${normalizedValue}`)
+  return getRenderablePayloadMediaPath(normalizedValue, baseUrl)
 }
 
 async function fetchInfoPage(config: InfoPageConfig) {
