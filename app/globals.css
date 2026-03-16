@@ -126,3 +126,67 @@ body {
 .animate-fadeIn {
   animation: lumera-fade-in 220ms ease-out;
 }
+
+.lumera-info-content {
+  color: #111111;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.lumera-info-content h2,
+.lumera-info-content h3 {
+  margin: 3.25rem 0 1.15rem;
+  color: #111111;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.08;
+}
+
+.lumera-info-content h2 {
+  font-size: clamp(1.5rem, 3vw, 2.15rem);
+}
+
+.lumera-info-content h3 {
+  font-size: clamp(1.5rem, 3vw, 2.15rem);
+}
+
+.lumera-info-content p,
+.lumera-info-content ul,
+.lumera-info-content ol,
+.lumera-info-content blockquote {
+  margin: 0 0 1.1rem;
+}
+
+.lumera-info-content ul,
+.lumera-info-content ol {
+  padding-left: 1.35rem;
+}
+
+.lumera-info-content ul {
+  list-style: disc;
+}
+
+.lumera-info-content ol {
+  list-style: decimal;
+}
+
+.lumera-info-content li {
+  margin: 0.16rem 0;
+}
+
+.lumera-info-content a {
+  color: #111111;
+  text-decoration: underline;
+  text-decoration-color: rgba(17, 17, 17, 0.25);
+  text-underline-offset: 3px;
+}
+
+.lumera-info-content strong {
+  font-weight: 600;
+}
+
+.lumera-info-content br {
+  display: block;
+  content: "";
+  margin-top: 0.35rem;
+}

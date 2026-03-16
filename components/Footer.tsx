@@ -4,110 +4,160 @@ import { Facebook, Instagram } from 'lucide-react';
 
 const Footer = () => {
     return (
-        <footer className="bg-white border-t-[0.8px] border-[#808080] pt-12 pb-8">
-            <div className="max-w-[1140px] mx-auto px-4 lg:px-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 text-[#111111]">
-                    {/* Brand Column */}
+        <footer className="border-t border-[#e8dfd5] bg-white pt-14 pb-8 md:pt-16 md:pb-10">
+            <div className="mx-auto max-w-[1140px] px-4 lg:px-0">
+                <div className="grid grid-cols-1 gap-12 text-[#111111] md:grid-cols-2 lg:grid-cols-[1.25fr_0.95fr_1fr_1.1fr] lg:gap-14">
                     <div className="flex flex-col">
-                        <div className="relative w-[180px] h-[120px] mb-6">
+                        <div className="relative mb-5 h-[112px] w-[180px] md:h-[126px] md:w-[196px]">
                             <Image
                                 src="/assets/logo-new.webp"
-                                alt="LVR LUMERA"
+                                alt="LVR Lumera"
                                 fill
+                                sizes="196px"
                                 className="object-contain object-left"
                             />
                         </div>
-                        <p className="text-gray-600 text-[15px] leading-relaxed font-sans max-w-[280px]">
-                            LumeraShop.cz – prémiový svět italské módy, kožených kabelek і doplňků pro ty, kteří hledají kvalitu.
+
+                        <p className="max-w-[285px] text-[17px] leading-[1.65] text-[#111111]">
+                            LumeraShop.cz - Premiove kozene kabelky, penezenky a doplnky primo z Italie.
                         </p>
                     </div>
 
-                    {/* Shop Column */}
                     <div>
-                        <h3 className="text-[18px] font-serif font-medium mb-8 uppercase tracking-wide" style={{ fontFamily: '"Cormorant Garamond", serif' }}>Nákup</h3>
-                        <ul className="space-y-3.5 text-[16px] text-[#111111] font-sans">
-                            <li><Link href="/doprava-a-platba" className="hover:text-[#c8a16a] transition-colors underline-offset-4">Doprava a platba</Link></li>
-                            <li><Link href="/reklamace-a-vraceni" className="hover:text-[#c8a16a] transition-colors underline-offset-4">Reklamace a vrácení</Link></li>
-                            <li><Link href="/obchodni-podminky" className="hover:text-[#c8a16a] transition-colors underline-offset-4">Obchodní podmínky</Link></li>
-                            <li><Link href="/ochrana-osobnich-udaju" className="hover:text-[#c8a16a] transition-colors underline-offset-4">Ochrana osobních údajů</Link></li>
-                            <li><Link href="/cookies" className="hover:text-[#c8a16a] transition-colors underline-offset-4">Cookies</Link></li>
+                        <h3
+                            className="mb-3 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                        >
+                            Nakup
+                        </h3>
+
+                        <ul className="space-y-1.5 text-[15px] leading-[1.55] text-[#4c4c4c]">
+                            <li>
+                                <Link href="/doprava-a-platba" className="transition-colors hover:text-[#c8a16a]">
+                                    Doprava a platba
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/reklamace-a-vraceni" className="transition-colors hover:text-[#c8a16a]">
+                                    Reklamace a vraceni
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/obchodni-podminky" className="transition-colors hover:text-[#c8a16a]">
+                                    Obchodni podminky
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/ochrana-osobnich-udaju"
+                                    className="transition-colors hover:text-[#c8a16a]"
+                                >
+                                    Ochrana osobnich udaju
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/cookies" className="transition-colors hover:text-[#c8a16a]">
+                                    Cookies
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 
-                    {/* Payment & Shipping Column */}
                     <div>
-                        <h3 className="text-[18px] font-serif font-medium mb-8 uppercase tracking-wide" style={{ fontFamily: '"Cormorant Garamond", serif' }}>Platby & Doprava</h3>
-                        <div className="grid grid-cols-2 gap-3 max-w-[220px]">
-                            {/* Mastercard */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30">
-                                <Image src="/assets/icons/mastercard.png" alt="MasterCard" width={50} height={30} className="object-contain" />
+                        <h3
+                            className="mb-5 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                        >
+                            Platby & Doprava
+                        </h3>
+
+                        <div className="grid max-w-[198px] grid-cols-2 gap-x-4 gap-y-5">
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/mastercard.png" alt="Mastercard" width={53} height={23} className="object-contain" />
                             </div>
-                            {/* Visa */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30">
-                                <Image src="/assets/icons/visa.png" alt="VISA" width={50} height={30} className="object-contain" />
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/visa.png" alt="Visa" width={56} height={22} className="object-contain" />
                             </div>
-                            {/* Apple Pay */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30">
-                                <Image src="/assets/icons/apple-pay.png" alt="Apple Pay" width={50} height={30} className="object-contain" />
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/apple-pay.png" alt="Apple Pay" width={58} height={22} className="object-contain" />
                             </div>
-                            {/* Google Pay */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30">
-                                <Image src="/assets/icons/google-pay.png" alt="Google Pay" width={50} height={30} className="object-contain" />
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/google-pay.png" alt="Google Pay" width={58} height={22} className="object-contain" />
                             </div>
-                            {/* PPL */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30 p-1">
-                                <Image src="/assets/icons/ppl.png" alt="PPL" width={60} height={30} className="object-contain" />
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/ppl.png" alt="PPL" width={62} height={22} className="object-contain" />
                             </div>
-                            {/* Zásilkovna */}
-                            <div className="h-[45px] relative border border-gray-100 flex items-center justify-center bg-gray-50/30 p-1">
-                                <Image src="/assets/icons/zasilkovna.png" alt="Zásilkovna" width={60} height={30} className="object-contain" />
+                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                                <Image src="/assets/icons/zasilkovna.png" alt="Zasilkovna" width={64} height={20} className="object-contain" />
                             </div>
                         </div>
                     </div>
 
-                    {/* Contact Column */}
                     <div>
-                        <h3 className="text-[18px] font-serif font-medium mb-8 uppercase tracking-wide" style={{ fontFamily: '"Cormorant Garamond", serif' }}>Kontakt</h3>
-                        <ul className="space-y-4 text-[16px] text-[#111111] font-sans">
-                            <li className="flex items-center gap-3">
-                                <Image src="/assets/icons/footer-phone.png" alt="Phone" width={18} height={18} className="object-contain" />
-                                <a href="tel:+420606731316" className="hover:text-[#c8a16a] transition-colors font-medium">+420 606 731 316</a>
+                        <h3
+                            className="mb-3 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                        >
+                            Kontakt
+                        </h3>
+
+                        <ul className="space-y-4 text-[15px] leading-[1.5] text-[#6c625d]">
+                            <li className="flex items-center gap-2.5">
+                                <Image src="/assets/icons/footer-phone.png" alt="Phone" width={17} height={17} className="object-contain" />
+                                <a href="tel:+420606731316" className="transition-colors hover:text-[#c8a16a]">
+                                    +420 606 731 316
+                                </a>
                             </li>
-                            <li className="flex items-center gap-3">
-                                <Image src="/assets/icons/footer-email.png" alt="Email" width={18} height={18} className="object-contain" />
-                                <a href="mailto:info@lumerashop.cz" className="hover:text-[#c8a16a] transition-colors font-medium">info@lumerashop.cz</a>
+                            <li className="flex items-center gap-2.5">
+                                <Image src="/assets/icons/footer-email.png" alt="Email" width={17} height={17} className="object-contain" />
+                                <a href="mailto:info@lumerashop.cz" className="transition-colors hover:text-[#c8a16a]">
+                                    info@lumerashop.cz
+                                </a>
                             </li>
-                            <li className="flex items-center gap-3">
-                                <Image src="/assets/icons/footer-whatsapp.png" alt="WhatsApp" width={18} height={18} className="object-contain" />
-                                <a href="https://wa.me/420606731316" className="hover:text-[#c8a16a] transition-colors font-medium">WhatsApp</a>
+                            <li className="flex items-center gap-2.5">
+                                <Image src="/assets/icons/footer-whatsapp.png" alt="WhatsApp" width={17} height={17} className="object-contain" />
+                                <a href="https://wa.me/420606731316" className="transition-colors hover:text-[#c8a16a]">
+                                    WhatsApp
+                                </a>
                             </li>
-                            <li className="flex items-start gap-3">
-                                <Image src="/assets/icons/footer-location.png" alt="Address" width={18} height={18} className="object-contain mt-1 shrink-0" />
-                                <span className="text-gray-600 leading-tight">Lisabonská 2394, 190 00 Praha</span>
+                            <li className="flex items-start gap-2.5">
+                                <Image
+                                    src="/assets/icons/footer-location.png"
+                                    alt="Address"
+                                    width={17}
+                                    height={17}
+                                    className="mt-0.5 object-contain shrink-0"
+                                />
+                                <span>Lisabonska 2394, 190 00 Praha</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-[13px] text-gray-500">
-                    <div className="mb-4 md:mb-0 italic">
-                        Copyright © 2025 LumeraShop.cz | Všechna práva vyhrazena
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Link href="https://facebook.com/lumerashop.cz" className="w-[30px] h-[30px] rounded-full bg-[#111111] text-white flex items-center justify-center hover:bg-[#c8a16a] transition-colors">
-                            <Facebook size={14} />
-                        </Link>
-                        <Link href="https://instagram.com/lumerashop.cz" className="w-[30px] h-[30px] rounded-full bg-[#111111] text-white flex items-center justify-center hover:bg-[#c8a16a] transition-colors">
-                            <Instagram size={14} />
-                        </Link>
-                    </div>
-                </div>
+                <div className="mt-20 flex flex-col gap-6 text-[14px] leading-[1.5] text-[#3f3530] md:mt-24">
+                    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                        <p>Copyright © 2025 LumeraShop.cz | Vsechna prava vyhrazena</p>
 
-                {/* Credits */}
-                <div className="mt-8 flex flex-col md:flex-row items-center justify-between text-[11px] text-gray-300 gap-4 font-light">
-                    <p>Tvorba webových stránek Taras Snitynskyi</p>
-                    <p>Agentura digitálního marketingu Whowhere.online</p>
+                        <div className="flex items-center gap-12 md:gap-6">
+                            <Link
+                                href="https://facebook.com/lumerashop.cz"
+                                className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#4a3c37] text-white transition-colors hover:bg-[#c8a16a]"
+                            >
+                                <Facebook size={16} />
+                            </Link>
+                            <Link
+                                href="https://instagram.com/lumerashop.cz"
+                                className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#4a3c37] text-white transition-colors hover:bg-[#c8a16a]"
+                            >
+                                <Instagram size={16} />
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 text-[15px] text-[#7a6f67] md:flex-row md:items-center md:justify-between">
+                        <p>Tvorba webovych stranek Taras Snitynskyi</p>
+                        <p>Agentura digitalniho marketingu Whowhere.online</p>
+                    </div>
                 </div>
             </div>
         </footer>

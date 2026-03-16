@@ -1,24 +1,42 @@
 'use client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import CatalogHeader from '@/components/catalog/CatalogHeader';
 
 interface GeneralInfoLayoutProps {
     title: string;
     children: React.ReactNode;
-    breadcrumbs: { label: string; href?: string }[];
+    heroImageUrl?: string | null;
 }
 
-const GeneralInfoLayout = ({ title, children, breadcrumbs }: GeneralInfoLayoutProps) => {
+const GeneralInfoLayout = ({ title, children, heroImageUrl }: GeneralInfoLayoutProps) => {
     return (
         <div className="min-h-screen font-sans text-[#111111] bg-white">
             <Header />
 
-            <main>
-                <CatalogHeader title={title} breadcrumbs={breadcrumbs} />
+            <main className="pt-[118px] md:pt-[132px]">
+                <section className="mx-auto max-w-[1140px] px-4 lg:px-0">
+                    <div
+                        className="relative flex min-h-[180px] items-center justify-center overflow-hidden md:min-h-[220px]"
+                        style={{
+                            backgroundImage: heroImageUrl
+                                ? `linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)), url(${heroImageUrl})`
+                                : 'linear-gradient(rgba(17, 17, 17, 0.58), rgba(17, 17, 17, 0.58))',
+                            backgroundPosition: 'center',
+                            backgroundSize: 'cover',
+                            backgroundRepeat: 'no-repeat',
+                        }}
+                    >
+                        <h1
+                            className="px-6 text-center font-serif text-[42px] font-bold leading-none text-white md:text-[64px]"
+                            style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                        >
+                            {title}
+                        </h1>
+                    </div>
+                </section>
 
-                <div className="max-w-[800px] mx-auto px-4 py-20">
-                    <div className="prose prose-neutral max-w-none prose-headings:font-serif prose-headings:font-bold prose-headings:text-[#111111] prose-p:text-gray-500 prose-p:leading-relaxed prose-li:text-gray-500">
+                <div className="mx-auto max-w-[1140px] px-4 py-7 md:py-8 lg:px-0">
+                    <div className="lumera-info-content">
                         {children}
                     </div>
                 </div>
