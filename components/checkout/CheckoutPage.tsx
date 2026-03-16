@@ -20,6 +20,7 @@ import type {
     Step,
 } from '@/components/checkout/types';
 import { useCart } from '@/context/CartContext';
+import { COUNTRY_OPTIONS, DEFAULT_COUNTRY_CODE } from '@/lib/country-options';
 import type { AuthUser } from '@/lib/payload-auth';
 import {
     PENDING_COUPON_EVENT,
@@ -42,6 +43,66 @@ const formatPrice = (value: number) =>
         minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
         maximumFractionDigits: 2,
     })} Kč`;
+
+const hasSavedAddressData = (
+    address:
+        | {
+              firstName?: string;
+              lastName?: string;
+              phone?: string;
+              address?: string;
+              city?: string;
+              zip?: string;
+              companyName?: string;
+              companyId?: string;
+              vatId?: string;
+          }
+        | undefined,
+) =>
+    Boolean(
+        address &&
+            [
+                address.firstName,
+                address.lastName,
+                address.phone,
+                address.address,
+                address.city,
+                address.zip,
+                address.companyName,
+                address.companyId,
+                address.vatId,
+            ].some((field) => typeof field === 'string' && field.trim().length > 0),
+    );
+
+const areSavedAddressesEquivalent = (
+    left:
+        | {
+              firstName?: string;
+              lastName?: string;
+              phone?: string;
+              country?: string;
+              address?: string;
+              city?: string;
+              zip?: string;
+          }
+        | undefined,
+    right:
+        | {
+              firstName?: string;
+              lastName?: string;
+              phone?: string;
+              country?: string;
+              address?: string;
+              city?: string;
+              zip?: string;
+          }
+        | undefined,
+) =>
+    ['firstName', 'lastName', 'phone', 'country', 'address', 'city', 'zip'].every((key) => {
+        const leftValue = typeof left?.[key as keyof typeof left] === 'string' ? left[key as keyof typeof left] : '';
+        const rightValue = typeof right?.[key as keyof typeof right] === 'string' ? right[key as keyof typeof right] : '';
+        return (leftValue || '').trim() === (rightValue || '').trim();
+    });
 
 const submitHppForm = (actionUrl: string, fields: Record<string, string>) => {
     const form = document.createElement('form');
@@ -101,7 +162,7 @@ export default function CheckoutPage({
         createAccount: false,
         firstName: '',
         lastName: '',
-        country: 'CZ',
+        country: DEFAULT_COUNTRY_CODE,
         address: '',
         city: '',
         zip: '',
@@ -175,12 +236,49 @@ export default function CheckoutPage({
             return;
         }
 
-        setFormData((prev) => ({
-            ...prev,
-            email: prev.email || currentUser.email,
-            firstName: prev.firstName || currentUser.firstName || '',
-            lastName: prev.lastName || currentUser.lastName || '',
-        }));
+        const shippingAddress = currentUser.shippingAddress;
+        const billingAddress = currentUser.billingAddress;
+        const hasBillingData = hasSavedAddressData(billingAddress);
+        const billingMatchesShipping = hasBillingData && areSavedAddressesEquivalent(billingAddress, shippingAddress);
+
+        setFormData((prev) => {
+            const hasManualShippingData = Boolean(prev.address || prev.city || prev.zip);
+            const hasManualBillingData = Boolean(
+                prev.billingFirstName ||
+                    prev.billingLastName ||
+                    prev.billingAddress ||
+                    prev.billingCity ||
+                    prev.billingZip ||
+                    prev.companyName ||
+                    prev.companyId ||
+                    prev.vatId,
+            );
+
+            return {
+                ...prev,
+                email: prev.email || currentUser.email,
+                phone: prev.phone || shippingAddress?.phone || billingAddress?.phone || '',
+                firstName: prev.firstName || shippingAddress?.firstName || currentUser.firstName || '',
+                lastName: prev.lastName || shippingAddress?.lastName || currentUser.lastName || '',
+                country:
+                    hasManualShippingData || !shippingAddress?.country ? prev.country : shippingAddress.country,
+                address: prev.address || shippingAddress?.address || '',
+                city: prev.city || shippingAddress?.city || '',
+                zip: prev.zip || shippingAddress?.zip || '',
+                billingSameAsShipping:
+                    hasManualBillingData || !hasBillingData ? prev.billingSameAsShipping : billingMatchesShipping,
+                billingFirstName:
+                    prev.billingFirstName || billingAddress?.firstName || shippingAddress?.firstName || currentUser.firstName || '',
+                billingLastName:
+                    prev.billingLastName || billingAddress?.lastName || shippingAddress?.lastName || currentUser.lastName || '',
+                billingAddress: prev.billingAddress || billingAddress?.address || '',
+                billingCity: prev.billingCity || billingAddress?.city || '',
+                billingZip: prev.billingZip || billingAddress?.zip || '',
+                companyName: prev.companyName || billingAddress?.companyName || '',
+                companyId: prev.companyId || billingAddress?.companyId || '',
+                vatId: prev.vatId || billingAddress?.vatId || '',
+            };
+        });
     }, [currentUser]);
 
     useEffect(() => {
@@ -205,9 +303,9 @@ export default function CheckoutPage({
         });
 
         if (!currentUser?.id) {
-            setCouponErrorMessage((prev) => prev || 'Kupon je ulozeny. Po prihlaseni ho muzes rovnou pouzit.');
+            setAppliedPromoCode((prev) => prev || pendingCoupon);
         }
-    }, []);
+    }, [currentUser?.id]);
 
     useEffect(() => {
         const handleCouponPersisted = (event: Event) => {
@@ -230,8 +328,9 @@ export default function CheckoutPage({
                 autoAppliedCouponRef.current = couponCode;
                 void applyCouponCode(couponCode, { silent: true });
             } else {
-                setCouponMessage('');
-                setCouponErrorMessage('Kupon je ulozeny. Po prihlaseni ho muzes rovnou pouzit.');
+                setAppliedPromoCode(couponCode);
+                setCouponErrorMessage('');
+                setCouponMessage('Kupon je nacteny. Sleva se prepocita i bez prihlaseni.');
             }
         };
 
@@ -272,7 +371,7 @@ export default function CheckoutPage({
     };
 
     const applyCouponCode = async (rawCode: string, options?: { silent?: boolean }) => {
-        const normalizedCode = rawCode.trim().toUpperCase();
+        const normalizedCode = sanitizeCouponCode(rawCode);
 
         if (!normalizedCode) {
             setAppliedPromoCode('');
@@ -292,16 +391,7 @@ export default function CheckoutPage({
             return;
         }
 
-        if (!currentUser?.id) {
-            setCouponMessage('');
-            if (!options?.silent) {
-                setCouponErrorMessage('Pro pouziti kuponu se musis prihlasit.');
-            }
-            persistPendingCoupon(normalizedCode);
-            return;
-        }
-
-        if (typeof window !== 'undefined') {
+        if (currentUser?.id && typeof window !== 'undefined') {
             try {
                 const saved = JSON.parse(
                     localStorage.getItem(getUsedCouponsStorageKey(currentUser.id)) || '[]',
@@ -333,7 +423,9 @@ export default function CheckoutPage({
             if (!options?.silent) {
                 setCouponMessage(
                     payload.coupon
-                        ? `Kupon ${payload.coupon.code} byl pouzit. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
+                        ? currentUser?.id
+                            ? `Kupon ${payload.coupon.code} byl pouzit. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
+                            : `Kupon ${payload.coupon.code} je nacteny. Sleva ${formatPrice(payload.coupon.discountAmount)} se zobrazuje uz ted, pred dokonceni objednavky se ale prihlas.`
                         : 'Kupon byl ulozen.',
                 );
             }
@@ -439,6 +531,11 @@ export default function CheckoutPage({
     const handleFinalSubmit = async () => {
         if (!formData.termsAccepted) {
             setErrorMessage('Musíte souhlasit s obchodními podmínkami.');
+            return;
+        }
+
+        if (appliedPromoCode && !currentUser?.id) {
+            setErrorMessage('Pro dokonceni objednavky se slevovym kuponem se prosim prihlas.');
             return;
         }
 

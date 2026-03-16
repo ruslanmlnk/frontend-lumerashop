@@ -38,9 +38,15 @@ export const persistPendingCoupon = (value: unknown) => {
         return ''
     }
 
+    const currentStoredCode = readPendingCoupon()
+
     window.localStorage.setItem(PENDING_COUPON_STORAGE_KEY, normalizedCode)
     document.cookie = `${PENDING_COUPON_COOKIE}=${encodeURIComponent(normalizedCode)}; path=/; max-age=2592000; SameSite=Lax`
-    window.dispatchEvent(new CustomEvent(PENDING_COUPON_EVENT, { detail: { couponCode: normalizedCode } }))
+
+    if (currentStoredCode !== normalizedCode) {
+        window.dispatchEvent(new CustomEvent(PENDING_COUPON_EVENT, { detail: { couponCode: normalizedCode } }))
+    }
+
     return normalizedCode
 }
 

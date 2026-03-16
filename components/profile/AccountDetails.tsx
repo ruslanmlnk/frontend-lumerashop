@@ -1,80 +1,197 @@
 'use client';
 
-const AccountDetails = () => {
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { AuthUser } from '@/lib/payload-auth';
+
+type AccountDetailsProps = {
+    user: AuthUser;
+};
+
+type FormState = {
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    email: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+};
+
+const inputClassName =
+    'w-full rounded-[10px] border border-[#111111]/10 bg-white px-4 py-3 text-[14px] text-[#111111] outline-none transition-colors placeholder:text-[#9d9488] focus:border-[#b98743]';
+
+const AccountDetails = ({ user }: AccountDetailsProps) => {
+    const router = useRouter();
+    const [formData, setFormData] = useState<FormState>({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        displayName: user.name || user.firstName || '',
+        email: user.email,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const updateField = (field: keyof FormState, value: string) => {
+        setErrorMessage('');
+        setSuccessMessage('');
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setErrorMessage('');
+        setSuccessMessage('');
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch('/api/account/details', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | null;
+
+            if (!response.ok) {
+                setErrorMessage(payload?.error || 'Nepodarilo se ulozit zmeny uctu.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            setSuccessMessage(payload?.message || 'Zmeny byly ulozeny.');
+            setFormData((prev) => ({
+                ...prev,
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+            }));
+            router.refresh();
+        } catch {
+            setErrorMessage('Sluzba pro upravu uctu je momentalne nedostupna.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
-        <div className="max-w-[700px]">
-            <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-[900px]">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                        <label className="block text-[14px] mb-2 font-medium">Křestní jméno <span className="text-red-500">*</span></label>
+                        <label className="mb-2 block text-[14px] font-medium">
+                            Krestni jmeno <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
-                            className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
-                            defaultValue="Ruslan"
+                            className={inputClassName}
+                            value={formData.firstName}
+                            onChange={(event) => updateField('firstName', event.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-[14px] mb-2 font-medium">Příjmení <span className="text-red-500">*</span></label>
+                        <label className="mb-2 block text-[14px] font-medium">
+                            Prijmeni <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
-                            className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
-                            defaultValue=""
+                            className={inputClassName}
+                            value={formData.lastName}
+                            onChange={(event) => updateField('lastName', event.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-[14px] mb-2 font-medium">Zobrazované jméno <span className="text-red-500">*</span></label>
+                    <label className="mb-2 block text-[14px] font-medium">
+                        Zobrazovane jmeno <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
-                        className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
-                        defaultValue="Ruslan"
+                        className={inputClassName}
+                        value={formData.displayName}
+                        onChange={(event) => updateField('displayName', event.target.value)}
+                        disabled={isSubmitting}
                     />
-                    <p className="mt-1 text-[13px] text-gray-500 italic">Toto jméno bude zobrazeno v uživatelském účtu a u recenzí.</p>
+                    <p className="mt-1 text-[13px] italic text-gray-500">
+                        Toto jmeno bude zobrazeno v uzivatelskem uctu a u recenzi.
+                    </p>
                 </div>
 
                 <div>
-                    <label className="block text-[14px] mb-2 font-medium">E-mailová adresa <span className="text-red-500">*</span></label>
+                    <label className="mb-2 block text-[14px] font-medium">
+                        E-mailova adresa <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="email"
-                        className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
-                        defaultValue="ruslan.mlnk@gmail.com" // Placeholder or from user data
+                        className={inputClassName}
+                        value={formData.email}
+                        onChange={(event) => updateField('email', event.target.value)}
+                        disabled={isSubmitting}
                     />
                 </div>
 
-                <fieldset className="border border-gray-100 p-6 rounded-sm space-y-6">
-                    <legend className="px-2 text-[18px] font-medium">Změna hesla</legend>
+                <fieldset className="space-y-6 rounded-[18px] border border-[#111111]/8 bg-[#faf8f4] p-6">
+                    <legend className="px-2 text-[18px] font-medium">Zmena hesla</legend>
 
                     <div>
-                        <label className="block text-[14px] mb-2 font-medium">Současné heslo (ponechte prázdné, pokud jej nechcete měnit)</label>
+                        <label className="mb-2 block text-[14px] font-medium">
+                            Soucasne heslo (ponechte prazdne, pokud jej nechcete menit)
+                        </label>
                         <input
                             type="password"
-                            className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
+                            className={inputClassName}
+                            value={formData.currentPassword}
+                            onChange={(event) => updateField('currentPassword', event.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-[14px] mb-2 font-medium">Nové heslo (ponechte prázdné, pokud jej nechcete měnit)</label>
+                        <label className="mb-2 block text-[14px] font-medium">
+                            Nove heslo (ponechte prazdne, pokud jej nechcete menit)
+                        </label>
                         <input
                             type="password"
-                            className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
+                            className={inputClassName}
+                            value={formData.newPassword}
+                            onChange={(event) => updateField('newPassword', event.target.value)}
+                            disabled={isSubmitting}
                         />
+                        <p className="mt-2 text-[12px] text-gray-500">
+                            Minimum 10 znaku, velke a male pismeno, cislo a specialni znak.
+                        </p>
                     </div>
 
                     <div>
-                        <label className="block text-[14px] mb-2 font-medium">Potvrdit nové heslo</label>
+                        <label className="mb-2 block text-[14px] font-medium">Potvrdit nove heslo</label>
                         <input
                             type="password"
-                            className="w-full bg-white border border-gray-200 h-[50px] px-4 focus:outline-none focus:border-gray-500 rounded-sm"
+                            className={inputClassName}
+                            value={formData.confirmPassword}
+                            onChange={(event) => updateField('confirmPassword', event.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
                 </fieldset>
 
+                {successMessage ? <p className="text-[13px] leading-5 text-[#1f6f43]">{successMessage}</p> : null}
+                {errorMessage ? <p className="text-[13px] leading-5 text-[#b42318]">{errorMessage}</p> : null}
+
                 <button
                     type="submit"
-                    className="bg-[#E1B12C] text-white px-8 h-[50px] font-bold text-[14px] hover:bg-[#c79a24] transition-colors rounded-sm uppercase tracking-wider"
+                    disabled={isSubmitting}
+                    className="inline-flex h-[50px] items-center justify-center rounded-[12px] bg-[#E1B12C] px-8 text-[14px] font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#c79a24] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    Uložit změny
+                    {isSubmitting ? 'Ukladam zmeny...' : 'Ulozit zmeny'}
                 </button>
             </form>
         </div>

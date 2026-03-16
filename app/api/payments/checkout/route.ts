@@ -210,6 +210,14 @@ export async function POST(request: NextRequest) {
             couponCode: payload.promoCode,
             useBonusBalance: payload.useBonusBalance,
         });
+
+        if (payload.promoCode?.trim() && !quote.viewer.isAuthenticated) {
+            return NextResponse.json(
+                { error: 'Please sign in before completing an order with a coupon.' },
+                { status: 400 },
+            );
+        }
+
         const baseUrl = getBaseUrl(
             request.headers.get('x-forwarded-host') || request.headers.get('host'),
             request.headers.get('x-forwarded-proto'),

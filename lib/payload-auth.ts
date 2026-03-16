@@ -11,6 +11,21 @@ export type AuthUser = {
   bonusBalance?: number;
   earnedBonusTotal?: number;
   spentBonusTotal?: number;
+  shippingAddress?: AuthAddress;
+  billingAddress?: AuthAddress;
+};
+
+export type AuthAddress = {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  country?: string;
+  address?: string;
+  city?: string;
+  zip?: string;
+  companyName?: string;
+  companyId?: string;
+  vatId?: string;
 };
 
 export type PayloadAuthConfig = {
@@ -106,7 +121,8 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
 
   const firstName = typeof record.firstName === 'string' ? record.firstName : undefined;
   const lastName = typeof record.lastName === 'string' ? record.lastName : undefined;
-  const name = typeof record.name === 'string' ? record.name : undefined;
+  const displayName = typeof record.displayName === 'string' ? record.displayName : undefined;
+  const name = displayName || (typeof record.name === 'string' ? record.name : undefined);
   const role = typeof record.role === 'string' ? record.role : undefined;
   const bonusBalanceRaw =
     typeof record.bonusBalance === 'number' || typeof record.bonusBalance === 'string'
@@ -120,6 +136,29 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
     typeof record.spentBonusTotal === 'number' || typeof record.spentBonusTotal === 'string'
       ? Number(record.spentBonusTotal)
       : NaN;
+  const sanitizeAddress = (input: unknown): AuthAddress | undefined => {
+    if (!input || typeof input !== 'object') {
+      return undefined;
+    }
+
+    const addressRecord = input as Record<string, unknown>;
+    const address: AuthAddress = {
+      firstName: typeof addressRecord.firstName === 'string' ? addressRecord.firstName : undefined,
+      lastName: typeof addressRecord.lastName === 'string' ? addressRecord.lastName : undefined,
+      phone: typeof addressRecord.phone === 'string' ? addressRecord.phone : undefined,
+      country: typeof addressRecord.country === 'string' ? addressRecord.country : undefined,
+      address: typeof addressRecord.address === 'string' ? addressRecord.address : undefined,
+      city: typeof addressRecord.city === 'string' ? addressRecord.city : undefined,
+      zip: typeof addressRecord.zip === 'string' ? addressRecord.zip : undefined,
+      companyName: typeof addressRecord.companyName === 'string' ? addressRecord.companyName : undefined,
+      companyId: typeof addressRecord.companyId === 'string' ? addressRecord.companyId : undefined,
+      vatId: typeof addressRecord.vatId === 'string' ? addressRecord.vatId : undefined,
+    };
+
+    return Object.values(address).some((field) => typeof field === 'string' && field.trim().length > 0)
+      ? address
+      : undefined;
+  };
 
   return {
     id: String(id),
@@ -131,6 +170,8 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
     bonusBalance: Number.isFinite(bonusBalanceRaw) ? Math.max(0, Math.floor(bonusBalanceRaw)) : 0,
     earnedBonusTotal: Number.isFinite(earnedBonusTotalRaw) ? Math.max(0, Math.floor(earnedBonusTotalRaw)) : 0,
     spentBonusTotal: Number.isFinite(spentBonusTotalRaw) ? Math.max(0, Math.floor(spentBonusTotalRaw)) : 0,
+    shippingAddress: sanitizeAddress(record.shippingAddress),
+    billingAddress: sanitizeAddress(record.billingAddress),
   };
 }
 

@@ -166,22 +166,20 @@ const fetchAppliedCoupon = async (code: string, subtotal: number): Promise<Appli
     }
 
     const config = getPayloadAuthConfig();
-    if (!config) {
-        throw new Error('Auth backend is not configured. Set PAYLOAD_API_URL.');
-    }
-
     const cookieStore = await cookies();
-    const token = cookieStore.get(config.cookieName)?.value;
-    if (!token) {
-        throw new Error('Please sign in to use a coupon.');
+    const token = config ? cookieStore.get(config.cookieName)?.value : undefined;
+    const endpoint = token ? 'apply' : 'preview';
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+
+    if (token) {
+        headers.Authorization = `JWT ${token}`;
     }
 
-    const response = await fetch(`${getPayloadBaseUrl()}/api/coupons/apply`, {
+    const response = await fetch(`${getPayloadBaseUrl()}/api/coupons/${endpoint}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `JWT ${token}`,
-        },
+        headers,
         body: JSON.stringify({
             code: normalizedCode,
             subtotal,

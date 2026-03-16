@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,20 +21,56 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
     const [current, setCurrent] = useState(0);
     const [direction, setDirection] = useState(0);
     const [isInitialSlideReady, setIsInitialSlideReady] = useState(false);
+    const autoplayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const activeIndex = current % sliderSlides.length;
 
+    const clearAutoplay = useCallback(() => {
+        if (autoplayTimeoutRef.current !== null) {
+            clearTimeout(autoplayTimeoutRef.current);
+            autoplayTimeoutRef.current = null;
+        }
+    }, []);
+
+    const advanceToNextSlide = useCallback(() => {
+        setDirection(1);
+        setCurrent((prev) => (prev + 1) % sliderSlides.length);
+    }, [sliderSlides.length]);
+
+    const scheduleAutoplay = useCallback(() => {
+        clearAutoplay();
+
+        if (sliderSlides.length <= 1) {
+            return;
+        }
+
+        autoplayTimeoutRef.current = setTimeout(() => {
+            advanceToNextSlide();
+        }, 7000);
+    }, [advanceToNextSlide, clearAutoplay, sliderSlides.length]);
+
     const paginate = (newDirection: number) => {
+        clearAutoplay();
         setDirection(newDirection);
         setCurrent((prev) => (prev + newDirection + sliderSlides.length) % sliderSlides.length);
     };
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setDirection(1);
-            setCurrent((prev) => (prev + 1) % sliderSlides.length);
-        }, 7000);
-        return () => clearInterval(timer);
-    }, [sliderSlides.length]);
+        scheduleAutoplay();
+
+        return clearAutoplay;
+    }, [clearAutoplay, current, scheduleAutoplay]);
+
+    const goToSlide = (nextIndex: number) => {
+        clearAutoplay();
+
+        if (nextIndex === activeIndex) {
+            scheduleAutoplay();
+            return;
+        }
+
+        setDirection(nextIndex > activeIndex ? 1 : -1);
+        setCurrent(nextIndex);
+    };
 
     const slideVariants: Variants = {
         enter: (direction: number) => ({
@@ -221,10 +257,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                             {sliderSlides.map((_, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => {
-                                        setDirection(idx > current ? 1 : -1);
-                                        setCurrent(idx);
-                                    }}
+                                    onClick={() => goToSlide(idx)}
                                     className={`w-[10px] h-[10px] rounded-full transition-all duration-300 ${activeIndex === idx ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/60'}`}
                                     aria-label={`Go to slide ${idx + 1}`}
                                 />

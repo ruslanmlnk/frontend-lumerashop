@@ -105,17 +105,16 @@ export default function CartPage() {
 
                 if (!response.ok || payload?.error || !payload?.totals) {
                     setQuote(null);
-                    setCouponErrorMessage(
-                        payload?.error ||
-                            'Kupon je ulozeny, ale sleva bude vypoctena az po prihlaseni v pokladne.',
-                    );
+                    setCouponErrorMessage(payload?.error || 'Kupon se nepodarilo prepocitat.');
                     return;
                 }
 
                 setQuote(payload);
                 if (payload.coupon) {
                     setCouponMessage(
-                        `Kupon ${payload.coupon.code} je aktivni. Sleva ${formatPrice(payload.coupon.discountAmount)}.`,
+                        payload.viewer?.isAuthenticated
+                            ? `Kupon ${payload.coupon.code} je aktivni. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
+                            : `Kupon ${payload.coupon.code} je nacteny. Sleva ${formatPrice(payload.coupon.discountAmount)} se ukazuje uz tady, pred dokonceni objednavky se ale prihlas.`,
                     );
                 }
             } catch {

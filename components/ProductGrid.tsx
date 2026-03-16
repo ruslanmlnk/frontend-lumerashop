@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Product } from '../types/site';
 import ProductCard from './ProductCard';
@@ -34,6 +34,7 @@ const ProductGrid = ({
 }: ProductGridProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [visibleItems, setVisibleItems] = useState(4);
+    const autoplayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isNovinky = variant === 'novinky';
     const resolvedArrowTheme = arrowTheme ?? (isNovinky ? 'gold' : 'default');
     const resolvedCardVariant = cardVariant ?? (isNovinky ? 'featured' : 'default');
@@ -67,30 +68,48 @@ const ProductGrid = ({
     const maxIndex = Math.max(0, products.length - visibleItems);
     const activeIndex = Math.min(currentIndex, maxIndex);
 
-    const nextSlide = useCallback(() => {
-        if (activeIndex < maxIndex) {
-            setCurrentIndex(activeIndex + 1);
-        } else {
-            setCurrentIndex(0);
+    const clearAutoplay = useCallback(() => {
+        if (autoplayTimeoutRef.current !== null) {
+            clearTimeout(autoplayTimeoutRef.current);
+            autoplayTimeoutRef.current = null;
         }
-    }, [activeIndex, maxIndex]);
+    }, []);
+
+    const advanceSlide = useCallback(() => {
+        setCurrentIndex((prev) => {
+            const boundedPrev = Math.min(prev, maxIndex);
+            return boundedPrev < maxIndex ? boundedPrev + 1 : 0;
+        });
+    }, [maxIndex]);
+
+    const nextSlide = useCallback(() => {
+        clearAutoplay();
+        setCurrentIndex((prev) => {
+            const boundedPrev = Math.min(prev, maxIndex);
+            return boundedPrev < maxIndex ? boundedPrev + 1 : 0;
+        });
+    }, [clearAutoplay, maxIndex]);
 
     const prevSlide = useCallback(() => {
-        if (activeIndex > 0) {
-            setCurrentIndex(activeIndex - 1);
-        } else {
-            setCurrentIndex(maxIndex);
-        }
-    }, [activeIndex, maxIndex]);
+        clearAutoplay();
+        setCurrentIndex((prev) => {
+            const boundedPrev = Math.min(prev, maxIndex);
+            return boundedPrev > 0 ? boundedPrev - 1 : maxIndex;
+        });
+    }, [clearAutoplay, maxIndex]);
 
     useEffect(() => {
         if (!isSlider || !autoPlay || products.length <= visibleItems) {
+            clearAutoplay();
             return;
         }
 
-        const timer = setInterval(nextSlide, 7000);
-        return () => clearInterval(timer);
-    }, [autoPlay, isSlider, nextSlide, products.length, visibleItems]);
+        autoplayTimeoutRef.current = setTimeout(() => {
+            advanceSlide();
+        }, 7000);
+
+        return clearAutoplay;
+    }, [activeIndex, advanceSlide, autoPlay, clearAutoplay, isSlider, products.length, visibleItems]);
 
     const gridHeader = (
         <div className={`mb-0 ${alignLeft ? 'text-left' : 'text-center'}`}>

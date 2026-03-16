@@ -34,10 +34,10 @@ export default async function MyAccountSubPage({ params }: PageProps) {
       content = <Downloads />;
       break;
     case 'edit-address':
-      content = <Addresses />;
+      content = <Addresses user={user} />;
       break;
     case 'edit-account':
-      content = <AccountDetails />;
+      content = <AccountDetails user={user} />;
       break;
     default:
       content = <div className="text-[16px] text-gray-600">Sekce nenalezena.</div>;

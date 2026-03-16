@@ -3,9 +3,17 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import type { CheckoutQuoteResponse } from '@/components/checkout/types';
 import type { NavItem } from '@/types/site';
 import { useCart } from '@/context/CartContext';
 import { useNavigation } from '@/context/NavigationContext';
+import {
+  PENDING_COUPON_EVENT,
+  clearPendingCoupon,
+  persistPendingCoupon,
+  readPendingCoupon,
+  sanitizeCouponCode,
+} from '@/lib/coupon-storage';
 import { getRenderableAssetPath } from '@/lib/local-assets';
 import HeaderSearchForm from '@/components/header/HeaderSearchForm';
 import { Menu, X, ChevronDown, ArrowRight, Phone, Mail, Facebook, Instagram, Tag } from 'lucide-react';
@@ -28,6 +36,11 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMiniCartCouponOpen, setIsMiniCartCouponOpen] = useState(false);
+  const [miniCartCouponCode, setMiniCartCouponCode] = useState('');
+  const [appliedMiniCartCouponCode, setAppliedMiniCartCouponCode] = useState('');
+  const [miniCartCouponErrorMessage, setMiniCartCouponErrorMessage] = useState('');
+  const [isMiniCartQuoteLoading, setIsMiniCartQuoteLoading] = useState(false);
+  const [miniCartQuote, setMiniCartQuote] = useState<CheckoutQuoteResponse | null>(null);
   const { cartItems, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
   const { menuItems } = useNavigation();
   const [scrolled, setScrolled] = useState(false);
@@ -36,8 +49,11 @@ const Header = () => {
   const desktopMenuItems = [HOME_MENU_ITEM, ...menuItems, ...STATIC_PAGE_ITEMS];
   const mobileMenuItems = [HOME_MENU_ITEM, ...menuItems, ...STATIC_PAGE_ITEMS];
   const hasCartItems = cartItems.length > 0;
-  const vatAmount = Number((totalPrice * 0.21).toFixed(2));
-  const hasFreeShipping = totalPrice >= 1500;
+  const miniCartSubtotal = miniCartQuote?.totals?.subtotal ?? totalPrice;
+  const miniCartCouponDiscountAmount = miniCartQuote?.discounts?.couponDiscountAmount ?? 0;
+  const miniCartDiscountedSubtotal = miniCartQuote?.discounts?.discountedSubtotal ?? miniCartSubtotal;
+  const vatAmount = Number((miniCartDiscountedSubtotal * 0.21).toFixed(2));
+  const hasFreeShipping = miniCartDiscountedSubtotal >= 1500;
 
   const openCartDrawer = () => setIsCartOpen(true);
   const closeCartDrawer = () => {
@@ -68,6 +84,119 @@ const Header = () => {
       window.removeEventListener('lumera:cart-open', handleCartOpen);
     };
   }, []);
+
+  useEffect(() => {
+    const pendingCoupon = readPendingCoupon();
+    if (!pendingCoupon) {
+      return;
+    }
+
+    setMiniCartCouponCode((prev) => prev || pendingCoupon);
+    setAppliedMiniCartCouponCode((prev) => prev || pendingCoupon);
+    setIsMiniCartCouponOpen(true);
+  }, []);
+
+  useEffect(() => {
+    const handleCouponPersisted = (event: Event) => {
+      const detail =
+        event instanceof CustomEvent && event.detail && typeof event.detail === 'object'
+          ? (event.detail as { couponCode?: unknown })
+          : {};
+      const couponCode = sanitizeCouponCode(detail.couponCode);
+
+      if (!couponCode) {
+        return;
+      }
+
+      setMiniCartCouponCode(couponCode);
+      setAppliedMiniCartCouponCode(couponCode);
+      setMiniCartCouponErrorMessage('');
+      setIsMiniCartCouponOpen(true);
+    };
+
+    window.addEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+    return () => {
+      window.removeEventListener(PENDING_COUPON_EVENT, handleCouponPersisted);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isCartOpen || !appliedMiniCartCouponCode) {
+      setMiniCartQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      setIsMiniCartQuoteLoading(true);
+      setMiniCartCouponErrorMessage('');
+
+      try {
+        const response = await fetch('/api/checkout/quote', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: cartItems,
+            promoCode: appliedMiniCartCouponCode,
+          }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
+
+        if (!response.ok || payload?.error || !payload?.totals) {
+          if (!cancelled) {
+            const message = payload?.error || 'Kupon se nepodarilo prepocitat.';
+            setMiniCartQuote(null);
+            setMiniCartCouponErrorMessage(message);
+
+            if (/not found|not active|valid discount/i.test(message)) {
+              clearPendingCoupon();
+            }
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setMiniCartQuote(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          setMiniCartQuote(null);
+          setMiniCartCouponErrorMessage('Slevu z kuponu se nepodarilo prepocitat.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsMiniCartQuoteLoading(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appliedMiniCartCouponCode, cartItems, isCartOpen]);
+
+  const handleApplyMiniCartCoupon = () => {
+    const normalizedCode = sanitizeCouponCode(miniCartCouponCode);
+
+    if (!normalizedCode) {
+      setMiniCartCouponCode('');
+      setAppliedMiniCartCouponCode('');
+      setMiniCartCouponErrorMessage('');
+      setMiniCartQuote(null);
+      clearPendingCoupon();
+      return;
+    }
+
+    persistPendingCoupon(normalizedCode);
+    setMiniCartCouponCode(normalizedCode);
+    setAppliedMiniCartCouponCode(normalizedCode);
+  };
 
   const renderDesktopChildren = (items: NavItem[], level = 1) => {
     const containerClass =
@@ -479,14 +608,27 @@ const Header = () => {
                               type="text"
                               placeholder={'Vložte kód'}
                               className="h-10 min-w-0 flex-1 rounded-[10px] border border-[#111]/10 bg-[#fbfaf8] px-3 text-[13px] text-[#111111] outline-none transition-colors placeholder:text-[#a39a8e] focus:border-[#c79200]"
+                              value={miniCartCouponCode}
+                              onChange={(event) => setMiniCartCouponCode(event.target.value)}
                             />
                             <button
                               type="button"
                               className="inline-flex h-10 shrink-0 items-center justify-center rounded-[10px] bg-[#111111] px-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c79200]"
+                              onClick={handleApplyMiniCartCoupon}
                             >
-                              {'Použít'}
+                              {isMiniCartQuoteLoading ? 'Pockam...' : 'Pouzit'}
                             </button>
                           </div>
+                        ) : null}
+
+                        {appliedMiniCartCouponCode ? (
+                          <p className="mt-3 text-[12px] leading-5 text-[#6b6257]">
+                            Aktivni kod: <span className="font-semibold text-[#111111]">{appliedMiniCartCouponCode}</span>
+                          </p>
+                        ) : null}
+
+                        {miniCartCouponErrorMessage ? (
+                          <p className="mt-3 text-[12px] leading-5 text-[#b42318]">{miniCartCouponErrorMessage}</p>
                         ) : null}
                       </div>
 
@@ -496,7 +638,7 @@ const Header = () => {
                             {'Zboží'}
                           </p>
                           <p className="mt-1 text-[16px] font-semibold leading-none text-[#111111]">
-                            {formatPrice(totalPrice)}
+                            {formatPrice(miniCartSubtotal)}
                           </p>
                         </div>
                         <div className="px-3 text-center">
@@ -534,8 +676,21 @@ const Header = () => {
                           {'K pokladně'}
                         </span>
                         <span className="mx-4 h-6 w-px bg-white/25" />
-                        <span className="inline-flex items-center gap-3 text-[14px] font-semibold">
-                          {formatPrice(totalPrice)}
+                        <span className="inline-flex items-center gap-3">
+                          {miniCartCouponDiscountAmount > 0 ? (
+                            <span className="flex flex-col items-end leading-none">
+                              <span className="text-[11px] font-medium text-white/70 line-through decoration-white/60">
+                                {formatPrice(miniCartSubtotal)}
+                              </span>
+                              <span className="mt-1 text-[15px] font-semibold text-white">
+                                {formatPrice(miniCartDiscountedSubtotal)}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-[14px] font-semibold text-white">
+                              {formatPrice(miniCartDiscountedSubtotal)}
+                            </span>
+                          )}
                           <ArrowRight size={18} />
                         </span>
                       </Link>
