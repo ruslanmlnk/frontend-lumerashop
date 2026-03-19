@@ -96,31 +96,33 @@ const PriceFilter = ({ min, max, value, onChange, hideTitle = false }: PriceFilt
             ) : null}
 
             <div className="space-y-[10px]">
-                <div
-                    ref={trackRef}
-                    className="relative h-[34px] cursor-pointer py-[15px]"
-                    onPointerDown={handleTrackPointerDown}
-                >
-                    <div className="h-[4px] rounded-[4px] bg-[#111111]/30" />
+                <div className="px-2">
                     <div
-                        className="absolute top-[15px] h-[4px] rounded-[4px] bg-[#111111]"
-                        style={{ left: `${left}%`, right: `${100 - right}%` }}
-                    />
+                        ref={trackRef}
+                        className="relative h-[34px] cursor-pointer py-[15px]"
+                        onPointerDown={handleTrackPointerDown}
+                    >
+                        <div className="h-[4px] rounded-[4px] bg-[#111111]/30" />
+                        <div
+                            className="absolute top-[15px] h-[4px] rounded-[4px] bg-[#111111]"
+                            style={{ left: `${left}%`, right: `${100 - right}%` }}
+                        />
 
-                    <button
-                        type="button"
-                        aria-label="Minimalni cena"
-                        onPointerDown={handleFromPointerDown}
-                        className="absolute top-1/2 h-[16px] w-[16px] -translate-y-1/2 rounded-full border-2 border-[#1E1E1E] bg-white"
-                        style={{ left: `calc(${left}% - 8px)` }}
-                    />
-                    <button
-                        type="button"
-                        aria-label="Maximalni cena"
-                        onPointerDown={handleToPointerDown}
-                        className="absolute top-1/2 h-[16px] w-[16px] -translate-y-1/2 rounded-full border-2 border-[#1E1E1E] bg-white"
-                        style={{ left: `calc(${right}% - 8px)` }}
-                    />
+                        <button
+                            type="button"
+                            aria-label="Minimalni cena"
+                            onPointerDown={handleFromPointerDown}
+                            className="absolute top-1/2 h-[16px] w-[16px] -translate-y-1/2 rounded-full border-2 border-[#1E1E1E] bg-white"
+                            style={{ left: `calc(${left}% - 8px)` }}
+                        />
+                        <button
+                            type="button"
+                            aria-label="Maximalni cena"
+                            onPointerDown={handleToPointerDown}
+                            className="absolute top-1/2 h-[16px] w-[16px] -translate-y-1/2 rounded-full border-2 border-[#1E1E1E] bg-white"
+                            style={{ left: `calc(${right}% - 8px)` }}
+                        />
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-between">

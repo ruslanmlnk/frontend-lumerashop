@@ -10,17 +10,20 @@ interface Breadcrumb {
 interface CatalogHeaderProps {
     title: string;
     breadcrumbs: Breadcrumb[];
+    variant?: 'page' | 'inline';
 }
 
-const CatalogHeader = ({ title, breadcrumbs }: CatalogHeaderProps) => {
+const CatalogHeader = ({ title, breadcrumbs, variant = 'page' }: CatalogHeaderProps) => {
+    const isInline = variant === 'inline';
+
     return (
-        <div className="border-b border-neutral-100 bg-[#f9f9f9] py-8">
-            <div className="mx-auto max-w-[1140px] px-4 lg:px-0">
+        <div className={isInline ? 'mb-8' : 'border-b border-neutral-100 bg-[#f9f9f9] py-8'}>
+            <div className={isInline ? '' : 'mx-auto max-w-[1140px] px-4 lg:px-0'}>
                 <nav className="mb-4 flex" aria-label="Breadcrumb">
                     <ol className="flex items-center space-x-2 font-sans text-[13px] text-gray-400">
                         <li>
                             <Link href="/" className="uppercase tracking-wider transition-colors hover:text-black">
-                                {"Domů"}
+                                {'Dom\u016F'}
                             </Link>
                         </li>
                         {breadcrumbs.map((crumb, index) => (
@@ -41,7 +44,9 @@ const CatalogHeader = ({ title, breadcrumbs }: CatalogHeaderProps) => {
                     </ol>
                 </nav>
                 <h1
-                    className="font-serif text-[42px] font-bold leading-tight text-[#111111]"
+                    className={`font-serif font-bold leading-tight text-[#111111] ${
+                        isInline ? 'text-[38px] xl:text-[42px]' : 'text-[42px]'
+                    }`}
                     style={{ fontFamily: '"Cormorant Garamond", serif' }}
                 >
                     {title}

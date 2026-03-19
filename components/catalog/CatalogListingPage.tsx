@@ -351,7 +351,9 @@ export default function CatalogListingPage({
                     isReady ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
                 }`}
             >
-                <CatalogHeader title={title} breadcrumbs={breadcrumbs} />
+                <div className="lg:hidden">
+                    <CatalogHeader title={title} breadcrumbs={breadcrumbs} />
+                </div>
 
                 <div className="mx-auto max-w-[1140px] px-4 py-16 lg:px-0">
                     <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-10">
@@ -372,6 +374,9 @@ export default function CatalogListingPage({
 
                         <div className="min-w-0 flex-1">
                             <div ref={listingTopRef} />
+                            <div className="hidden lg:block">
+                                <CatalogHeader title={title} breadcrumbs={breadcrumbs} variant="inline" />
+                            </div>
                             <CatalogChildLinks items={visibleChildLinks} />
                             <ProductSort value={sortOrder} onChange={setSortOrder} totalResults={filteredProducts.length} />
 
