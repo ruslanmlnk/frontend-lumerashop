@@ -31,14 +31,14 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                     <Link
                         key={item.id}
                         href={item.href}
-                        className="group flex min-h-[66px] w-full items-center gap-3 border border-[#111111] px-3 py-2.5 text-[#111111] transition-colors duration-200 hover:border-[#6f5640] hover:text-[#6f5640] lg:w-[calc((100%-1.875rem)/4)]"
+                        className="group flex w-full items-center gap-3 border border-[#111111] px-3 py-[7px] text-[#111111] transition-colors duration-200 hover:border-[#6f5640] hover:text-[#6f5640] lg:w-[calc((100%-1.875rem)/4)]"
                     >
                         <div className="relative h-8 w-8 shrink-0 overflow-hidden lg:h-9 lg:w-9">
                             <Image
                                 src={imageSrc}
                                 alt={item.name}
                                 fill
-                                sizes="36px"
+                                sizes="22px"
                                 className="object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                             />
                         </div>
