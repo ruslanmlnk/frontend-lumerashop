@@ -33,18 +33,18 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                         href={item.href}
                         className="group flex min-h-[66px] w-full items-center gap-3 border border-[#111111] px-3 py-2.5 text-[#111111] transition-colors duration-200 hover:border-[#6f5640] hover:text-[#6f5640] lg:w-[calc((100%-1.875rem)/4)]"
                     >
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden lg:h-10 lg:w-10">
+                        <div className="relative h-8 w-8 shrink-0 overflow-hidden lg:h-9 lg:w-9">
                             <Image
                                 src={imageSrc}
                                 alt={item.name}
                                 fill
-                                sizes="40px"
+                                sizes="36px"
                                 className="object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                             />
                         </div>
 
-                        <span className="min-w-0 flex-1 text-[14px] leading-[1.2] lg:text-[15px]">{item.name}</span>
-                        <ArrowRight size={16} className="ml-auto shrink-0" />
+                        <span className="min-w-0 flex-1 text-[13px] leading-[1.15] lg:text-[14px]">{item.name}</span>
+                        <ArrowRight size={15} className="ml-auto shrink-0" />
                     </Link>
                 );
             })}
