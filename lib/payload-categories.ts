@@ -2,6 +2,7 @@ import type {
     CatalogCategoryGroupNavItem,
     CatalogCategoryNavItem,
     CatalogSubcategoryNavItem,
+    HeaderMenus,
     NavItem,
 } from '@/types/site';
 import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
@@ -16,6 +17,8 @@ type PayloadCategoryDoc = {
     slug?: unknown;
     createdAt?: unknown;
     showInMenu?: unknown;
+    showInDesktopMenu?: unknown;
+    showInMobileMenu?: unknown;
     sortOrder?: unknown;
 };
 
@@ -25,6 +28,8 @@ type PayloadCategoryGroupDoc = {
     slug?: unknown;
     createdAt?: unknown;
     showInMenu?: unknown;
+    showInDesktopMenu?: unknown;
+    showInMobileMenu?: unknown;
     sortOrder?: unknown;
     category?: {
         id?: unknown;
@@ -38,6 +43,8 @@ type PayloadSubcategoryDoc = {
     slug?: unknown;
     createdAt?: unknown;
     showInMenu?: unknown;
+    showInDesktopMenu?: unknown;
+    showInMobileMenu?: unknown;
     sortOrder?: unknown;
     categoryGroup?: {
         id?: unknown;
@@ -58,6 +65,8 @@ const CATEGORY_SELECT: PayloadSelect = {
     slug: true,
     createdAt: true,
     showInMenu: true,
+    showInDesktopMenu: true,
+    showInMobileMenu: true,
     sortOrder: true,
 };
 
@@ -110,6 +119,21 @@ const sortByMenuOrderAsc = <T extends { createdAt?: unknown; sortOrder?: unknown
 
 const isMenuVisible = (value: unknown) => value === true;
 
+type MenuViewport = 'desktop' | 'mobile';
+
+const isVisibleForViewport = (
+    doc: { showInMenu?: unknown; showInDesktopMenu?: unknown; showInMobileMenu?: unknown },
+    viewport: MenuViewport,
+) => {
+    const explicitValue = viewport === 'desktop' ? doc.showInDesktopMenu : doc.showInMobileMenu;
+
+    if (typeof explicitValue === 'boolean') {
+        return explicitValue;
+    }
+
+    return isMenuVisible(doc.showInMenu);
+};
+
 const mapCategoryGroup = (
     doc: PayloadCategoryGroupDoc,
     categorySlug: string,
@@ -151,7 +175,10 @@ const mapSubcategory = (
     };
 };
 
-export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?: boolean }): Promise<CatalogCategoryNavItem[]> {
+export async function fetchPayloadCatalogCategories(options?: {
+    onlyMenuVisible?: boolean;
+    viewport?: MenuViewport;
+}): Promise<CatalogCategoryNavItem[]> {
     const baseUrl = getPayloadBaseUrl();
     const categoriesParams = new URLSearchParams({ depth: '0', limit: '200', sort: 'sortOrder' });
     const categoryGroupsParams = new URLSearchParams({ depth: '1', limit: '500', sort: 'sortOrder' });
@@ -190,7 +217,7 @@ export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?
 
         const subcategoriesByGroup = new Map<string, CatalogSubcategoryNavItem[]>();
         for (const doc of subcategoryDocs) {
-            if (options?.onlyMenuVisible && !isMenuVisible(doc.showInMenu)) {
+            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
                 continue;
             }
 
@@ -219,7 +246,7 @@ export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?
 
         const groupsByCategory = new Map<string, CatalogCategoryGroupNavItem[]>();
         for (const doc of categoryGroupDocs) {
-            if (options?.onlyMenuVisible && !isMenuVisible(doc.showInMenu)) {
+            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
                 continue;
             }
 
@@ -247,7 +274,7 @@ export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?
         }
 
         return categoryDocs.reduce<CatalogCategoryNavItem[]>((items, doc) => {
-            if (options?.onlyMenuVisible && !isMenuVisible(doc.showInMenu)) {
+            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
                 return items;
             }
 
@@ -276,10 +303,8 @@ export async function fetchPayloadCatalogCategories(options?: { onlyMenuVisible?
     }
 }
 
-export async function fetchPayloadHeaderMenuItems(): Promise<NavItem[]> {
-    const categories = await fetchPayloadCatalogCategories({ onlyMenuVisible: true });
-
-    return categories.map((category) => ({
+const mapCategoriesToHeaderItems = (categories: CatalogCategoryNavItem[]): NavItem[] =>
+    categories.map((category) => ({
         label: category.name,
         href: category.href,
         children: category.children?.length
@@ -295,6 +320,17 @@ export async function fetchPayloadHeaderMenuItems(): Promise<NavItem[]> {
               }))
             : undefined,
     }));
+
+export async function fetchPayloadHeaderMenus(): Promise<HeaderMenus> {
+    const [desktopCategories, mobileCategories] = await Promise.all([
+        fetchPayloadCatalogCategories({ onlyMenuVisible: true, viewport: 'desktop' }),
+        fetchPayloadCatalogCategories({ onlyMenuVisible: true, viewport: 'mobile' }),
+    ]);
+
+    return {
+        desktopMenuItems: mapCategoriesToHeaderItems(desktopCategories),
+        mobileMenuItems: mapCategoriesToHeaderItems(mobileCategories),
+    };
 }
 
 export const findCatalogCategoryBySlug = (

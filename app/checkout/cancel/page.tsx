@@ -123,10 +123,10 @@ export default async function CheckoutCancelPage({
                             </a>
 
                             <a
-                                href="/cart"
+                                href="/shop"
                                 className="inline-flex h-[46px] items-center justify-center border border-[#111111]/20 px-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-black"
                             >
-                                {'Zpět do košíku'}
+                                {'Do obchodu'}
                             </a>
                         </div>
                     </div>

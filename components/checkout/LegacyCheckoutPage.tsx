@@ -835,11 +835,11 @@ export default function CheckoutPage() {
 
                                 <div className="mt-6">
                                     <Link
-                                        href="/cart"
+                                        href="/shop"
                                         className="flex items-center justify-center gap-2 text-[13px] font-semibold text-[#888] hover:text-black transition-colors"
                                     >
                                         <ArrowLeft size={14} />
-                                        Zpět do košíku
+                                        Pokračovat v nákupu
                                     </Link>
                                 </div>
                             </aside>

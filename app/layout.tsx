@@ -5,7 +5,7 @@ import { Cormorant_Garamond, Work_Sans } from "next/font/google";
 import CouponCapture from "@/components/CouponCapture";
 import { CartProvider } from "@/context/CartContext";
 import { NavigationProvider } from "@/context/NavigationContext";
-import { fetchPayloadHeaderMenuItems } from "@/lib/payload-categories";
+import { fetchPayloadHeaderMenus } from "@/lib/payload-categories";
 
 import "./globals.css";
 
@@ -32,7 +32,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const menuItems = await fetchPayloadHeaderMenuItems();
+  const menuItems = await fetchPayloadHeaderMenus();
   return (
     <html lang="cs">
       <body

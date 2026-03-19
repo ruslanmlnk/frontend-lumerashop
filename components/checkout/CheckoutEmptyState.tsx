@@ -21,9 +21,9 @@ export default function CheckoutEmptyState({ variant }: CheckoutEmptyStateProps)
                 Jakmile budete mít v košíku vybrané položky, tady dokončíte dopravu, fakturaci i platbu.
             </p>
             <div className="mt-6 flex justify-center">
-                <Link href="/cart" className={theme.secondary}>
+                <Link href="/shop" className={theme.secondary}>
                     <ArrowLeft size={14} />
-                    Zpět do košíku
+                    Do obchodu
                 </Link>
             </div>
         </section>

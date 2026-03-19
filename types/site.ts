@@ -54,6 +54,11 @@ export interface NavItem {
     children?: NavItem[];
 }
 
+export interface HeaderMenus {
+    desktopMenuItems: NavItem[];
+    mobileMenuItems: NavItem[];
+}
+
 export interface Category {
     name: string;
     bg: string;

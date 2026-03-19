@@ -42,12 +42,12 @@ const Header = () => {
   const [isMiniCartQuoteLoading, setIsMiniCartQuoteLoading] = useState(false);
   const [miniCartQuote, setMiniCartQuote] = useState<CheckoutQuoteResponse | null>(null);
   const { cartItems, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
-  const { menuItems } = useNavigation();
+  const { desktopMenuItems: payloadDesktopMenuItems, mobileMenuItems: payloadMobileMenuItems } = useNavigation();
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const desktopMenuItems = [HOME_MENU_ITEM, ...menuItems, ...STATIC_PAGE_ITEMS];
-  const mobileMenuItems = [HOME_MENU_ITEM, ...menuItems, ...STATIC_PAGE_ITEMS];
+  const desktopMenuItems = [HOME_MENU_ITEM, ...payloadDesktopMenuItems, ...STATIC_PAGE_ITEMS];
+  const mobileMenuItems = [HOME_MENU_ITEM, ...payloadMobileMenuItems, ...STATIC_PAGE_ITEMS];
   const hasCartItems = cartItems.length > 0;
   const miniCartSubtotal = miniCartQuote?.totals?.subtotal ?? totalPrice;
   const miniCartCouponDiscountAmount = miniCartQuote?.discounts?.couponDiscountAmount ?? 0;
@@ -237,10 +237,10 @@ const Header = () => {
       const rowClass = depth === 0 ? 'py-[10px]' : depth === 1 ? 'py-[8px]' : 'py-[6px]';
       const linkClass =
         depth === 0
-          ? 'flex-1 text-[22px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]'
+          ? 'flex-1 text-[19px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]'
           : depth === 1
-            ? 'flex-1 text-[18px] font-light leading-[1.4] text-white/70 transition-colors hover:text-[#c8a16a]'
-            : 'flex-1 text-[16px] font-light leading-[1.5] text-white/55 transition-colors hover:text-[#c8a16a]';
+            ? 'flex-1 text-[15px] font-light leading-[1.4] text-white/70 transition-colors hover:text-[#c8a16a]'
+            : 'flex-1 text-[13px] font-light leading-[1.5] text-white/55 transition-colors hover:text-[#c8a16a]';
       const childWrapClass = depth === 0 ? 'space-y-3 pb-4 pl-4 pt-2' : 'space-y-2 pb-3 pl-5 pt-2';
 
       return (
@@ -350,7 +350,7 @@ const Header = () => {
 
         {desktopMenuItems.length > 0 ? (
         <nav className="mx-auto hidden h-[53px] max-w-[1140px] px-4 md:block lg:px-0">
-          <ul className="flex h-full items-center justify-center gap-[52px] font-sans text-[#111111]">
+          <ul className="flex h-full w-full items-center justify-between gap-6 font-sans text-[#111111] xl:gap-8">
             {desktopMenuItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
 
@@ -478,7 +478,7 @@ const Header = () => {
                 transition={{ type: 'tween', duration: 0.3 }}
                 className="fixed right-0 top-0 z-[100] flex h-full w-full flex-col bg-white shadow-2xl md:w-[396px]"
               >
-                <div className="flex h-[72px] shrink-0 items-center justify-between px-6">
+                <div className="flex h-[72px] shrink-0 items-center justify-between pl-4 pr-6">
                   <button
                     onClick={closeCartDrawer}
                     className="inline-flex h-8 w-8 items-center justify-center text-[#90867a] transition-colors hover:text-[#111111]"
@@ -497,7 +497,7 @@ const Header = () => {
                 </div>
 
                 {hasCartItems ? (
-                  <div className="flex-1 overflow-y-auto px-6 pb-5">
+                  <div className="flex-1 overflow-y-auto pl-4 pr-6 pb-5">
                     <div className="space-y-1">
                       {cartItems.map((item) => (
                         <article
@@ -516,7 +516,7 @@ const Header = () => {
 
                           <div className="min-w-0">
                             <Link
-                              href={item.slug ? `/product/${item.slug}` : '/cart'}
+                              href={item.slug ? `/product/${item.slug}` : '/shop'}
                               onClick={closeCartDrawer}
                               className="block text-[11px] font-semibold uppercase leading-5 tracking-[0.04em] text-[#111111] transition-colors hover:text-[#b98743]"
                             >
@@ -563,7 +563,7 @@ const Header = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
+                  <div className="flex flex-1 flex-col items-center justify-center pl-4 pr-6 py-10 text-center">
                     <div className="inline-flex h-12 w-16 items-center justify-center rounded-[16px] bg-[#111111] text-white shadow-[0_16px_32px_rgba(17,17,17,0.12)]">
                       <svg width="24" height="24" viewBox="0 0 32 32" fill="currentColor">
                         <path d="M6.55 13.0581L9.225 21.4481C9.425 22.0456 9.95 22.444 10.575 22.444H20.9C21.5 22.444 22.075 22.0705 22.275 21.5228L26.225 10.9917H28.5C29.05 10.9917 29.5 10.5436 29.5 9.99585C29.5 9.44813 29.05 9 28.5 9H25.525C25.1 9 24.725 9.27386 24.575 9.6722L20.5 20.4523H11L8.875 13.7303H20.65C21.2 13.7303 21.65 13.2822 21.65 12.7344C21.65 12.1867 21.2 11.7386 20.65 11.7386H7.5C7.175 11.7386 6.875 11.9129 6.7 12.1618C6.5 12.4108 6.45 12.7593 6.55 13.0581Z" />
@@ -581,7 +581,7 @@ const Header = () => {
                   </div>
                 )}
 
-                <div className="shrink-0 border-t border-[#111]/8 bg-[#f8f6f3] px-6 py-5">
+                <div className="shrink-0 border-t border-[#111]/8 bg-[#f8f6f3] pl-4 pr-6 py-5">
                   {hasCartItems ? (
                     <>
                       <div className="rounded-[14px] border border-dashed border-[#111]/12 bg-white px-4 py-3">
@@ -660,9 +660,9 @@ const Header = () => {
                       </div>
 
                       <Link
-                        href="/cart"
+                        href="/shop"
                         onClick={closeCartDrawer}
-                        className="mt-5 flex h-[44px] w-full items-center justify-center gap-2 rounded-[16px] border border-[#111]/10 bg-white text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111] transition-colors hover:border-[#b98743] hover:text-[#b98743]"
+                        className="hidden"
                       >
                         {'Do košíku'} <ArrowRight size={16} />
                       </Link>
@@ -670,7 +670,7 @@ const Header = () => {
                       <Link
                         href="/checkout"
                         onClick={closeCartDrawer}
-                        className="mt-2.5 flex h-[56px] w-full items-center justify-between rounded-[18px] bg-[#c79200] px-6 text-white transition-colors hover:bg-[#af8100]"
+                        className="mt-5 flex h-[56px] w-full items-center justify-between rounded-[18px] bg-[#c79200] px-6 text-white transition-colors hover:bg-[#af8100]"
                       >
                         <span className="text-[14px] font-semibold uppercase tracking-[0.12em]">
                           {'K pokladně'}

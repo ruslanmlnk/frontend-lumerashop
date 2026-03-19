@@ -1,10 +1,11 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { NavItem } from '@/types/site';
+import type { HeaderMenus } from '@/types/site';
 
-const NavigationContext = createContext<{ menuItems: NavItem[] }>({
-    menuItems: [],
+const NavigationContext = createContext<HeaderMenus>({
+    desktopMenuItems: [],
+    mobileMenuItems: [],
 });
 
 export function NavigationProvider({
@@ -12,10 +13,10 @@ export function NavigationProvider({
     initialMenuItems,
 }: {
     children: ReactNode;
-    initialMenuItems: NavItem[];
+    initialMenuItems: HeaderMenus;
 }) {
     return (
-        <NavigationContext.Provider value={{ menuItems: initialMenuItems }}>
+        <NavigationContext.Provider value={initialMenuItems}>
             {children}
         </NavigationContext.Provider>
     );

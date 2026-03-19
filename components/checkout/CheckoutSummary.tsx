@@ -176,9 +176,9 @@ export default function CheckoutSummary({
                     </div>
                 ) : null}
 
-                <Link href="/cart" className={theme.secondary}>
+                <Link href="/shop" className={theme.secondary}>
                     <ArrowLeft size={14} />
-                    Zpet do kosiku
+                    Pokracovat v nakupu
                 </Link>
             </div>
         </aside>
