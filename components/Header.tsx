@@ -251,15 +251,16 @@ const Header = () => {
             </Link>
             {hasChildren ? (
               <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   toggleExpand(itemKey);
                 }}
-                className="flex h-10 w-12 items-center justify-end text-white/40 transition-colors hover:text-white"
+                className="ml-3 inline-flex shrink-0 items-center justify-center p-1 text-white/40 transition-colors hover:text-white"
               >
                 <ChevronDown
-                  size={20}
+                  size={18}
                   className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                 />
               </button>

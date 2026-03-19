@@ -6,13 +6,14 @@ interface PriceFilterProps {
     max: number;
     value: [number, number];
     onChange: (range: [number, number]) => void;
+    hideTitle?: boolean;
 }
 
 type DragHandle = 'from' | 'to' | null;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-const PriceFilter = ({ min, max, value, onChange }: PriceFilterProps) => {
+const PriceFilter = ({ min, max, value, onChange, hideTitle = false }: PriceFilterProps) => {
     const [from, to] = value;
     const [dragging, setDragging] = useState<DragHandle>(null);
     const trackRef = useRef<HTMLDivElement | null>(null);
@@ -85,12 +86,14 @@ const PriceFilter = ({ min, max, value, onChange }: PriceFilterProps) => {
 
     return (
         <div className="w-full">
-            <h3
-                className="mb-[10px] text-[18px] font-bold leading-[21.6px] text-[#111111]"
-                style={{ fontFamily: '"Cormorant Garamond", serif' }}
-            >
-                Cena
-            </h3>
+            {!hideTitle ? (
+                <h3
+                    className="mb-[10px] text-[18px] font-bold leading-[21.6px] text-[#111111]"
+                    style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                >
+                    Cena
+                </h3>
+            ) : null}
 
             <div className="space-y-[10px]">
                 <div

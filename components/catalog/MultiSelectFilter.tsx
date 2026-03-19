@@ -5,21 +5,24 @@ interface MultiSelectFilterProps {
     options: string[];
     selected: string[];
     onToggle: (value: string) => void;
+    hideTitle?: boolean;
 }
 
-const MultiSelectFilter = ({ title, options, selected, onToggle }: MultiSelectFilterProps) => {
+const MultiSelectFilter = ({ title, options, selected, onToggle, hideTitle = false }: MultiSelectFilterProps) => {
     if (options.length === 0) {
         return null;
     }
 
     return (
         <div className="w-full">
-            <h3
-                className="mb-[10px] text-[18px] font-bold leading-[21.6px] text-[#111111]"
-                style={{ fontFamily: '"Cormorant Garamond", serif' }}
-            >
-                {title}
-            </h3>
+            {!hideTitle ? (
+                <h3
+                    className="mb-[10px] text-[18px] font-bold leading-[21.6px] text-[#111111]"
+                    style={{ fontFamily: '"Cormorant Garamond", serif' }}
+                >
+                    {title}
+                </h3>
+            ) : null}
 
             <div className="space-y-[2px]">
                 {options.map((option) => {
