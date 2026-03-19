@@ -350,7 +350,7 @@ const Header = () => {
 
         {desktopMenuItems.length > 0 ? (
         <nav className="mx-auto hidden h-[53px] max-w-[1140px] px-4 md:block lg:px-0">
-          <ul className="flex h-full w-full items-center justify-between gap-6 font-sans text-[#111111] xl:gap-8">
+          <ul className="flex h-full items-center justify-center gap-[32px] font-sans text-[#111111] lg:gap-[40px] xl:gap-[52px]">
             {desktopMenuItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
 
