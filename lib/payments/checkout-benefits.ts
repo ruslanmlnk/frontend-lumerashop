@@ -30,11 +30,13 @@ export type CheckoutQuote = {
         isAuthenticated: boolean;
         userId?: string;
         bonusBalance: number;
+        firstPurchaseDiscountUsed: boolean;
     };
     loyaltySettings: LoyaltySettings;
     coupon?: AppliedCoupon;
     discounts: {
         couponDiscountAmount: number;
+        firstPurchaseDiscountAmount: number;
         bonusDiscountAmount: number;
         discountedSubtotal: number;
     };
@@ -68,6 +70,8 @@ const DEFAULT_SETTINGS: LoyaltySettings = {
     redemptionBonusUnits: 5,
     redemptionAmount: 100,
 };
+
+const FIRST_PURCHASE_DISCOUNT_AMOUNT = 100;
 
 const toPositiveMoney = (value: unknown, fallback = 0) => {
     const numeric = typeof value === 'number' ? value : Number(value);
@@ -253,17 +257,22 @@ export const buildCheckoutQuote = async ({
         toPositiveMoney(appliedCoupon?.discountAmount),
     );
     const subtotalAfterCoupon = Math.max(0, totals.subtotal - couponDiscountAmount);
+    const firstPurchaseDiscountAmount =
+        currentUser && currentUser.firstPurchaseDiscountUsed !== true
+            ? Math.min(subtotalAfterCoupon, FIRST_PURCHASE_DISCOUNT_AMOUNT)
+            : 0;
+    const subtotalAfterFirstPurchaseDiscount = Math.max(0, subtotalAfterCoupon - firstPurchaseDiscountAmount);
 
     const bonusRedemption =
         useBonusBalance && currentUser
-            ? calculateBonusRedemption(bonusBalance, subtotalAfterCoupon, loyaltySettings)
+            ? calculateBonusRedemption(bonusBalance, subtotalAfterFirstPurchaseDiscount, loyaltySettings)
             : {
                   bonusUnitsSpent: 0,
                   discountAmount: 0,
                   availableBonusDiscountAmount: 0,
               };
 
-    const discountedSubtotal = Math.max(0, subtotalAfterCoupon - bonusRedemption.discountAmount);
+    const discountedSubtotal = Math.max(0, subtotalAfterFirstPurchaseDiscount - bonusRedemption.discountAmount);
     const total = Math.max(0, discountedSubtotal + totals.shipping);
 
     return {
@@ -271,11 +280,13 @@ export const buildCheckoutQuote = async ({
             isAuthenticated: Boolean(currentUser),
             userId: currentUser?.id,
             bonusBalance,
+            firstPurchaseDiscountUsed: currentUser?.firstPurchaseDiscountUsed === true,
         },
         loyaltySettings,
         coupon: appliedCoupon,
         discounts: {
             couponDiscountAmount,
+            firstPurchaseDiscountAmount,
             bonusDiscountAmount: bonusRedemption.discountAmount,
             discountedSubtotal,
         },

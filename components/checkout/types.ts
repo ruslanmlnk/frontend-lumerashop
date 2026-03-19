@@ -18,6 +18,7 @@ export type CheckoutQuoteResponse = {
         isAuthenticated: boolean;
         userId?: string;
         bonusBalance: number;
+        firstPurchaseDiscountUsed?: boolean;
     };
     loyaltySettings?: {
         bonusesEnabled: boolean;
@@ -35,6 +36,7 @@ export type CheckoutQuoteResponse = {
     };
     discounts?: {
         couponDiscountAmount: number;
+        firstPurchaseDiscountAmount: number;
         bonusDiscountAmount: number;
         discountedSubtotal: number;
     };
@@ -64,7 +66,7 @@ export type CheckoutFormState = {
     city: string;
     zip: string;
     notes: string;
-    shippingMethod: ShippingMethodId;
+    shippingMethod: ShippingMethodId | '';
     pickupPoint: CheckoutPickupPoint | null;
     billingSameAsShipping: boolean;
     billingFirstName: string;

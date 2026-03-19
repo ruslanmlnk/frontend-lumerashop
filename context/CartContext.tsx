@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getRenderableAssetPath } from '@/lib/local-assets';
+import { DEFAULT_LOCAL_ASSET_FALLBACK, getStoredAssetPath } from '@/lib/local-assets';
 
 export interface CartItem {
     id: number | string;
@@ -25,9 +25,16 @@ interface CartContextType {
 }
 
 type PersistedCartItem = Partial<CartItem> & { image?: string };
+type ProductApiResponse = {
+    products?: Array<{
+        image?: unknown;
+    }>;
+};
 
 const CART_STORAGE_KEY = 'lumera_cart';
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+const normalizeCartImage = (value: string | null | undefined) => getStoredAssetPath(value);
 
 const sanitizePersistedCart = (value: unknown): CartItem[] => {
     if (!Array.isArray(value)) {
@@ -45,7 +52,7 @@ const sanitizePersistedCart = (value: unknown): CartItem[] => {
 
             return {
                 ...item,
-                image: getRenderableAssetPath(item.image),
+                image: normalizeCartImage(item.image),
             };
         })
         .filter(
@@ -89,11 +96,96 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(CART_STORAGE_KEY);
     }, [cartItems]);
 
+    useEffect(() => {
+        const itemsNeedingImageRepair = cartItems.filter(
+            (item) => item.slug && item.image === DEFAULT_LOCAL_ASSET_FALLBACK,
+        );
+
+        if (itemsNeedingImageRepair.length === 0) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const repairImages = async () => {
+            const repairedEntries = await Promise.all(
+                itemsNeedingImageRepair.map(async (item) => {
+                    try {
+                        const response = await fetch(`/api/products?slug=${encodeURIComponent(item.slug ?? '')}`);
+                        if (!response.ok) {
+                            return null;
+                        }
+
+                        const payload = (await response.json()) as ProductApiResponse;
+                        const productImage =
+                            typeof payload.products?.[0]?.image === 'string'
+                                ? normalizeCartImage(payload.products[0].image)
+                                : null;
+
+                        if (!productImage || productImage === DEFAULT_LOCAL_ASSET_FALLBACK) {
+                            return null;
+                        }
+
+                        return {
+                            slug: item.slug ?? '',
+                            image: productImage,
+                        };
+                    } catch {
+                        return null;
+                    }
+                }),
+            );
+
+            if (cancelled) {
+                return;
+            }
+
+            const imageBySlug = new Map(
+                repairedEntries
+                    .filter((entry): entry is { slug: string; image: string } => Boolean(entry?.slug && entry.image))
+                    .map((entry) => [entry.slug, entry.image] as const),
+            );
+
+            if (imageBySlug.size === 0) {
+                return;
+            }
+
+            setCartItems((prev) => {
+                let hasChanges = false;
+
+                const next = prev.map((item) => {
+                    if (!item.slug || item.image !== DEFAULT_LOCAL_ASSET_FALLBACK) {
+                        return item;
+                    }
+
+                    const repairedImage = imageBySlug.get(item.slug);
+                    if (!repairedImage) {
+                        return item;
+                    }
+
+                    hasChanges = true;
+                    return {
+                        ...item,
+                        image: repairedImage,
+                    };
+                });
+
+                return hasChanges ? next : prev;
+            });
+        };
+
+        void repairImages();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [cartItems]);
+
     const addToCart = (item: CartItem) => {
         setCartItems((prev) => {
             const normalizedItem = {
                 ...item,
-                image: getRenderableAssetPath(item.image),
+                image: normalizeCartImage(item.image),
             };
             const existingItem = prev.find((entry) => entry.id === item.id);
 
@@ -106,7 +198,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                               slug: entry.slug ?? normalizedItem.slug,
                               sku: entry.sku ?? normalizedItem.sku,
                               variant: entry.variant ?? normalizedItem.variant,
-                              image: getRenderableAssetPath(entry.image),
+                              image: normalizedItem.image,
                           }
                         : entry,
                 );

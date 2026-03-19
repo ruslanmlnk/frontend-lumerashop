@@ -36,7 +36,7 @@ export type CheckoutPayload = {
     promoCode?: string;
     useBonusBalance?: boolean;
     shipping?: {
-        methodId: ShippingMethodId;
+        methodId?: ShippingMethodId;
         label?: string;
         pickupPoint?: CheckoutPickupPoint | null;
     };

@@ -18,6 +18,7 @@ const isCheckoutProvider = (value: unknown): value is CheckoutProvider =>
 const buildStripeLineItems = ({
     items,
     couponDiscountAmount,
+    firstPurchaseDiscountAmount,
     bonusDiscountAmount,
     shippingAmount,
     shippingLabel,
@@ -25,13 +26,14 @@ const buildStripeLineItems = ({
 }: {
     items: ReturnType<typeof sanitizeCheckoutItems>;
     couponDiscountAmount: number;
+    firstPurchaseDiscountAmount: number;
     bonusDiscountAmount: number;
     shippingAmount: number;
     shippingLabel?: string;
     shippingMethodId?: string;
 }) => {
     const subtotalCents = items.reduce((sum, item) => sum + item.lineTotal * 100, 0);
-    const discountCents = Math.round((couponDiscountAmount + bonusDiscountAmount) * 100);
+    const discountCents = Math.round((couponDiscountAmount + firstPurchaseDiscountAmount + bonusDiscountAmount) * 100);
 
     const expandedUnits = items.flatMap((item) =>
         Array.from({ length: item.quantity }, (_, index) => ({
@@ -178,6 +180,10 @@ export async function POST(request: NextRequest) {
         }
 
         const shippingMethodId = payload.shipping?.methodId;
+        if (!shippingMethodId) {
+            return NextResponse.json({ error: 'Shipping method is required.' }, { status: 400 });
+        }
+
         const shippingMethods = await fetchPayloadShippingMethods();
         const selectedShippingMethod = shippingMethodId
             ? shippingMethods.find((method) => method.id === shippingMethodId)
@@ -254,6 +260,7 @@ export async function POST(request: NextRequest) {
                 : null,
             discounts: {
                 couponDiscountAmount: quote.discounts.couponDiscountAmount,
+                firstPurchaseDiscountAmount: quote.discounts.firstPurchaseDiscountAmount,
                 bonusDiscountAmount: quote.discounts.bonusDiscountAmount,
                 discountedSubtotal: quote.discounts.discountedSubtotal,
             },
@@ -287,6 +294,7 @@ export async function POST(request: NextRequest) {
                 line_items: buildStripeLineItems({
                     items,
                     couponDiscountAmount: quote.discounts.couponDiscountAmount,
+                    firstPurchaseDiscountAmount: quote.discounts.firstPurchaseDiscountAmount,
                     bonusDiscountAmount: quote.discounts.bonusDiscountAmount,
                     shippingAmount: quote.totals.shipping,
                     shippingLabel: selectedShippingMethod?.label || payload.shipping?.label,
@@ -304,6 +312,7 @@ export async function POST(request: NextRequest) {
                     pickupPointName: pickupPoint?.name?.slice(0, 500) || '',
                     couponCode: quote.coupon?.code || '',
                     couponDiscountAmount: String(quote.discounts.couponDiscountAmount),
+                    firstPurchaseDiscountAmount: String(quote.discounts.firstPurchaseDiscountAmount),
                     bonusDiscountAmount: String(quote.discounts.bonusDiscountAmount),
                     bonusUnitsSpent: String(quote.loyalty.bonusUnitsSpent),
                 },

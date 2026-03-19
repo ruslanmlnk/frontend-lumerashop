@@ -14,6 +14,7 @@ import {
     SHIPPING_METHODS as SHIPPING_METHODS_CLEAN,
     type CheckoutPickupPoint,
 } from '@/lib/checkout-shipping';
+import { getStoredAssetPath } from '@/lib/local-assets';
 import { Check, Truck, CreditCard, User, Receipt, Info, ArrowLeft, Loader2 } from 'lucide-react';
 import '@/app/checkout2.css';
 
@@ -774,7 +775,7 @@ export default function CheckoutPage() {
                                     {cartItems.map((item) => (
                                         <div key={item.id} className="summary-item flex items-start gap-3 text-[14px]">
                                             <div className="relative w-[60px] h-[60px] bg-white border border-[#eee] rounded-md overflow-hidden flex-shrink-0">
-                                                <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                                <Image src={getStoredAssetPath(item.image)} alt={item.name} fill className="object-cover" />
                                                 <div className="absolute top-[-5px] right-[-5px] bg-[#111] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
                                                     {item.quantity}
                                                 </div>

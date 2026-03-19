@@ -104,6 +104,19 @@ export const getRenderableAssetPath = (
   return normalized;
 };
 
+export const getStoredAssetPath = (
+  value: string | null | undefined,
+  fallback = DEFAULT_LOCAL_ASSET_FALLBACK,
+): string => {
+  const normalized = getLocalAssetPath(value);
+
+  if (!normalized) {
+    return fallback;
+  }
+
+  return normalized;
+};
+
 export const getPayloadMediaProxyPath = (value: string): string =>
   `/api/payload-media/${encodeURIComponent(value)}`;
 

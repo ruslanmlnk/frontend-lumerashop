@@ -8,7 +8,7 @@ type CheckoutHeroProps = {
     description: string;
     itemCount: number;
     itemLabel: string;
-    shippingLabel: string;
+    shippingLabel?: string;
 };
 
 type HeroPill = {
@@ -28,7 +28,7 @@ export default function CheckoutHero({
 
     const pills: HeroPill[] = [
         { icon: ShoppingBag, label: `${itemCount} ${itemLabel}` },
-        { icon: Truck, label: shippingLabel },
+        { icon: Truck, label: shippingLabel || 'Doprava neni vybrana' },
         { icon: Shield, label: 'Bezpečná platba' },
     ];
 

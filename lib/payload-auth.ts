@@ -11,6 +11,7 @@ export type AuthUser = {
   bonusBalance?: number;
   earnedBonusTotal?: number;
   spentBonusTotal?: number;
+  firstPurchaseDiscountUsed?: boolean;
   shippingAddress?: AuthAddress;
   billingAddress?: AuthAddress;
 };
@@ -200,6 +201,7 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
     typeof record.spentBonusTotal === 'number' || typeof record.spentBonusTotal === 'string'
       ? Number(record.spentBonusTotal)
       : NaN;
+  const firstPurchaseDiscountUsed = record.firstPurchaseDiscountUsed === true;
   const sanitizeAddress = (input: unknown): AuthAddress | undefined => {
     if (!input || typeof input !== 'object') {
       return undefined;
@@ -234,6 +236,7 @@ export function sanitizeAuthUser(value: unknown): AuthUser | null {
     bonusBalance: Number.isFinite(bonusBalanceRaw) ? Math.max(0, Math.floor(bonusBalanceRaw)) : 0,
     earnedBonusTotal: Number.isFinite(earnedBonusTotalRaw) ? Math.max(0, Math.floor(earnedBonusTotalRaw)) : 0,
     spentBonusTotal: Number.isFinite(spentBonusTotalRaw) ? Math.max(0, Math.floor(spentBonusTotalRaw)) : 0,
+    firstPurchaseDiscountUsed,
     shippingAddress: sanitizeAddress(record.shippingAddress),
     billingAddress: sanitizeAddress(record.billingAddress),
   };

@@ -211,7 +211,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <div className="mt-[20px] hidden md:block">
+        <div className="mt-[20px]">
           <Features />
         </div>
 

@@ -30,7 +30,6 @@ import {
     sanitizeCouponCode,
 } from '@/lib/coupon-storage';
 import {
-    DEFAULT_SHIPPING_METHOD,
     formatPickupPointAddress,
     getPickupCarrierForMethod,
     getShippingMethodById,
@@ -167,7 +166,7 @@ export default function CheckoutPage({
         city: '',
         zip: '',
         notes: '',
-        shippingMethod: availableShippingMethods[0]?.id ?? DEFAULT_SHIPPING_METHOD,
+        shippingMethod: '',
         pickupPoint: null,
         billingSameAsShipping: true,
         billingFirstName: '',
@@ -196,23 +195,25 @@ export default function CheckoutPage({
     }, []);
 
     useEffect(() => {
-        const fallbackMethod = availableShippingMethods[0]?.id ?? DEFAULT_SHIPPING_METHOD;
-
         setFormData((prev) => {
+            if (!prev.shippingMethod) {
+                return prev;
+            }
+
             if (availableShippingMethods.some((method) => method.id === prev.shippingMethod)) {
                 return prev;
             }
 
             return {
                 ...prev,
-                shippingMethod: fallbackMethod,
+                shippingMethod: '',
                 pickupPoint: null,
             };
         });
     }, [availableShippingMethods]);
 
     useEffect(() => {
-        const pickupCarrier = getPickupCarrierForMethod(formData.shippingMethod);
+        const pickupCarrier = formData.shippingMethod ? getPickupCarrierForMethod(formData.shippingMethod) : undefined;
 
         setFormData((prev) => {
             if (!pickupCarrier && prev.pickupPoint) {
@@ -354,7 +355,7 @@ export default function CheckoutPage({
             },
             body: JSON.stringify({
                 items: cartItems,
-                shippingMethodId: formData.shippingMethod,
+                shippingMethodId: formData.shippingMethod || undefined,
                 promoCode,
                 useBonusBalance,
             }),
@@ -456,7 +457,7 @@ export default function CheckoutPage({
                     },
                     body: JSON.stringify({
                         items: cartItems,
-                        shippingMethodId: formData.shippingMethod,
+                        shippingMethodId: formData.shippingMethod || undefined,
                         promoCode: appliedPromoCode,
                         useBonusBalance: formData.useBonusBalance,
                     }),
@@ -513,7 +514,13 @@ export default function CheckoutPage({
     };
 
     const handleContinueFromShipping = () => {
-        const pickupCarrier = getPickupCarrierForMethod(formData.shippingMethod);
+        if (!formData.shippingMethod) {
+            setShippingErrorMessage('Vyberte prosim zpusob dopravy.');
+            return;
+        }
+
+        const shippingMethodId = formData.shippingMethod;
+        const pickupCarrier = getPickupCarrierForMethod(shippingMethodId);
 
         if (pickupCarrier && (!formData.pickupPoint || formData.pickupPoint.carrier !== pickupCarrier)) {
             setShippingErrorMessage('Pro tento způsob dopravy musíte vybrat výdejní místo nebo box.');
@@ -544,6 +551,13 @@ export default function CheckoutPage({
             return;
         }
 
+        if (!formData.shippingMethod) {
+            setErrorMessage('Vyberte prosim zpusob dopravy.');
+            setCurrentStep('shipping');
+            return;
+        }
+
+        const shippingMethodId = formData.shippingMethod;
         const provider = formData.paymentProvider;
         setErrorMessage(null);
 
@@ -559,10 +573,8 @@ export default function CheckoutPage({
                     provider,
                     items: cartItems,
                     shipping: {
-                        methodId: formData.shippingMethod,
-                        label:
-                            getShippingMethodById(formData.shippingMethod, availableShippingMethods)?.label ||
-                            formData.shippingMethod,
+                        methodId: shippingMethodId,
+                        label: getShippingMethodById(shippingMethodId, availableShippingMethods)?.label,
                         pickupPoint: formData.pickupPoint,
                     },
                     customer: {
@@ -634,12 +646,11 @@ export default function CheckoutPage({
     const currentStepIndex = stepsInfo.findIndex((step) => step.id === currentStep);
     const progress = ((currentStepIndex + 1) / stepsInfo.length) * 100;
     const selectedShippingMethod =
-        getShippingMethodById(formData.shippingMethod, availableShippingMethods) ??
-        availableShippingMethods[0] ??
-        SHIPPING_METHODS[0];
-    const shippingPrice = quote?.totals?.shipping ?? selectedShippingMethod.price;
+        formData.shippingMethod ? getShippingMethodById(formData.shippingMethod, availableShippingMethods) : undefined;
+    const shippingPrice = quote?.totals?.shipping ?? selectedShippingMethod?.price ?? 0;
     const subtotalPrice = quote?.totals?.subtotal ?? totalPrice;
     const couponDiscountAmount = quote?.discounts?.couponDiscountAmount ?? 0;
+    const firstPurchaseDiscountAmount = quote?.discounts?.firstPurchaseDiscountAmount ?? 0;
     const bonusDiscountAmount = quote?.discounts?.bonusDiscountAmount ?? 0;
     const discountedSubtotal = quote?.discounts?.discountedSubtotal ?? subtotalPrice;
     const orderTotal = quote?.totals?.total ?? discountedSubtotal + shippingPrice;
@@ -722,7 +733,9 @@ export default function CheckoutPage({
                         <div>
                             {formData.firstName} {formData.lastName}, {formData.address}, {formData.city} {formData.zip}
                         </div>
-                        <div className="mt-1 text-[#7a7164]">{selectedShippingMethod.label}</div>
+                        {selectedShippingMethod ? (
+                            <div className="mt-1 text-[#7a7164]">{selectedShippingMethod.label}</div>
+                        ) : null}
                         {formData.pickupPoint && (
                             <div className="mt-1 text-[12px] text-[#6b6257]">
                                 {formData.pickupPoint.name}
@@ -1360,7 +1373,7 @@ export default function CheckoutPage({
                         description={description}
                         itemCount={itemCount}
                         itemLabel={getItemLabel(itemCount)}
-                        shippingLabel={selectedShippingMethod.label}
+                        shippingLabel={selectedShippingMethod?.label}
                     />
 
                     <CheckoutProgress
@@ -1405,11 +1418,9 @@ export default function CheckoutPage({
 
                         <CheckoutSummary
                             variant={variant}
-                            cartItems={cartItems}
-                            itemCount={itemCount}
-                            itemLabel={getItemLabel(itemCount)}
                             subtotalPrice={subtotalPrice}
                             couponDiscountAmount={couponDiscountAmount}
+                            firstPurchaseDiscountAmount={firstPurchaseDiscountAmount}
                             bonusDiscountAmount={bonusDiscountAmount}
                             discountedSubtotal={discountedSubtotal}
                             vatAmount={vatAmount}

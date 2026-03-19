@@ -14,7 +14,7 @@ import {
   readPendingCoupon,
   sanitizeCouponCode,
 } from '@/lib/coupon-storage';
-import { getRenderableAssetPath } from '@/lib/local-assets';
+import { getStoredAssetPath } from '@/lib/local-assets';
 import HeaderSearchForm from '@/components/header/HeaderSearchForm';
 import { Menu, X, ChevronDown, ArrowRight, Phone, Mail, Facebook, Instagram, Tag } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
@@ -507,7 +507,7 @@ const Header = () => {
                         >
                           <div className="relative h-[72px] w-[64px] shrink-0 overflow-hidden rounded-[12px] border border-[#111]/6 bg-[#f7f6f3]">
                             <Image
-                              src={getRenderableAssetPath(item.image)}
+                              src={getStoredAssetPath(item.image)}
                               alt={item.name}
                               fill
                               sizes="64px"

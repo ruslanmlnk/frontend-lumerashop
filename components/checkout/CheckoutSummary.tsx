@@ -1,26 +1,21 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Info, Shield } from 'lucide-react';
 
 import { getCheckoutTheme } from '@/components/checkout/theme';
 import type { CheckoutFormState, CheckoutVariant } from '@/components/checkout/types';
 import { formatPickupPointAddress, formatShippingPrice, type ShippingMethod } from '@/lib/checkout-shipping';
-import { getRenderableAssetPath } from '@/lib/local-assets';
-import type { CartItem } from '@/context/CartContext';
 
 type CheckoutSummaryProps = {
     variant: CheckoutVariant;
-    cartItems: CartItem[];
-    itemCount: number;
-    itemLabel: string;
     subtotalPrice: number;
     couponDiscountAmount: number;
+    firstPurchaseDiscountAmount: number;
     bonusDiscountAmount: number;
     discountedSubtotal: number;
     vatAmount: number;
     shippingPrice: number;
     orderTotal: number;
-    selectedShippingMethod: ShippingMethod;
+    selectedShippingMethod?: ShippingMethod;
     formData: CheckoutFormState;
     paymentLabel: string;
     formatPrice: (value: number) => string;
@@ -33,11 +28,9 @@ type CheckoutSummaryProps = {
 
 export default function CheckoutSummary({
     variant,
-    cartItems,
-    itemCount,
-    itemLabel,
     subtotalPrice,
     couponDiscountAmount,
+    firstPurchaseDiscountAmount,
     bonusDiscountAmount,
     discountedSubtotal,
     vatAmount,
@@ -50,44 +43,10 @@ export default function CheckoutSummary({
     loyaltySummary,
 }: CheckoutSummaryProps) {
     const theme = getCheckoutTheme(variant);
+    const hasAnyDiscount = couponDiscountAmount > 0 || firstPurchaseDiscountAmount > 0 || bonusDiscountAmount > 0;
 
     return (
         <aside className={theme.summary}>
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                    <p className={theme.eyebrow}>Prehled objednavky</p>
-                    <h2 className={theme.summaryTitle}>Kosik a platba</h2>
-                </div>
-                <div className={theme.pill}>
-                    {itemCount} {itemLabel}
-                </div>
-            </div>
-
-            <div className={theme.summaryList}>
-                {cartItems.map((item) => {
-                    const itemImage = getRenderableAssetPath(item.image);
-                    const itemMeta = [item.sku ? `Ref. ${item.sku}` : null, item.variant]
-                        .filter(Boolean)
-                        .join(' · ');
-
-                    return (
-                        <article key={item.id} className={theme.summaryItem}>
-                            <div className={theme.summaryThumb}>
-                                <Image src={itemImage} alt={item.name} fill className="object-contain p-2" />
-                                <span className={theme.summaryCount}>{item.quantity}</span>
-                            </div>
-
-                            <div className="min-w-0">
-                                <p className={theme.summaryName}>{item.name}</p>
-                                {itemMeta ? <p className={theme.summaryMeta}>{itemMeta}</p> : null}
-                            </div>
-
-                            <p className={theme.summaryPrice}>{formatPrice(item.price * item.quantity)}</p>
-                        </article>
-                    );
-                })}
-            </div>
-
             <div className={theme.summaryRows}>
                 <div className={theme.summaryRow}>
                     <div className={theme.summaryRowLabel}>
@@ -105,6 +64,15 @@ export default function CheckoutSummary({
                     </div>
                 ) : null}
 
+                {firstPurchaseDiscountAmount > 0 ? (
+                    <div className={theme.summaryRow}>
+                        <div className={theme.summaryRowLabel}>
+                            <span>Sleva na prvni nakup</span>
+                        </div>
+                        <span className={theme.summaryPrice}>- {formatPrice(firstPurchaseDiscountAmount)}</span>
+                    </div>
+                ) : null}
+
                 {bonusDiscountAmount > 0 ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
@@ -117,7 +85,7 @@ export default function CheckoutSummary({
                     </div>
                 ) : null}
 
-                {couponDiscountAmount > 0 || bonusDiscountAmount > 0 ? (
+                {hasAnyDiscount ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
                             <span>Po slevach</span>
@@ -136,8 +104,10 @@ export default function CheckoutSummary({
                 <div className={theme.summaryRow}>
                     <div className={theme.summaryRowLabel}>
                         <span>Doprava</span>
-                        <small className={theme.summaryRowMeta}>{selectedShippingMethod.label}</small>
-                        {formData.pickupPoint ? (
+                        <small className={theme.summaryRowMeta}>
+                            {selectedShippingMethod?.label || 'Zatim neni vybrana'}
+                        </small>
+                        {selectedShippingMethod && formData.pickupPoint ? (
                             <small className={theme.summaryRowMeta}>
                                 {formData.pickupPoint.name}
                                 {formatPickupPointAddress(formData.pickupPoint)
@@ -146,7 +116,9 @@ export default function CheckoutSummary({
                             </small>
                         ) : null}
                     </div>
-                    <span className={theme.summaryPrice}>{formatShippingPrice(shippingPrice)}</span>
+                    <span className={theme.summaryPrice}>
+                        {selectedShippingMethod ? formatShippingPrice(shippingPrice) : '-'}
+                    </span>
                 </div>
             </div>
 

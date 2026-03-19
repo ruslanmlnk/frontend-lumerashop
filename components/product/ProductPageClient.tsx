@@ -85,7 +85,7 @@ export default function ProductPageClient({
           />
         </section>
 
-        <div className="mt-[20px] hidden md:block">
+        <div className="mt-[20px]">
           <Features />
         </div>
 

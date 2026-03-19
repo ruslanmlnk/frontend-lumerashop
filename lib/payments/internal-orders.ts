@@ -18,6 +18,7 @@ export type PaymentOrderSummary = {
     bonusLedgerRecorded: boolean;
     couponCode: string;
     couponDiscountAmount: number;
+    firstPurchaseDiscountAmount: number;
     bonusDiscountAmount: number;
     discountedSubtotal: number;
     bonusUnitsSpent: number;
@@ -58,6 +59,7 @@ export type CreatePaymentOrderInput = {
     } | null;
     discounts?: {
         couponDiscountAmount?: number;
+        firstPurchaseDiscountAmount?: number;
         bonusDiscountAmount?: number;
         discountedSubtotal?: number;
     } | null;
