@@ -23,7 +23,7 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
     }
 
     return (
-        <div className="mb-10 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-10 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch">
             {items.map((item) => {
                 const imageSrc = typeof item.image === 'string' && item.image.trim() ? item.image : DEFAULT_LOCAL_ASSET_FALLBACK;
 
@@ -31,9 +31,9 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                     <Link
                         key={item.id}
                         href={item.href}
-                        className="group flex min-h-[88px] items-center gap-4 border border-[#111111] px-4 py-4 text-[#111111] transition-colors duration-200 hover:border-[#6f5640] hover:text-[#6f5640]"
+                        className="group flex min-h-[74px] w-full items-center gap-4 border border-[#111111] px-4 py-3 text-[#111111] transition-colors duration-200 hover:border-[#6f5640] hover:text-[#6f5640] md:w-[310px]"
                     >
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden md:h-12 md:w-12">
                             <Image
                                 src={imageSrc}
                                 alt={item.name}
@@ -43,8 +43,8 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                             />
                         </div>
 
-                        <span className="min-w-0 flex-1 text-[18px] leading-[1.25]">{item.name}</span>
-                        <ArrowRight size={18} className="shrink-0" />
+                        <span className="min-w-0 flex-1 text-[16px] leading-[1.25] md:text-[17px]">{item.name}</span>
+                        <ArrowRight size={18} className="ml-auto shrink-0" />
                     </Link>
                 );
             })}
