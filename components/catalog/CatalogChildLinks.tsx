@@ -38,7 +38,7 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                                 src={imageSrc}
                                 alt={item.name}
                                 fill
-                                sizes="22px"
+                                sizes="26px"
                                 className="object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                             />
                         </div>
