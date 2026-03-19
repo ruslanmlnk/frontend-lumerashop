@@ -5,10 +5,20 @@ import type {
     HeaderMenus,
     NavItem,
 } from '@/types/site';
+import {
+    DEFAULT_LOCAL_ASSET_FALLBACK,
+    getLocalAssetPath,
+    getRenderableAssetPath,
+    getRenderablePayloadMediaPath,
+} from '@/lib/local-assets';
 import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 
 type PayloadListResponse<T> = {
     docs?: T[];
+};
+
+type PayloadMediaDoc = {
+    url?: unknown;
 };
 
 type PayloadCategoryDoc = {
@@ -35,6 +45,7 @@ type PayloadCategoryGroupDoc = {
         id?: unknown;
         slug?: unknown;
     } | number | null;
+    image?: PayloadMediaDoc | number | null;
 };
 
 type PayloadSubcategoryDoc = {
@@ -54,6 +65,7 @@ type PayloadSubcategoryDoc = {
         id?: unknown;
         slug?: unknown;
     } | number | null;
+    image?: PayloadMediaDoc | number | null;
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
@@ -76,6 +88,9 @@ const CATEGORY_GROUP_SELECT: PayloadSelect = {
         id: true,
         slug: true,
     },
+    image: {
+        url: true,
+    },
 };
 
 const SUBCATEGORY_SELECT: PayloadSelect = {
@@ -88,6 +103,9 @@ const SUBCATEGORY_SELECT: PayloadSelect = {
         id: true,
         slug: true,
     },
+    image: {
+        url: true,
+    },
 };
 
 const getPayloadBaseUrl = () => (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '');
@@ -99,6 +117,35 @@ const getCategoryGroupHref = (categorySlug: string, groupSlug: string) =>
 
 const getSubcategoryHref = (categorySlug: string, groupSlug: string, subcategorySlug: string) =>
     `/product-category/${categorySlug}/${groupSlug}/${subcategorySlug}`;
+
+const resolveCategoryImageUrl = (value: unknown, baseUrl: string): string | undefined => {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        return undefined;
+    }
+
+    const normalizedValue = getLocalAssetPath(value);
+    if (!normalizedValue) {
+        return undefined;
+    }
+
+    if (normalizedValue.startsWith('/assets/')) {
+        return normalizedValue;
+    }
+
+    if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
+        if (normalizedValue.startsWith(baseUrl)) {
+            return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
+        }
+
+        return getRenderableAssetPath(normalizedValue, DEFAULT_LOCAL_ASSET_FALLBACK);
+    }
+
+    if (normalizedValue.startsWith('/')) {
+        return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
+    }
+
+    return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
+};
 
 const toSortOrder = (value: unknown) => {
     const numericValue = typeof value === 'number' ? value : Number(value);
@@ -137,6 +184,7 @@ const isVisibleForViewport = (
 const mapCategoryGroup = (
     doc: PayloadCategoryGroupDoc,
     categorySlug: string,
+    baseUrl: string,
 ): CatalogCategoryGroupNavItem | null => {
     const id = doc.id != null ? String(doc.id) : '';
     const name = typeof doc.name === 'string' ? doc.name.trim() : '';
@@ -151,6 +199,7 @@ const mapCategoryGroup = (
         name,
         slug,
         href: getCategoryGroupHref(categorySlug, slug),
+        image: typeof doc.image === 'object' && doc.image ? resolveCategoryImageUrl(doc.image.url, baseUrl) : undefined,
     };
 };
 
@@ -158,6 +207,7 @@ const mapSubcategory = (
     doc: PayloadSubcategoryDoc,
     categorySlug: string,
     groupSlug: string,
+    baseUrl: string,
 ): CatalogSubcategoryNavItem | null => {
     const id = doc.id != null ? String(doc.id) : '';
     const name = typeof doc.name === 'string' ? doc.name.trim() : '';
@@ -172,6 +222,7 @@ const mapSubcategory = (
         name,
         slug,
         href: getSubcategoryHref(categorySlug, groupSlug, slug),
+        image: typeof doc.image === 'object' && doc.image ? resolveCategoryImageUrl(doc.image.url, baseUrl) : undefined,
     };
 };
 
@@ -234,7 +285,7 @@ export async function fetchPayloadCatalogCategories(options?: {
                 continue;
             }
 
-            const mapped = mapSubcategory(doc, categorySlug, parentGroupSlug);
+            const mapped = mapSubcategory(doc, categorySlug, parentGroupSlug, baseUrl);
             if (!mapped) {
                 continue;
             }
@@ -259,7 +310,7 @@ export async function fetchPayloadCatalogCategories(options?: {
                 continue;
             }
 
-            const mapped = mapCategoryGroup(doc, parentSlug);
+            const mapped = mapCategoryGroup(doc, parentSlug, baseUrl);
             if (!mapped) {
                 continue;
             }

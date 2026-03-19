@@ -71,6 +71,7 @@ export interface CatalogSubcategoryNavItem {
     name: string;
     slug: string;
     href: string;
+    image?: string;
 }
 
 export interface CatalogCategoryGroupNavItem {
@@ -78,6 +79,7 @@ export interface CatalogCategoryGroupNavItem {
     name: string;
     slug: string;
     href: string;
+    image?: string;
     children?: CatalogSubcategoryNavItem[];
 }
 

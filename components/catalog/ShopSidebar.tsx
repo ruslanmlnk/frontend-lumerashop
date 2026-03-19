@@ -84,14 +84,11 @@ const ShopSidebarComponent = ({
         const isExpanded = expandedMobileSections.includes(sectionKey);
 
         return (
-            <section
-                key={sectionKey}
-                className="overflow-hidden rounded-[18px] border border-[#111111]/10 bg-[#fbfaf8]"
-            >
+            <section key={sectionKey} className="overflow-hidden">
                 <button
                     type="button"
                     onClick={() => toggleMobileSection(sectionKey)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left"
+                    className="flex w-full items-center justify-between gap-3 py-4 text-left"
                     aria-expanded={isExpanded}
                 >
                     <span className="flex items-center gap-2">
@@ -114,7 +111,7 @@ const ShopSidebarComponent = ({
                     />
                 </button>
 
-                {isExpanded ? <div className="border-t border-[#111111]/8 px-4 py-4">{content}</div> : null}
+                {isExpanded ? <div className="pb-4">{content}</div> : null}
             </section>
         );
     };

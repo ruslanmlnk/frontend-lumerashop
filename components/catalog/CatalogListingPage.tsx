@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
+import CatalogChildLinks from '@/components/catalog/CatalogChildLinks';
 import CatalogHeader from '@/components/catalog/CatalogHeader';
 import ProductSort from '@/components/catalog/ProductSort';
 import ShopSidebar from '@/components/catalog/ShopSidebar';
@@ -298,6 +299,23 @@ export default function CatalogListingPage({
             })),
         [filterGroups, selectedFilters],
     );
+    const visibleChildLinks = useMemo(() => {
+        if (!selectedCategorySlug || selectedSubcategorySlug) {
+            return [];
+        }
+
+        const selectedCategory = categoryItems.find((category) => category.slug === selectedCategorySlug);
+        if (!selectedCategory) {
+            return [];
+        }
+
+        if (selectedCategoryGroupSlug) {
+            const selectedCategoryGroup = selectedCategory.children?.find((group) => group.slug === selectedCategoryGroupSlug);
+            return selectedCategoryGroup?.children ?? [];
+        }
+
+        return selectedCategory.children ?? [];
+    }, [categoryItems, selectedCategoryGroupSlug, selectedCategorySlug, selectedSubcategorySlug]);
 
     const changePage = (page: number) => {
         const nextPage = Math.max(1, Math.min(page, totalPages));
@@ -354,6 +372,7 @@ export default function CatalogListingPage({
 
                         <div className="min-w-0 flex-1">
                             <div ref={listingTopRef} />
+                            <CatalogChildLinks items={visibleChildLinks} />
                             <ProductSort value={sortOrder} onChange={setSortOrder} totalResults={filteredProducts.length} />
 
                             {filteredProducts.length > 0 ? (
