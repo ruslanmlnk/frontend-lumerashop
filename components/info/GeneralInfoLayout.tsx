@@ -13,7 +13,7 @@ const GeneralInfoLayout = ({ title, children, heroImageUrl }: GeneralInfoLayoutP
         <div className="min-h-screen font-sans text-[#111111] bg-white">
             <Header />
 
-            <main className="pt-[118px] md:pt-[132px]">
+            <main>
                 <section className="mx-auto max-w-[1140px] px-4 lg:px-0">
                     <div
                         className="relative flex min-h-[180px] items-center justify-center overflow-hidden md:min-h-[220px]"

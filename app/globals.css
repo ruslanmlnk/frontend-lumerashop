@@ -17,6 +17,8 @@
   --lumera-sheet-xs: 340px;
   --lumera-text-line-height: 1.6;
   --lumera-btn-line-height: 1.4;
+  --lumera-header-mobile-height: 152px;
+  --lumera-header-desktop-height: 135px;
 }
 
 @theme inline {

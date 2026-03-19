@@ -28,7 +28,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="min-h-screen font-sans text-[#111111] bg-white">
             <Header />
 
-            <main className="pt-[140px] md:pt-[180px] pb-32">
+            <main className="pb-32">
                 <div className="max-w-[1140px] mx-auto px-4 lg:px-6">
                     {/* Breadcrumbs */}
                     <nav className="mb-12 text-[11px] text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">

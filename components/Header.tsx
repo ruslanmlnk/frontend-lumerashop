@@ -711,6 +711,10 @@ const Header = () => {
           )}
         </AnimatePresence>
       </header>
+      <div
+        aria-hidden="true"
+        className="h-[var(--lumera-header-mobile-height)] md:h-[var(--lumera-header-desktop-height)]"
+      />
     </>
   );
 };

@@ -61,7 +61,7 @@ export default async function CheckoutSuccessPage({
                 userId={order?.userId}
             />
 
-            <main className="flex flex-1 items-start pt-[180px] pb-20 md:pt-[220px]">
+            <main className="flex flex-1 items-start pb-20">
                 <div className="mx-auto w-full max-w-[820px] px-4 lg:px-0">
                     <div className="border border-[#111111]/10 bg-white p-8 md:p-12">
                         <h1

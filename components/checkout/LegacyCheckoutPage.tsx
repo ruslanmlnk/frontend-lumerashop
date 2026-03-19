@@ -301,7 +301,7 @@ export default function CheckoutPage() {
         <div className="flex min-h-screen flex-col bg-[#fdfdfd]">
             <Header />
 
-            <main className="flex-1 pt-[140px] md:pt-[180px] pb-20">
+            <main className="flex-1 pb-20">
                 <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6">
 
                     {/* Progress Header */}

@@ -48,7 +48,7 @@ export default function ProductPageClient({
   };
 
   return (
-    <main className="pb-16 pt-[148px] lg:pt-[164px]">
+    <main className="pb-16">
       <div className="lumera-container">
         <div className="mb-6 md:hidden">
           <h1 className="font-serif text-[34px] font-normal leading-[1.08] text-[#111111]">

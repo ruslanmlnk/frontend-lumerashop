@@ -10,7 +10,7 @@ export default async function BlogPage() {
         <div className="min-h-screen font-sans text-[#111111] bg-white">
             <Header />
 
-            <main className="pt-[110px] md:pt-[130px]">
+            <main>
                 <BlogHero />
 
                 <div className="max-w-[1200px] mx-auto px-4 lg:px-6 py-20 md:py-32">

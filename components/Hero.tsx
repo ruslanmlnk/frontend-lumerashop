@@ -14,7 +14,7 @@ const Hero = () => {
 
     return (
         <section
-            className="mt-[148px] lg:mt-[132px] overflow-hidden bg-white pt-0 pb-0 relative"
+            className="relative overflow-hidden bg-white pt-0 pb-0"
             id="block-12"
         >
             <div className="lumera-container">

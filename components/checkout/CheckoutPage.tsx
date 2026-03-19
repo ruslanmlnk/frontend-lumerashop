@@ -1338,7 +1338,7 @@ export default function CheckoutPage({
         return (
             <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
                 <Header />
-                <main className="flex-1 px-4 pb-20 pt-[170px] md:px-6 md:pt-[210px]">
+                <main className="flex-1 px-4 pb-20 md:px-6">
                     <div className="mx-auto max-w-[720px]">
                         <CheckoutEmptyState variant={variant} />
                     </div>
@@ -1352,7 +1352,7 @@ export default function CheckoutPage({
         <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
             <Header />
 
-            <main className="flex-1 px-4 pb-20 pt-[170px] md:px-6 md:pt-[210px]">
+            <main className="flex-1 px-4 pb-20 md:px-6">
                 <div className="mx-auto grid max-w-[1120px] gap-5 md:gap-6">
                     <CheckoutHero
                         variant={variant}

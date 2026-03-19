@@ -23,7 +23,7 @@ export default async function ProductPage({
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex flex-1 flex-col items-center justify-center p-20 pt-[148px] text-center lg:pt-[164px]">
+        <main className="flex flex-1 flex-col items-center justify-center p-20 text-center">
           <h1 className="mb-6 font-serif text-[32px]">Produkt nebyl nalezen</h1>
           <Link
             href="/shop"
