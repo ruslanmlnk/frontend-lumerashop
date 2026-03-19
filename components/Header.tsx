@@ -237,10 +237,10 @@ const Header = () => {
       const rowClass = depth === 0 ? 'py-[10px]' : depth === 1 ? 'py-[8px]' : 'py-[6px]';
       const linkClass =
         depth === 0
-          ? 'flex-1 text-[12px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]'
+          ? 'flex-1 text-[16px] font-normal leading-[1.3] text-[#F2F2F2] transition-colors hover:text-[#c8a16a]'
           : depth === 1
-            ? 'flex-1 text-[12px] font-light leading-[1.4] text-white/70 transition-colors hover:text-[#c8a16a]'
-            : 'flex-1 text-[12px] font-light leading-[1.5] text-white/55 transition-colors hover:text-[#c8a16a]';
+            ? 'flex-1 text-[16px] font-light leading-[1.4] text-white/70 transition-colors hover:text-[#c8a16a]'
+            : 'flex-1 text-[16px] font-light leading-[1.5] text-white/55 transition-colors hover:text-[#c8a16a]';
       const childWrapClass = depth === 0 ? 'space-y-3 pb-4 pl-4 pt-2' : 'space-y-2 pb-3 pl-5 pt-2';
 
       return (
