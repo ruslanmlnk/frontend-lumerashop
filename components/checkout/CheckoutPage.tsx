@@ -1968,8 +1968,7 @@ export default function CheckoutPage({
                                 )}
                             </section>
 
-                            {renderCustomerBillingSection()}
-                            {renderShippingPaymentSection()}
+                            {isCustomerStep ? renderCustomerBillingSection() : renderShippingPaymentSection()}
                         </div>
 
                         <CheckoutSummary
