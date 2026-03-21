@@ -49,7 +49,7 @@ export default function ProductPageClient({
 
   return (
     <main className="pb-16">
-      <div className="lumera-container">
+      <div className="mx-auto w-full max-w-[1140px] px-5 lg:px-0">
         <div className="mb-6 md:hidden">
           <h1 className="font-serif text-[34px] font-normal leading-[1.08] text-[#111111]">
             {product.name}
@@ -84,25 +84,25 @@ export default function ProductPageClient({
             reviews={reviews}
           />
         </section>
-
-        <div className="mt-[20px]">
-          <Features />
-        </div>
-
-        {recommendedProducts.length > 0 ? (
-          <div className="mt-[35px]">
-            <ProductGrid
-              title="Novinky"
-              products={recommendedProducts}
-              description="Podivejte se na nejnovejsi modely, ktere prave dorazily z Italie"
-              isSlider={true}
-              alignLeft={true}
-              variant="novinky"
-              autoPlay={false}
-            />
-          </div>
-        ) : null}
       </div>
+
+      <div className="mt-[20px]">
+        <Features />
+      </div>
+
+      {recommendedProducts.length > 0 ? (
+        <div className="mt-[35px]">
+          <ProductGrid
+            title="Novinky"
+            products={recommendedProducts}
+            description="Podivejte se na nejnovejsi modely, ktere prave dorazily z Italie"
+            isSlider={true}
+            alignLeft={true}
+            variant="novinky"
+            autoPlay={false}
+          />
+        </div>
+      ) : null}
     </main>
   );
 }
