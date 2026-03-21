@@ -61,7 +61,7 @@ const ProductInfo = ({
   return (
     <div className="w-full pb-[36px] text-[#111111]">
       <h1
-        className={`${showTitleOnMobile ? "block" : "hidden md:block"} mb-[20px] font-serif text-[36px] font-normal leading-[1.1] lg:text-[48px] lg:leading-[52.8px]`}
+        className={`${showTitleOnMobile ? "block" : "hidden md:block"} mb-[20px] font-serif text-[36px] font-bold leading-[1.1] lg:text-[48px] lg:leading-[52.8px]`}
       >
         {name}
       </h1>
