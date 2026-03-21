@@ -25,7 +25,7 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
 
   return (
     <div className="w-full">
-      <div className="group relative mb-[10px] h-[430px] w-full overflow-hidden bg-transparent lg:h-[654px]">
+      <div className="-mx-[15px] group relative mb-[10px] h-[430px] w-[calc(100%+30px)] overflow-hidden bg-transparent lg:mx-0 lg:h-[654px] lg:w-full">
         <div
           className="flex h-full w-full transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
@@ -72,7 +72,7 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
       </div>
 
       {images.length > 1 && (
-        <div className="no-scrollbar flex gap-[10px] overflow-x-auto pb-[6px]">
+        <div className="no-scrollbar flex gap-[10px] overflow-x-auto pb-[6px] px-[15px] -mx-[15px] w-[calc(100%+30px)] lg:mx-0 lg:px-0 lg:w-full">
           {images.map((image, index) => (
             <button
               key={`${image}-thumb-${index}`}
