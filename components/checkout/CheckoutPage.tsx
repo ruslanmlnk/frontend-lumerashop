@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, CreditCard, Loader2, Receipt, Truck, User } from 'lucide-react';
+import { ArrowLeft, Loader2, Truck, User } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CheckoutEmptyState from '@/components/checkout/CheckoutEmptyState';
@@ -20,7 +20,7 @@ import type {
     Step,
 } from '@/components/checkout/types';
 import { useCart } from '@/context/CartContext';
-import { COUNTRY_OPTIONS, DEFAULT_COUNTRY_CODE } from '@/lib/country-options';
+import { DEFAULT_COUNTRY_CODE } from '@/lib/country-options';
 import type { AuthUser } from '@/lib/payload-auth';
 import {
     PENDING_COUPON_EVENT,
@@ -149,7 +149,7 @@ export default function CheckoutPage({
     const theme = getCheckoutTheme(variant);
     const { cartItems, totalPrice } = useCart();
     const availableShippingMethods = shippingMethods.length ? shippingMethods : SHIPPING_METHODS;
-    const [currentStep, setCurrentStep] = useState<Step>('contact');
+    const [currentStep, setCurrentStep] = useState<Step>('customer');
     const [completedSteps, setCompletedSteps] = useState<Step[]>([]);
     const [isSubmitting, setIsSubmitting] = useState<PaymentProvider | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -507,16 +507,16 @@ export default function CheckoutPage({
     };
 
     const goToStep = (step: Step) => {
-        if (completedSteps.includes(step) || step === 'contact') {
+        if (step === 'customer' || completedSteps.includes('customer')) {
             setCurrentStep(step);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-    const handleContinueFromShipping = () => {
+    const validateShippingSelection = () => {
         if (!formData.shippingMethod) {
             setShippingErrorMessage('Vyberte prosim zpusob dopravy.');
-            return;
+            return false;
         }
 
         const shippingMethodId = formData.shippingMethod;
@@ -528,6 +528,14 @@ export default function CheckoutPage({
         }
 
         setShippingErrorMessage(null);
+        return true;
+    };
+
+    const handleContinueFromShipping = () => {
+        if (!validateShippingSelection()) {
+            return;
+        }
+
         nextStep('shipping', 'billing');
     };
 
@@ -551,13 +559,13 @@ export default function CheckoutPage({
             return;
         }
 
-        if (!formData.shippingMethod) {
-            setErrorMessage('Vyberte prosim zpusob dopravy.');
-            setCurrentStep('shipping');
+        if (!validateShippingSelection()) {
+            setErrorMessage('Zkontrolujte prosim sekci dopravy.');
+            setCurrentStep('order');
             return;
         }
 
-        const shippingMethodId = formData.shippingMethod;
+        const shippingMethodId = formData.shippingMethod as Exclude<typeof formData.shippingMethod, ''>;
         const provider = formData.paymentProvider;
         setErrorMessage(null);
 
@@ -633,10 +641,8 @@ export default function CheckoutPage({
 
     const stepsInfo = useMemo(
         () => [
-            { id: 'contact' as const, title: 'Kontakt', icon: User },
-            { id: 'shipping' as const, title: 'Doprava', icon: Truck },
-            { id: 'billing' as const, title: 'Fakturace', icon: Receipt },
-            { id: 'payment' as const, title: 'Platba', icon: CreditCard },
+            { id: 'customer' as const, title: 'Kontakt + fakturace', icon: User },
+            { id: 'order' as const, title: 'Doprava + platba', icon: Truck },
         ],
         [],
     );
@@ -657,7 +663,7 @@ export default function CheckoutPage({
     const vatAmount = Number((orderTotal * 0.21).toFixed(2));
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const effectiveLoyaltySettings = quote?.loyaltySettings || loyaltySettings;
-    const isCustomerStage = currentStep === 'contact' || currentStep === 'shipping';
+    const isCustomerStep = currentStep === 'customer';
     const description =
         variant === 'minimal'
             ? 'Čistší a klidnější pokladna v jednodušším rozvržení, ale stále ve stylu Lumera.'
@@ -1347,6 +1353,565 @@ export default function CheckoutPage({
         </CheckoutSectionCard>
     );
 
+    const billingSummaryText = formData.billingSameAsShipping
+        ? 'Fakturacni adresa se prevezme z doruceni.'
+        : formData.billingFirstName || formData.billingLastName || formData.billingAddress || formData.billingCity || formData.billingZip
+          ? `${formData.billingFirstName} ${formData.billingLastName}, ${formData.billingAddress}, ${formData.billingCity} ${formData.billingZip}`
+          : 'Fakturacni udaje doplnite v prvnim kroku.';
+
+    const customerSummary = (
+        <>
+            <div>
+                {formData.email || 'E-mail zatim chybi'}
+                {formData.phone ? ` · ${formData.phone}` : ''}
+            </div>
+            <div className="mt-1 text-[#7a7164]">{billingSummaryText}</div>
+            {formData.isCompany && formData.companyName ? (
+                <div className="mt-1 text-[#6b6257]">
+                    {formData.companyName}
+                    {formData.companyId ? ` · IC ${formData.companyId}` : ''}
+                </div>
+            ) : null}
+        </>
+    );
+
+    const orderSummary = (
+        <>
+            <div>{selectedShippingMethod?.label || 'Dopravu vyberete v druhem kroku.'}</div>
+            <div className="mt-1 text-[#7a7164]">{getPaymentLabel(formData.paymentProvider)}</div>
+            {formData.pickupPoint ? (
+                <div className="mt-1 text-[12px] text-[#6b6257]">
+                    {formData.pickupPoint.name}
+                    {formatPickupPointAddress(formData.pickupPoint)
+                        ? ` · ${formatPickupPointAddress(formData.pickupPoint)}`
+                        : ''}
+                </div>
+            ) : null}
+        </>
+    );
+
+    const renderCustomerBillingSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={1}
+            eyebrow="Krok 1"
+            title="Kontakt a fakturace"
+            active={currentStep === 'customer'}
+            completed={completedSteps.includes('customer')}
+            onOpen={() => goToStep('customer')}
+            summary={customerSummary}
+        >
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Kontakt</p>
+                    <h3 className={theme.stageTitle}>Muj kontakt</h3>
+                </div>
+
+                <div className={theme.field}>
+                    <label className={theme.label}>E-mailova adresa *</label>
+                    <input
+                        type="email"
+                        className={theme.input}
+                        placeholder="vase@adresa.cz"
+                        value={formData.email}
+                        onChange={(event) => updateFormData('email', event.target.value)}
+                    />
+                    <p className={theme.help}>Na tento e-mail posleme potvrzeni objednavky i dalsi informace.</p>
+                </div>
+
+                <div className={theme.field}>
+                    <label className={theme.label}>Telefon pro dopravce *</label>
+                    <input
+                        type="tel"
+                        className={theme.input}
+                        placeholder="+420 123 456 789"
+                        value={formData.phone}
+                        onChange={(event) => updateFormData('phone', event.target.value)}
+                    />
+                </div>
+
+                <label className={theme.check}>
+                    <input
+                        type="checkbox"
+                        className={checkboxClassName}
+                        checked={formData.createAccount}
+                        onChange={(event) => updateFormData('createAccount', event.target.checked)}
+                    />
+                    <span>Vytvorit ucet po dokonceni objednavky</span>
+                </label>
+            </div>
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Fakturace</p>
+                    <h3 className={theme.stageTitle}>Fakturacni udaje</h3>
+                </div>
+
+                <div className={theme.toggleGrid}>
+                    <label className={cn(theme.check, theme.checkCard)}>
+                        <input
+                            type="checkbox"
+                            className={checkboxClassName}
+                            checked={formData.billingSameAsShipping}
+                            onChange={(event) => updateFormData('billingSameAsShipping', event.target.checked)}
+                        />
+                        <span>Fakturacni adresa bude stejna jako dorucovaci</span>
+                    </label>
+
+                    <label className={cn(theme.check, theme.checkCard)}>
+                        <input
+                            type="checkbox"
+                            className={checkboxClassName}
+                            checked={formData.isCompany}
+                            onChange={(event) => updateFormData('isCompany', event.target.checked)}
+                        />
+                        <span>Nakupuji na firmu</span>
+                    </label>
+                </div>
+
+                {formData.isCompany ? (
+                    <div className={theme.surface}>
+                        <div>
+                            <p className={theme.eyebrow}>Firma</p>
+                            <h3 className={theme.stageTitle}>Firemni identifikace</h3>
+                        </div>
+
+                        <div className={theme.field}>
+                            <label className={theme.label}>Nazev firmy *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.companyName}
+                                onChange={(event) => updateFormData('companyName', event.target.value)}
+                            />
+                        </div>
+
+                        <div className={theme.inputGrid}>
+                            <div className={theme.field}>
+                                <label className={theme.label}>IC *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.companyId}
+                                    onChange={(event) => updateFormData('companyId', event.target.value)}
+                                />
+                            </div>
+                            <div className={theme.field}>
+                                <label className={theme.label}>DIC</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.vatId}
+                                    onChange={(event) => updateFormData('vatId', event.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
+
+                {!formData.billingSameAsShipping ? (
+                    <div className={theme.surface}>
+                        <div>
+                            <p className={theme.eyebrow}>Fakturace</p>
+                            <h3 className={theme.stageTitle}>Samostatna fakturacni adresa</h3>
+                        </div>
+
+                        <div className={theme.inputGrid}>
+                            <div className={theme.field}>
+                                <label className={theme.label}>Jmeno *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.billingFirstName}
+                                    onChange={(event) => updateFormData('billingFirstName', event.target.value)}
+                                />
+                            </div>
+                            <div className={theme.field}>
+                                <label className={theme.label}>Prijmeni *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.billingLastName}
+                                    onChange={(event) => updateFormData('billingLastName', event.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={theme.field}>
+                            <label className={theme.label}>Ulice a cislo *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.billingAddress}
+                                onChange={(event) => updateFormData('billingAddress', event.target.value)}
+                            />
+                        </div>
+
+                        <div className={theme.inputGrid}>
+                            <div className={theme.field}>
+                                <label className={theme.label}>Mesto *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.billingCity}
+                                    onChange={(event) => updateFormData('billingCity', event.target.value)}
+                                />
+                            </div>
+                            <div className={theme.field}>
+                                <label className={theme.label}>PSC *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.billingZip}
+                                    onChange={(event) => updateFormData('billingZip', event.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
+
+                <p className={theme.help}>Dorucovaci adresu, zpusob dopravy a platbu vyberete v dalsim kroku.</p>
+            </div>
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={() => nextStep('customer', 'order')}
+                disabled={!formData.email || !formData.phone}
+            >
+                Pokracovat k doprave a platbe
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const renderShippingPaymentSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={2}
+            eyebrow="Krok 2"
+            title="Doprava a platba"
+            active={currentStep === 'order'}
+            completed={completedSteps.includes('order')}
+            onOpen={() => goToStep('order')}
+            summary={orderSummary}
+        >
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Doruceni</p>
+                    <h3 className={theme.stageTitle}>Kontakt pro doruceni a adresa</h3>
+                </div>
+
+                <div className={theme.inputGrid}>
+                    <div className={theme.field}>
+                        <label className={theme.label}>Jmeno *</label>
+                        <input
+                            type="text"
+                            className={theme.input}
+                            value={formData.firstName}
+                            onChange={(event) => updateFormData('firstName', event.target.value)}
+                        />
+                    </div>
+                    <div className={theme.field}>
+                        <label className={theme.label}>Prijmeni *</label>
+                        <input
+                            type="text"
+                            className={theme.input}
+                            value={formData.lastName}
+                            onChange={(event) => updateFormData('lastName', event.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className={theme.inputGrid}>
+                    <div className={theme.field}>
+                        <label className={theme.label}>Zeme *</label>
+                        <select className={theme.input} value={formData.country} disabled aria-disabled="true">
+                            <option value="CZ">Ceska republika</option>
+                        </select>
+                    </div>
+                    <div className={theme.field}>
+                        <label className={theme.label}>PSC *</label>
+                        <input
+                            type="text"
+                            className={theme.input}
+                            value={formData.zip}
+                            onChange={(event) => updateFormData('zip', event.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className={theme.field}>
+                    <label className={theme.label}>Ulice a cislo popisne *</label>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        value={formData.address}
+                        onChange={(event) => updateFormData('address', event.target.value)}
+                    />
+                </div>
+
+                <div className={theme.field}>
+                    <label className={theme.label}>Mesto *</label>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        value={formData.city}
+                        onChange={(event) => updateFormData('city', event.target.value)}
+                    />
+                </div>
+
+                <div className={theme.field}>
+                    <label className={theme.label}>Poznamka k objednavce</label>
+                    <textarea
+                        className={theme.textarea}
+                        placeholder="Upresneni k doruceni, jmeno na zvonku a podobne."
+                        value={formData.notes}
+                        onChange={(event) => updateFormData('notes', event.target.value)}
+                    />
+                </div>
+
+                <div>
+                    <p className={theme.eyebrow}>Doprava</p>
+                    <h3 className={theme.stageTitle}>Zpusob doruceni</h3>
+                </div>
+
+                {availableShippingMethods.map((method) => {
+                    const isSelected = formData.shippingMethod === method.id;
+                    const showPickupSelector = isSelected && Boolean(method.pickupCarrier);
+
+                    return (
+                        <div
+                            key={method.id}
+                            className={cn(
+                                'overflow-hidden rounded-[12px] border transition',
+                                isSelected ? theme.optionSelected : theme.optionIdle,
+                            )}
+                        >
+                            <button
+                                type="button"
+                                className="flex w-full items-start gap-3 p-3.5 text-left"
+                                onClick={() => {
+                                    setShippingErrorMessage(null);
+                                    updateFormData('shippingMethod', method.id);
+                                }}
+                            >
+                                <span className={theme.optionControl}>
+                                    {isSelected ? <span className="h-2 w-2 rounded-full bg-[#b98743]" /> : null}
+                                </span>
+                                <span className={theme.optionCopy}>
+                                    <span className={theme.optionTitle}>{method.label}</span>
+                                    <span className={theme.optionMeta}>{method.description}</span>
+                                </span>
+                                <span className={theme.optionPrice}>
+                                    {method.price === 0 ? 'Zdarma' : formatPrice(method.price)}
+                                </span>
+                            </button>
+
+                            {showPickupSelector ? (
+                                <div className="border-t border-black/8 px-3.5 pb-3.5 pt-3">
+                                    <PickupPointSelector
+                                        variant={variant}
+                                        displayMode="inline"
+                                        shippingMethodId={method.id}
+                                        country={formData.country}
+                                        selectedPoint={formData.pickupPoint}
+                                        onSelect={(pickupPoint) => {
+                                            setShippingErrorMessage(null);
+                                            updateFormData('pickupPoint', pickupPoint);
+                                        }}
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {shippingErrorMessage ? (
+                <p className="text-[12px] leading-5 text-[#b42318]">{shippingErrorMessage}</p>
+            ) : null}
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Sleva</p>
+                    <h3 className={theme.stageTitle}>Darkovy nebo slevovy kod</h3>
+                </div>
+
+                <div className={theme.inlineGrid}>
+                    <input
+                        type="text"
+                        className={theme.input}
+                        placeholder="Kod kuponu"
+                        value={formData.promoCode}
+                        onChange={(event) => updateFormData('promoCode', event.target.value)}
+                    />
+                    <button
+                        type="button"
+                        className={theme.secondary}
+                        onClick={handleApplyCoupon}
+                        disabled={isQuoteLoading}
+                    >
+                        {isQuoteLoading ? 'Pockam...' : 'Pouzit'}
+                    </button>
+                </div>
+
+                {appliedPromoCode ? (
+                    <p className="text-[13px] text-[#6b6257]">
+                        Aktivni kod: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
+                    </p>
+                ) : null}
+
+                {couponMessage ? (
+                    <p className="rounded-[12px] border border-[#1f6f43]/15 bg-[#f4fbf6] px-3 py-2.5 text-[12px] leading-5 text-[#1f6f43]">
+                        {couponMessage}
+                    </p>
+                ) : null}
+
+                {couponErrorMessage ? (
+                    <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                        {couponErrorMessage}
+                    </p>
+                ) : null}
+            </div>
+
+            {currentUser && effectiveLoyaltySettings?.bonusesEnabled ? (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Bonusy</p>
+                        <h3 className={theme.stageTitle}>Vyuziti bonusnich jednotek</h3>
+                    </div>
+
+                    <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
+                        <p>
+                            Na uctu mas{' '}
+                            <span className="font-semibold text-[#111111]">
+                                {quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0}
+                            </span>{' '}
+                            bonusnich jednotek.
+                        </p>
+                        <p className="mt-1 text-[12px] text-[#6b6257]">
+                            {effectiveLoyaltySettings.redemptionBonusUnits} bonusu ={' '}
+                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za kazdych{' '}
+                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech ziskas{' '}
+                            {effectiveLoyaltySettings.earningBonusUnits} bonusu.
+                        </p>
+                    </div>
+
+                    <label className={theme.check}>
+                        <input
+                            type="checkbox"
+                            className={checkboxClassName}
+                            checked={formData.useBonusBalance}
+                            onChange={(event) => updateFormData('useBonusBalance', event.target.checked)}
+                        />
+                        <span>Pouzit bonusni jednotky na tuto objednavku</span>
+                    </label>
+
+                    {formData.useBonusBalance ? (
+                        <p className="text-[13px] leading-5 text-[#6b6257]">
+                            Pri teto objednavce se pouzije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusu a odecte se{' '}
+                            {formatPrice(quote?.discounts?.bonusDiscountAmount ?? 0)}.
+                        </p>
+                    ) : null}
+
+                    <p className="text-[13px] leading-5 text-[#6b6257]">
+                        Po uspesne platbe se pripise {quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.
+                    </p>
+                </div>
+            ) : null}
+
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Platba</p>
+                    <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+                </div>
+
+                {([
+                    {
+                        value: 'stripe',
+                        title: 'Online karta / Apple Pay (Stripe)',
+                        copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
+                    },
+                    {
+                        value: 'global-payments',
+                        title: 'Global Payments (GP webpay)',
+                        copy: 'Tradicni platebni brana pro karty i lokalni metody.',
+                    },
+                ] as const).map((option) => {
+                    const isSelected = formData.paymentProvider === option.value;
+
+                    return (
+                        <button
+                            key={option.value}
+                            type="button"
+                            className={cn(theme.option, isSelected ? theme.optionSelected : theme.optionIdle)}
+                            onClick={() => updateFormData('paymentProvider', option.value)}
+                        >
+                            <span className={theme.optionControl}>
+                                {isSelected ? <span className="h-2 w-2 rounded-full bg-[#b98743]" /> : null}
+                            </span>
+                            <span className={theme.optionCopy}>
+                                <span className={theme.optionTitle}>{option.title}</span>
+                                <span className={theme.optionMeta}>{option.copy}</span>
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <label className={theme.check}>
+                <input
+                    type="checkbox"
+                    className={checkboxClassName}
+                    checked={formData.termsAccepted}
+                    onChange={(event) => updateFormData('termsAccepted', event.target.checked)}
+                />
+                <span>
+                    Souhlasim s{' '}
+                    <a href="/obchodni-podminky" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        obchodnimi podminkami
+                    </a>{' '}
+                    a{' '}
+                    <a href="/ochrana-osobnich-udaju" className="underline decoration-[#b98743]/60 underline-offset-4">
+                        ochranou osobnich udaju
+                    </a>{' '}
+                    *
+                </span>
+            </label>
+
+            {errorMessage ? (
+                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                    {errorMessage}
+                </p>
+            ) : null}
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={handleFinalSubmit}
+                disabled={isSubmitting !== null}
+            >
+                {isSubmitting ? (
+                    <span className="inline-flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        Presmerovani...
+                    </span>
+                ) : (
+                    `Objednat a zaplatit ${formatPrice(orderTotal)}`
+                )}
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const legacyStepRenderers = [
+        renderContactSection,
+        renderShippingSection,
+        renderBillingSection,
+        renderPaymentSection,
+        renderEnhancedPaymentSection,
+    ];
+    void legacyStepRenderers;
+
     if (cartItems.length === 0) {
         return (
             <div className={cn(theme.shell, 'flex min-h-screen flex-col')}>
@@ -1389,31 +1954,22 @@ export default function CheckoutPage({
                         <div className={theme.main}>
                             <section className={theme.stage}>
                                 <div>
-                                    <p className={theme.eyebrow}>{isCustomerStage ? 'Etapa 1 / 2' : 'Etapa 2 / 2'}</p>
+                                    <p className={theme.eyebrow}>{isCustomerStep ? 'Etapa 1 / 2' : 'Etapa 2 / 2'}</p>
                                     <h2 className={theme.stageTitle}>
-                                        {isCustomerStage ? 'Kontakt a doprava' : 'Fakturace a platba'}
+                                        {isCustomerStep ? 'Kontakt a fakturace' : 'Doprava a platba'}
                                     </h2>
                                 </div>
 
-                                {!isCustomerStage && (
-                                    <button type="button" className={theme.stageBack} onClick={() => goToStep('shipping')}>
+                                {!isCustomerStep && (
+                                    <button type="button" className={theme.stageBack} onClick={() => goToStep('customer')}>
                                         <ArrowLeft size={14} />
-                                        Zpět na kontakt a dopravu
+                                        Zpet na kontakt a fakturaci
                                     </button>
                                 )}
                             </section>
 
-                            {isCustomerStage ? (
-                                <>
-                                    {renderContactSection()}
-                                    {renderShippingSection()}
-                                </>
-                            ) : (
-                                <>
-                                    {renderBillingSection()}
-                                    {renderEnhancedPaymentSection()}
-                                </>
-                            )}
+                            {renderCustomerBillingSection()}
+                            {renderShippingPaymentSection()}
                         </div>
 
                         <CheckoutSummary

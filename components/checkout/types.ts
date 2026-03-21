@@ -1,7 +1,7 @@
 import type { CheckoutPickupPoint, ShippingMethodId } from '@/lib/checkout-shipping';
 
 export type PaymentProvider = 'global-payments' | 'stripe';
-export type Step = 'contact' | 'shipping' | 'billing' | 'payment';
+export type Step = 'customer' | 'order' | 'contact' | 'shipping' | 'billing' | 'payment';
 export type CheckoutVariant = 'minimal' | 'refined';
 
 export type CheckoutStartResponse = {

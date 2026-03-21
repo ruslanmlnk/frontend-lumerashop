@@ -31,7 +31,7 @@ export const getCheckoutTheme = (variant: CheckoutVariant) => {
         progressFill: minimal
             ? 'h-full rounded-full bg-[#111]'
             : 'h-full rounded-full bg-gradient-to-r from-[#111] to-[#b98743]',
-        progressSteps: 'mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4',
+        progressSteps: 'mt-2 grid grid-cols-2 gap-2',
         progressStep: 'inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full border px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] transition',
         progressStepIdle: 'border-black/8 bg-white text-[#6b6257] hover:border-[#d7c29f] hover:text-[#111]',
         progressStepActive: minimal
