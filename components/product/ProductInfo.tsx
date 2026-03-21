@@ -171,6 +171,28 @@ const ProductInfo = ({
           />
           <span className="text-[14px] leading-[1.6] text-[#111111]">14 dní na vrácení</span>
         </div>
+
+        <div className="flex items-center gap-[10px]">
+          <Image
+            src="/images/icons/discount.png"
+            alt="Discount icon"
+            width={22}
+            height={22}
+            className="object-contain"
+          />
+          <span className="text-[14px] leading-[1.6] text-[#111111]">100 Kč sleva na první nákup</span>
+        </div>
+
+        <div className="flex items-center gap-[10px]">
+          <Image
+            src="/images/icons/coin.png"
+            alt="Coin icon"
+            width={22}
+            height={22}
+            className="object-contain"
+          />
+          <span className="text-[14px] leading-[1.6] text-[#111111]">Věrnostní program plný odměn</span>
+        </div>
       </div>
 
       {summaryItems.length > 0 && (
