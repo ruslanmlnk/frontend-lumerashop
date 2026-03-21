@@ -174,7 +174,7 @@ const ProductInfo = ({
 
         <div className="flex items-center gap-[10px]">
           <Image
-            src="/images/icons/discount.png"
+            src="/discount.png"
             alt="Discount icon"
             width={22}
             height={22}
@@ -185,7 +185,7 @@ const ProductInfo = ({
 
         <div className="flex items-center gap-[10px]">
           <Image
-            src="/images/icons/coin.png"
+            src="/coin.png"
             alt="Coin icon"
             width={22}
             height={22}
