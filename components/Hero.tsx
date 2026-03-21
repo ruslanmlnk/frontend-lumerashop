@@ -76,9 +76,8 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    <div className="flex h-auto w-full flex-col gap-6 lg:h-[567px] lg:w-[305.8px] lg:gap-[24px] lg:py-[12.5px]">
+                    <div className="flex h-auto w-full flex-col gap-6 lg:grid lg:h-[567px] lg:w-[305.8px] lg:grid-rows-[126.5fr_126.5fr_110fr_107fr] lg:gap-[24px]">
                         {HERO_CATEGORIES.map((cat, idx) => {
-                            const pcHeights = ['126.5px', '126.5px', '110px', '107px'];
                             const mobileHeights = ['104px', '104px', '104px', '104px'];
                             const pcTops = ['25px', '25px', '38.5px', '44px'];
                             const pcImgW = ['80px', '88px', '89px', '90px'];
@@ -91,10 +90,9 @@ const Hero = () => {
                                 <Link
                                     key={idx}
                                     href={cat.href}
-                                    className="relative block h-[var(--h-m)] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-[var(--h-pc)]"
+                                    className="relative block h-[var(--h-m)] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-full"
                                     style={{
                                         '--h-m': mobileHeights[idx],
-                                        '--h-pc': pcHeights[idx],
                                     } as CSSVars}
                                 >
                                     <div className="absolute inset-0 z-0 overflow-hidden">
