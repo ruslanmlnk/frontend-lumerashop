@@ -395,7 +395,7 @@ export default function CatalogListingPage({
 
                                     <div className="grid min-h-[780px] grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3">
                                     {paginatedProducts.map((product) => (
-                                        <ProductCard key={product.id} product={product} />
+                                        <ProductCard key={product.id} product={product} showDiscount />
                                     ))}
                                     </div>
 

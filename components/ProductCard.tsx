@@ -9,11 +9,29 @@ import type { Product } from '../types/site';
 type ProductCardProps = {
     product: Product;
     variant?: 'default' | 'featured';
+    showDiscount?: boolean;
 };
 
-const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps) => {
+const parseFormattedPrice = (value?: string) => {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        return null;
+    }
+
+    const normalized = Number(value.replace(/\s+/g, '').replace(',', '.').replace(/[^\d.]/g, ''));
+    if (Number.isFinite(normalized)) {
+        return normalized;
+    }
+
+    const fallback = Number(value.replace(/[^\d]/g, ''));
+    return Number.isFinite(fallback) ? fallback : null;
+};
+
+const ProductCardComponent = ({ product, variant = 'default', showDiscount = false }: ProductCardProps) => {
     const secondaryImage = product.gallery?.find((image) => image && image !== product.image);
     const hasSecondaryImage = Boolean(secondaryImage);
+    const currentPrice = parseFormattedPrice(product.price);
+    const previousPrice = parseFormattedPrice(product.oldPrice);
+    const hasDiscount = showDiscount && typeof currentPrice === 'number' && typeof previousPrice === 'number' && previousPrice > currentPrice;
 
     const primaryImageClasses = hasSecondaryImage
         ? 'object-contain transition-all duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-0'
@@ -61,7 +79,15 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                         </Link>
                     </h3>
 
-                    <div className="mt-[9px]">
+                    <div className="mt-[9px] flex items-baseline gap-[8px]">
+                        {hasDiscount ? (
+                            <span
+                                className="text-[14px] font-normal leading-none text-[#9ca3af] line-through"
+                                style={{ fontFamily: '"Work Sans", sans-serif' }}
+                            >
+                                {product.oldPrice}
+                            </span>
+                        ) : null}
                         <p
                             className="m-0 text-[24px] font-medium leading-[1.6] text-[#111111] transition-colors duration-200 group-hover:text-[#6f5640]"
                             style={{ fontFamily: '"Work Sans", sans-serif' }}
@@ -116,7 +142,12 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                     </Link>
                 </h3>
 
-                <div className="mb-0 mt-[10px]" style={{ fontFamily: '"Work Sans", sans-serif' }}>
+                <div className="mb-0 mt-[10px] flex items-baseline gap-[8px]" style={{ fontFamily: '"Work Sans", sans-serif' }}>
+                    {hasDiscount ? (
+                        <span className="text-[13px] font-normal leading-none text-[#9ca3af] line-through md:text-[16px]">
+                            {product.oldPrice}
+                        </span>
+                    ) : null}
                     <p className="m-0 text-[18px] font-normal leading-[1.2] text-[#111111] transition-colors duration-200 group-hover:text-[#6f5640] md:mt-[20px] md:text-[24px]">
                         {product.price}
                     </p>
