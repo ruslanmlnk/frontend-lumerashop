@@ -8,7 +8,7 @@ const Footer = () => {
             <div className="mx-auto max-w-[1140px] px-4 lg:px-0">
                 <div className="grid grid-cols-1 gap-12 text-[#111111] md:grid-cols-2 lg:grid-cols-[1.25fr_0.95fr_1fr_1.1fr] lg:gap-14">
                     <div className="flex flex-col">
-                        <div className="relative mb-5 h-[112px] w-[180px] md:h-[126px] md:w-[196px]">
+                        <div className="relative mb-5 h-[112px] w-[180px] md:h-[96.64px] md:w-[144.98px]">
                             <Image
                                 src="/assets/logo-new.webp"
                                 alt="LVR Lumera"
@@ -19,7 +19,7 @@ const Footer = () => {
                         </div>
 
                         <p className="max-w-[285px] text-[17px] leading-[1.65] text-[#111111]">
-                            LumeraShop.cz - Premiove kozene kabelky, penezenky a doplnky primo z Italie.
+                            LumeraShop.cz – Prémiové kožené kabelky, peněženky a doplňky přímo z Itálie.
                         </p>
                     </div>
 
@@ -31,7 +31,7 @@ const Footer = () => {
                             Nakup
                         </h3>
 
-                        <ul className="space-y-1.5 text-[15px] leading-[1.55] text-[#4c4c4c]">
+                        <ul className="space-y-1.5 text-[14px] leading-[1.55] text-[#4c4c4c]">
                             <li>
                                 <Link href="/doprava-a-platba" className="transition-colors hover:text-[#c8a16a]">
                                     Doprava a platba
@@ -72,22 +72,22 @@ const Footer = () => {
                         </h3>
 
                         <div className="grid max-w-[198px] grid-cols-2 gap-x-4 gap-y-5">
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/mastercard.png" alt="Mastercard" width={53} height={23} className="object-contain" />
                             </div>
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/visa.png" alt="Visa" width={56} height={22} className="object-contain" />
                             </div>
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/apple-pay.png" alt="Apple Pay" width={58} height={22} className="object-contain" />
                             </div>
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/google-pay.png" alt="Google Pay" width={58} height={22} className="object-contain" />
                             </div>
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/ppl.png" alt="PPL" width={62} height={22} className="object-contain" />
                             </div>
-                            <div className="flex h-[38px] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
+                            <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
                                 <Image src="/assets/icons/zasilkovna.png" alt="Zasilkovna" width={64} height={20} className="object-contain" />
                             </div>
                         </div>
