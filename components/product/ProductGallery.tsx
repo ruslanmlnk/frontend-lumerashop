@@ -23,6 +23,11 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
     setActiveIndex((prev) => (prev + 1) % images.length);
   };
 
+  const shouldRenderSlideImage = (index: number) => {
+    const distance = Math.abs(index - activeIndex);
+    return index === 0 || distance <= 1 || distance === images.length - 1;
+  };
+
   return (
     <div className="w-full">
       <div className="group relative mb-[10px] h-[430px] w-full overflow-hidden bg-transparent lg:h-[654px]">
@@ -32,14 +37,18 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
         >
           {images.map((image, index) => (
             <div key={`${image}-${index}`} className="relative h-full w-full shrink-0">
-              <Image
-                src={image}
-                alt={`${productName} image ${index + 1}`}
-                fill
-                priority={index === 0}
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-contain"
-              />
+              {shouldRenderSlideImage(index) ? (
+                <Image
+                  src={image}
+                  alt={`${productName} image ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "low"}
+                  sizes="(min-width: 1024px) 540px, calc(100vw - 110px)"
+                  className="object-contain"
+                />
+              ) : null}
             </div>
           ))}
         </div>
@@ -89,6 +98,7 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
                 src={image}
                 alt={`${productName} thumbnail ${index + 1}`}
                 fill
+                loading="lazy"
                 sizes="100px"
                 className="object-contain p-1"
               />
