@@ -79,7 +79,6 @@ const Hero = () => {
                     <div className="flex h-auto w-full flex-col gap-6 lg:grid lg:h-[567px] lg:w-[305.8px] lg:grid-rows-[126.5fr_126.5fr_110fr_107fr] lg:gap-[24px]">
                         {HERO_CATEGORIES.map((cat, idx) => {
                             const mobileHeights = ['104px', '104px', '104px', '104px'];
-                            const pcTops = ['25px', '25px', '38.5px', '44px'];
                             const pcImgW = ['80px', '88px', '89px', '90px'];
                             const pcImgTop = ['18px', '18px', '14.5px', '35px'];
                             const pcImgRight = ['30px', '26px', '26px', '25px'];
@@ -108,11 +107,9 @@ const Hero = () => {
 
                                     <div className="pointer-events-none absolute inset-0 z-10">
                                         <h2
-                                            className="absolute top-[var(--t-m)] left-[60px] font-serif text-[24px] leading-[1.1] text-[#111111] whitespace-pre-line font-bold lg:top-[var(--t-pc)] lg:text-[30px]"
+                                            className="absolute top-1/2 left-[60px] -translate-y-1/2 font-serif text-[24px] leading-[1.1] text-[#111111] whitespace-pre-line font-bold lg:text-[30px]"
                                             style={{
                                                 fontFamily: '"Cormorant Garamond", serif',
-                                                '--t-m': ['35px', '35px', '34px', '34px'][idx],
-                                                '--t-pc': pcTops[idx],
                                             } as CSSVars}
                                         >
                                             {idx < 2 ? cat.name.replace(' ', '\n') : cat.name}
