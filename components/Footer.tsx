@@ -25,10 +25,10 @@ const Footer = () => {
 
                     <div>
                         <h3
-                            className="mb-3 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            className="mb-3 font-serif text-[18px] font-bold leading-none text-[#111111]"
                             style={{ fontFamily: '"Cormorant Garamond", serif' }}
                         >
-                            Nakup
+                            Nákup   
                         </h3>
 
                         <ul className="space-y-1.5 text-[14px] leading-[1.55] text-[#4c4c4c]">
@@ -65,7 +65,7 @@ const Footer = () => {
 
                     <div>
                         <h3
-                            className="mb-5 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            className="mb-5 font-serif text-[18px] font-bold leading-none text-[#111111]"
                             style={{ fontFamily: '"Cormorant Garamond", serif' }}
                         >
                             Platby & Doprava
@@ -95,7 +95,7 @@ const Footer = () => {
 
                     <div>
                         <h3
-                            className="mb-3 font-serif text-[18px] font-medium leading-none text-[#111111]"
+                            className="mb-3 font-serif text-[18px] font-bold leading-none text-[#111111]"
                             style={{ fontFamily: '"Cormorant Garamond", serif' }}
                         >
                             Kontakt
