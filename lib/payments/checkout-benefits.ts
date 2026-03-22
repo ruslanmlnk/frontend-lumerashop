@@ -6,7 +6,7 @@ import { fetchPayloadShippingMethods } from '@/lib/payload-shipping-methods';
 import { getGlobal } from '@/lib/payload-data';
 import { getCurrentUser } from '@/lib/auth';
 import { getPayloadAuthConfig, parseJsonSafely } from '@/lib/payload-auth';
-import { buildCheckoutTotals, sanitizeCheckoutItems } from '@/lib/payments/checkout-utils';
+import { assertCheckoutItemsWithinStock, buildCheckoutTotals, sanitizeCheckoutItems } from '@/lib/payments/checkout-utils';
 import type { CheckoutItemInput } from '@/lib/payments/checkout-types';
 
 export type LoyaltySettings = {
@@ -241,6 +241,7 @@ export const buildCheckoutQuote = async ({
     ]);
 
     const sanitizedItems = sanitizeCheckoutItems(items);
+    await assertCheckoutItemsWithinStock(sanitizedItems);
     const selectedShippingMethod = shippingMethodId
         ? shippingMethods.find((method) => method.id === shippingMethodId)
         : undefined;

@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { getRemainingStock } from "@/lib/stock";
 import type { ProductVariant } from "@/types/site";
 
 interface ProductInfoProps {
@@ -11,7 +12,9 @@ interface ProductInfoProps {
   oldPrice?: string;
   sku?: string;
   highlights?: string[];
+  stockQuantity?: number;
   stockStatus?: "in-stock" | "low-stock" | "out-of-stock";
+  currentCartQuantity?: number;
   variants?: ProductVariant[];
   onAddToCart?: (quantity: number) => void;
   showTitleOnMobile?: boolean;
@@ -26,12 +29,20 @@ const ProductInfo = ({
   oldPrice,
   sku,
   highlights,
+  stockQuantity,
   stockStatus = "in-stock",
+  currentCartQuantity = 0,
   variants,
   onAddToCart,
   showTitleOnMobile = true,
 }: ProductInfoProps) => {
   const [quantity, setQuantity] = useState(1);
+  const availableToAdd = useMemo(
+    () => getRemainingStock(stockQuantity, currentCartQuantity),
+    [currentCartQuantity, stockQuantity],
+  );
+  const isAddToCartDisabled = stockStatus === "out-of-stock" || availableToAdd === 0;
+  const canIncreaseQuantity = typeof availableToAdd === "number" ? quantity < availableToAdd : true;
 
   const stock = useMemo(() => {
     switch (stockStatus) {
@@ -59,6 +70,14 @@ const ProductInfo = ({
     return Array.from(new Set(items));
   }, [highlights]);
 
+  useEffect(() => {
+    if (typeof availableToAdd !== "number") {
+      return;
+    }
+
+    setQuantity((prev) => Math.min(prev, Math.max(1, availableToAdd)));
+  }, [availableToAdd]);
+
   return (
     <div className="w-full pb-[36px] text-[#111111]">
       <h1
@@ -66,6 +85,8 @@ const ProductInfo = ({
       >
         {name}
       </h1>
+
+      <p className={`mb-[14px] mt-[-8px] text-[15px] font-bold ${stock.color}`}>{stock.label}</p>
 
       {sku && <p className="mb-[20px] mt-[10px] text-[14px] text-[#999999]">{sku}</p>}
 
@@ -97,9 +118,18 @@ const ProductInfo = ({
 
           <button
             type="button"
-            onClick={() => setQuantity((prev) => prev + 1)}
-            className="flex h-full w-[32px] items-center justify-center text-[#111111] transition hover:bg-[#f9f9f9]"
+            onClick={() =>
+              setQuantity((prev) => {
+                if (typeof availableToAdd === "number") {
+                  return Math.min(prev + 1, availableToAdd);
+                }
+
+                return prev + 1;
+              })
+            }
+            className="flex h-full w-[32px] items-center justify-center text-[#111111] transition hover:bg-[#f9f9f9] disabled:cursor-not-allowed disabled:text-[#d0cbc4]"
             aria-label="Increase quantity"
+            disabled={!canIncreaseQuantity}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
               <path d="m 4 8 h 8 M 8 4 v 8" fill="none" stroke="currentColor" strokeWidth="1" fillRule="evenodd" />
@@ -115,12 +145,18 @@ const ProductInfo = ({
               window.dispatchEvent(new CustomEvent("lumera:cart-open"));
             }
           }}
-          disabled={stockStatus === "out-of-stock"}
+          disabled={isAddToCartDisabled}
           className="inline-flex h-[42px] w-full items-center justify-center whitespace-nowrap bg-black px-[30px] text-[15px] font-bold uppercase tracking-[0.02em] text-white transition hover:bg-[#222222] disabled:cursor-not-allowed disabled:bg-[#8e8e8e] sm:w-auto"
         >
           Přidat do košíku
         </button>
       </div>
+
+      {availableToAdd === 0 && stockStatus !== "out-of-stock" ? (
+        <p className="mb-[16px] mt-[-10px] text-[13px] leading-[1.5] text-[#6b6257]">
+          V koĹˇĂ­ku uĹľ mĂˇte maximĂˇlnĂ­ dostupnĂ© mnoĹľstvĂ­ tohoto produktu.
+        </p>
+      ) : null}
 
       {variants && variants.length > 0 && (
         <div className="mb-[14px]">
@@ -148,8 +184,6 @@ const ProductInfo = ({
           </div>
         </div>
       )}
-
-      <p className={`mb-[18px] mt-[20px] text-[15px] font-bold ${stock.color}`}>{stock.label}</p>
 
       <div className="mb-[20px] space-y-[8px]">
         <div className="flex items-center gap-[10px]">

@@ -300,6 +300,14 @@ const ShopSidebarComponent = ({
                         ),
                     )}
                 </div>
+
+                <button
+                    type="button"
+                    onClick={() => setIsMobileFiltersOpen(false)}
+                    className="mt-5 w-full bg-black px-4 py-3 text-[14px] font-medium text-white transition-opacity hover:opacity-90"
+                >
+                    Filtrovat
+                </button>
             </div>
     );
 

@@ -373,7 +373,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        const status = /coupon|bonus|sign in|cart is empty|required|unsupported|not available/i.test(message)
+        const status = /coupon|bonus|sign in|cart is empty|required|unsupported|not available|košíku|košík|dostupný|vyprodan|skladem/i.test(message)
             ? 400
             : 500;
 

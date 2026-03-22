@@ -1,5 +1,6 @@
 import 'server-only';
 import type { CheckoutItemInput, CheckoutLineItem, CheckoutTotals } from '@/lib/payments/checkout-types';
+import { fetchPayloadProducts } from '@/lib/payload-products';
 
 const DEFAULT_CURRENCY = (process.env.CHECKOUT_CURRENCY || 'CZK').toUpperCase();
 
@@ -41,6 +42,38 @@ export const sanitizeCheckoutItems = (items: CheckoutItemInput[]): CheckoutLineI
     }
 
     return sanitized;
+};
+
+export const assertCheckoutItemsWithinStock = async (items: CheckoutLineItem[]) => {
+    if (items.length === 0) {
+        return;
+    }
+
+    const products = await fetchPayloadProducts();
+    const productsById = new Map(products.map((product) => [product.id, product] as const));
+    const productsBySlug = new Map(products.map((product) => [product.slug, product] as const));
+
+    for (const item of items) {
+        const product = (item.slug && productsBySlug.get(item.slug)) || productsById.get(item.id);
+
+        if (!product) {
+            throw new Error(`Produkt "${item.name}" už není dostupný. Odeberte ho z košíku a zkuste to znovu.`);
+        }
+
+        if (typeof product.stockQuantity !== 'number') {
+            continue;
+        }
+
+        if (item.quantity > product.stockQuantity) {
+            if (product.stockQuantity <= 0) {
+                throw new Error(`Produkt "${product.name}" je momentálně vyprodaný. Odeberte ho z košíku a zkuste to znovu.`);
+            }
+
+            throw new Error(
+                `U produktu "${product.name}" jsou skladem už jen ${product.stockQuantity} ks. Upravte množství v košíku a zkuste to znovu.`,
+            );
+        }
+    }
 };
 
 export const buildCheckoutTotals = (items: CheckoutLineItem[], shippingAmount = 0): CheckoutTotals => {

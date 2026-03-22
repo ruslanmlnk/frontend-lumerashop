@@ -558,6 +558,8 @@ const Header = () => {
                     <div className="space-y-1">
                       {cartItems.map((item) => {
                         const itemImageSrc = getStoredAssetPath(item.image);
+                        const canIncreaseQuantity =
+                          typeof item.stockQuantity !== 'number' || item.quantity < item.stockQuantity;
 
                         return (
                         <article
@@ -600,7 +602,8 @@ const Header = () => {
                               />
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] text-[18px] leading-none text-[#b0aba4] transition-colors hover:bg-white hover:text-[#111111]"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] text-[18px] leading-none text-[#b0aba4] transition-colors hover:bg-white hover:text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
+                                disabled={!canIncreaseQuantity}
                               >
                                 +
                               </button>

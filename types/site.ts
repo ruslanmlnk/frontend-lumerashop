@@ -41,6 +41,7 @@ export interface Product {
     specifications?: Record<string, string>;
     filterValues?: ProductFilterValue[];
     highlights?: string[];
+    stockQuantity?: number;
     stockStatus?: 'in-stock' | 'low-stock' | 'out-of-stock';
     variants?: ProductVariant[];
     reviews?: ProductReview[];

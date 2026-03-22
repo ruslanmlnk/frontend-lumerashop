@@ -30,12 +30,16 @@ export default function ProductPageClient({
   product,
   recommendedProducts,
 }: ProductPageClientProps) {
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const gallery = useMemo(() => {
     const sourceImages = product.gallery?.length ? product.gallery : [product.image];
     return Array.from(new Set(sourceImages.filter(Boolean)));
   }, [product.gallery, product.image]);
   const normalizedPrice = useMemo(() => normalizePrice(product.price), [product.price]);
+  const currentCartQuantity = useMemo(
+    () => cartItems.find((item) => item.id === product.id)?.quantity ?? 0,
+    [cartItems, product.id],
+  );
   const primaryCartImage = gallery[0] || product.image;
   const descriptionHtml = product.descriptionHtml || "";
   const specifications = product.specifications;
@@ -51,6 +55,7 @@ export default function ProductPageClient({
       quantity,
       slug: product.slug,
       sku: product.sku,
+      stockQuantity: product.stockQuantity,
     });
   };
 
@@ -75,7 +80,9 @@ export default function ProductPageClient({
               oldPrice={product.oldPrice}
               sku={product.sku}
               highlights={product.highlights}
+              stockQuantity={product.stockQuantity}
               stockStatus={product.stockStatus || "in-stock"}
+              currentCartQuantity={currentCartQuantity}
               variants={variants}
               onAddToCart={handleAddToCart}
               showTitleOnMobile={false}

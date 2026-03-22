@@ -8,6 +8,7 @@ import {
 } from '@/lib/local-assets';
 import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 import { createLexicalRichTextFromText, renderLexicalToHTML } from '@/lib/payload-richtext';
+import { normalizeStockQuantity } from '@/lib/stock';
 import type { Product, ProductFilterValue, ProductReview, ProductVariant } from '@/types/site';
 
 type PayloadListResponse<T> = {
@@ -251,8 +252,8 @@ const normalizeStockStatus = (value: unknown, quantity: unknown): Product['stock
         return value;
     }
 
-    const numericQuantity = typeof quantity === 'number' ? quantity : Number(quantity);
-    if (Number.isFinite(numericQuantity)) {
+    const numericQuantity = normalizeStockQuantity(quantity);
+    if (typeof numericQuantity === 'number') {
         if (numericQuantity <= 0) return 'out-of-stock';
         if (numericQuantity <= 3) return 'low-stock';
     }
@@ -447,6 +448,7 @@ const mapPayloadProduct = (
                   )
                   .filter((variant): variant is ProductVariant => Boolean(variant))
             : undefined;
+    const stockQuantity = normalizeStockQuantity(doc.stockQuantity);
 
     return {
         id,
@@ -472,7 +474,8 @@ const mapPayloadProduct = (
         specifications: includeDetails ? toSpecificationsObject(doc.specifications) : undefined,
         filterValues: toFilterValues(doc.filterOptions),
         highlights: includeDetails ? toHighlights(doc.highlights) : undefined,
-        stockStatus: normalizeStockStatus(doc.stockStatus, doc.stockQuantity),
+        stockQuantity,
+        stockStatus: normalizeStockStatus(doc.stockStatus, stockQuantity),
         variants: variants?.length ? variants : undefined,
         isFeatured: doc.isFeatured === true,
         isRecommended: doc.isRecommended === true,

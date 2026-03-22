@@ -130,6 +130,26 @@ const getItemLabel = (count: number) => {
     return 'položek';
 };
 
+const isBlank = (value: string) => value.trim().length === 0;
+
+const formatMissingFields = (fields: string[]) => {
+    if (fields.length <= 1) {
+        return fields[0] || '';
+    }
+
+    return `${fields.slice(0, -1).join(', ')} a ${fields[fields.length - 1]}`;
+};
+
+const buildMissingFieldsMessage = (fields: string[], nextAction: string) => {
+    const formattedFields = formatMissingFields(fields);
+
+    if (fields.length === 1) {
+        return `Chybí pole ${formattedFields}. Doplňte ho a potom ${nextAction}.`;
+    }
+
+    return `Chybí pole ${formattedFields}. Doplňte je a potom ${nextAction}.`;
+};
+
 const checkboxClassName = 'mt-[2px] h-4 w-4 accent-[#b98743]';
 const getUsedCouponsStorageKey = (userId: string) => `lumera_used_coupons:${userId}`;
 
@@ -233,6 +253,8 @@ export default function CheckoutPage({
 
     const updateFormData = <K extends keyof CheckoutFormState>(field: K, value: CheckoutFormState[K]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+        setErrorMessage(null);
+        setShippingErrorMessage(null);
     };
 
     useEffect(() => {
@@ -510,6 +532,120 @@ export default function CheckoutPage({
         }
     };
 
+    const getMissingCustomerFields = () => {
+        const missingFields: string[] = [];
+
+        if (isBlank(formData.email)) {
+            missingFields.push('E-mailová adresa');
+        }
+
+        if (isBlank(formData.phone)) {
+            missingFields.push('Telefon pro dopravce');
+        }
+
+        if (formData.isCompany) {
+            if (isBlank(formData.companyName)) {
+                missingFields.push('Název firmy');
+            }
+
+            if (isBlank(formData.companyId)) {
+                missingFields.push('IČ');
+            }
+        }
+
+        if (!formData.billingSameAsShipping) {
+            if (isBlank(formData.billingFirstName)) {
+                missingFields.push('Fakturační jméno');
+            }
+
+            if (isBlank(formData.billingLastName)) {
+                missingFields.push('Fakturační příjmení');
+            }
+
+            if (isBlank(formData.billingAddress)) {
+                missingFields.push('Fakturační ulice a číslo');
+            }
+
+            if (isBlank(formData.billingCity)) {
+                missingFields.push('Fakturační město');
+            }
+
+            if (isBlank(formData.billingZip)) {
+                missingFields.push('Fakturační PSČ');
+            }
+        }
+
+        return missingFields;
+    };
+
+    const getMissingOrderFields = () => {
+        const missingFields: string[] = [];
+
+        if (isBlank(formData.firstName)) {
+            missingFields.push('Jméno');
+        }
+
+        if (isBlank(formData.lastName)) {
+            missingFields.push('Příjmení');
+        }
+
+        if (isBlank(formData.address)) {
+            missingFields.push('Ulice a číslo popisné');
+        }
+
+        if (isBlank(formData.city)) {
+            missingFields.push('Město');
+        }
+
+        if (isBlank(formData.zip)) {
+            missingFields.push('PSČ');
+        }
+
+        if (!formData.shippingMethod) {
+            missingFields.push('Způsob dopravy');
+            return missingFields;
+        }
+
+        const pickupCarrier = getPickupCarrierForMethod(formData.shippingMethod);
+        if (pickupCarrier && (!formData.pickupPoint || formData.pickupPoint.carrier !== pickupCarrier)) {
+            missingFields.push('Výdejní místo / box');
+        }
+
+        return missingFields;
+    };
+
+    const validateCustomerStep = (nextAction: string) => {
+        const missingFields = getMissingCustomerFields();
+
+        if (missingFields.length === 0) {
+            setErrorMessage(null);
+            return true;
+        }
+
+        setCurrentStep('customer');
+        setErrorMessage(buildMissingFieldsMessage(missingFields, nextAction));
+        return false;
+    };
+
+    const validateOrderStep = (nextAction: string) => {
+        const missingFields = getMissingOrderFields();
+        const hasShippingIssue = missingFields.some(
+            (field) => field === 'Způsob dopravy' || field === 'Výdejní místo / box',
+        );
+
+        if (missingFields.length === 0) {
+            setErrorMessage(null);
+            setShippingErrorMessage(null);
+            return true;
+        }
+
+        const message = buildMissingFieldsMessage(missingFields, nextAction);
+        setCurrentStep('order');
+        setErrorMessage(message);
+        setShippingErrorMessage(hasShippingIssue ? message : null);
+        return false;
+    };
+
     const validateShippingSelection = () => {
         if (!formData.shippingMethod) {
             setShippingErrorMessage('Vyberte prosim zpusob dopravy.');
@@ -541,6 +677,19 @@ export default function CheckoutPage({
     };
 
     const handleFinalSubmit = async () => {
+        if (cartItems.length === 0) {
+            setErrorMessage('KoĹˇĂ­k je prĂˇzdnĂ˝. PĹ™idejte produkty pĹ™ed platbou.');
+            return;
+        }
+
+        if (!validateCustomerStep('zkuste objednávku odeslat znovu')) {
+            return;
+        }
+
+        if (!validateOrderStep('zkuste objednávku odeslat znovu')) {
+            return;
+        }
+
         if (!formData.termsAccepted) {
             setErrorMessage('Musíte souhlasit s obchodními podmínkami.');
             return;
@@ -1570,11 +1719,22 @@ export default function CheckoutPage({
                 <p className={theme.help}>Dorucovaci adresu, zpusob dopravy a platbu vyberete v dalsim kroku.</p>
             </div>
 
+            {errorMessage ? (
+                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                    {errorMessage}
+                </p>
+            ) : null}
+
             <button
                 type="button"
                 className={theme.primary}
-                onClick={() => nextStep('customer', 'order')}
-                disabled={!formData.email || !formData.phone}
+                onClick={() => {
+                    if (!validateCustomerStep('pokračujte k dopravě a platbě')) {
+                        return;
+                    }
+
+                    nextStep('customer', 'order');
+                }}
             >
                 Pokracovat k doprave a platbe
             </button>

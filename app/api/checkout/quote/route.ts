@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not calculate checkout quote.';
-        const status = /sign in|coupon/i.test(message) ? 400 : 500;
+        const status = /sign in|coupon|košíku|košík|dostupný|vyprodan|skladem/i.test(message) ? 400 : 500;
 
         return NextResponse.json({ error: message }, { status });
     }

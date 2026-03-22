@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DEFAULT_LOCAL_ASSET_FALLBACK, getStoredAssetPath } from '@/lib/local-assets';
+import { clampQuantityToStock, normalizeStockQuantity } from '@/lib/stock';
 
 export interface CartItem {
     id: number | string;
@@ -12,6 +13,7 @@ export interface CartItem {
     slug?: string;
     sku?: string;
     variant?: string;
+    stockQuantity?: number;
 }
 
 interface CartContextType {
@@ -28,13 +30,25 @@ type PersistedCartItem = Partial<CartItem> & { image?: string };
 type ProductApiResponse = {
     products?: Array<{
         image?: unknown;
+        stockQuantity?: unknown;
     }>;
+};
+type NormalizedPersistedCartItem = Partial<CartItem> & {
+    image: string;
+    quantity: number;
+    stockQuantity?: number;
+};
+type SyncedCartProduct = {
+    slug: string;
+    image?: string;
+    stockQuantity?: number;
 };
 
 const CART_STORAGE_KEY = 'lumera_cart';
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const normalizeCartImage = (value: string | null | undefined) => getStoredAssetPath(value);
+const clampCartQuantity = (quantity: number, stockQuantity?: number) => clampQuantityToStock(quantity, stockQuantity);
 
 const sanitizePersistedCart = (value: unknown): CartItem[] => {
     if (!Array.isArray(value)) {
@@ -42,7 +56,7 @@ const sanitizePersistedCart = (value: unknown): CartItem[] => {
     }
 
     return value
-        .map((rawItem) => {
+        .map((rawItem): NormalizedPersistedCartItem | null => {
             const item =
                 typeof rawItem === 'object' && rawItem !== null ? (rawItem as PersistedCartItem) : null;
 
@@ -50,9 +64,13 @@ const sanitizePersistedCart = (value: unknown): CartItem[] => {
                 return null;
             }
 
+            const stockQuantity = normalizeStockQuantity(item.stockQuantity);
+
             return {
                 ...item,
                 image: normalizeCartImage(item.image),
+                stockQuantity,
+                quantity: clampCartQuantity(item.quantity ?? 0, stockQuantity),
             };
         })
         .filter(
@@ -62,7 +80,8 @@ const sanitizePersistedCart = (value: unknown): CartItem[] => {
                 typeof item.name === 'string' &&
                 typeof item.price === 'number' &&
                 typeof item.image === 'string' &&
-                typeof item.quantity === 'number',
+                typeof item.quantity === 'number' &&
+                clampCartQuantity(item.quantity, item.stockQuantity) > 0,
         );
 };
 
@@ -97,11 +116,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [cartItems]);
 
     useEffect(() => {
-        const itemsNeedingImageRepair = cartItems.filter(
-            (item) => item.slug && item.image === DEFAULT_LOCAL_ASSET_FALLBACK,
+        const itemsNeedingSync = cartItems.filter(
+            (item) =>
+                item.slug &&
+                (item.image === DEFAULT_LOCAL_ASSET_FALLBACK || typeof item.stockQuantity !== 'number'),
         );
 
-        if (itemsNeedingImageRepair.length === 0) {
+        if (itemsNeedingSync.length === 0) {
             return;
         }
 
@@ -109,7 +130,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const repairImages = async () => {
             const repairedEntries = await Promise.all(
-                itemsNeedingImageRepair.map(async (item) => {
+                itemsNeedingSync.map(async (item): Promise<SyncedCartProduct | null> => {
                     try {
                         const response = await fetch(`/api/products?slug=${encodeURIComponent(item.slug ?? '')}`);
                         if (!response.ok) {
@@ -121,14 +142,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             typeof payload.products?.[0]?.image === 'string'
                                 ? normalizeCartImage(payload.products[0].image)
                                 : null;
+                        const stockQuantity = normalizeStockQuantity(payload.products?.[0]?.stockQuantity);
 
-                        if (!productImage || productImage === DEFAULT_LOCAL_ASSET_FALLBACK) {
+                        if ((!productImage || productImage === DEFAULT_LOCAL_ASSET_FALLBACK) && typeof stockQuantity !== 'number') {
                             return null;
                         }
 
                         return {
                             slug: item.slug ?? '',
-                            image: productImage,
+                            image: productImage ?? undefined,
+                            stockQuantity,
                         };
                     } catch {
                         return null;
@@ -140,33 +163,60 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
             }
 
-            const imageBySlug = new Map(
+            const productMetaBySlug = new Map(
                 repairedEntries
-                    .filter((entry): entry is { slug: string; image: string } => Boolean(entry?.slug && entry.image))
-                    .map((entry) => [entry.slug, entry.image] as const),
+                    .filter(
+                        (
+                            entry,
+                        ): entry is SyncedCartProduct =>
+                            Boolean(entry?.slug),
+                    )
+                    .map((entry) => [entry.slug, entry] as const),
             );
 
-            if (imageBySlug.size === 0) {
+            if (productMetaBySlug.size === 0) {
                 return;
             }
 
             setCartItems((prev) => {
                 let hasChanges = false;
 
-                const next = prev.map((item) => {
-                    if (!item.slug || item.image !== DEFAULT_LOCAL_ASSET_FALLBACK) {
-                        return item;
+                const next = prev.flatMap((item) => {
+                    if (!item.slug) {
+                        return [item];
                     }
 
-                    const repairedImage = imageBySlug.get(item.slug);
-                    if (!repairedImage) {
-                        return item;
+                    const syncedProduct = productMetaBySlug.get(item.slug);
+                    if (!syncedProduct) {
+                        return [item];
+                    }
+
+                    const nextImage =
+                        syncedProduct.image && syncedProduct.image !== DEFAULT_LOCAL_ASSET_FALLBACK
+                            ? syncedProduct.image
+                            : item.image;
+                    const nextStockQuantity = syncedProduct.stockQuantity ?? item.stockQuantity;
+                    const nextQuantity = clampCartQuantity(item.quantity, nextStockQuantity);
+
+                    if (nextQuantity <= 0) {
+                        hasChanges = true;
+                        return [];
+                    }
+
+                    if (
+                        item.image === nextImage &&
+                        item.stockQuantity === nextStockQuantity &&
+                        item.quantity === nextQuantity
+                    ) {
+                        return [item];
                     }
 
                     hasChanges = true;
                     return {
                         ...item,
-                        image: repairedImage,
+                        image: nextImage,
+                        stockQuantity: nextStockQuantity,
+                        quantity: nextQuantity,
                     };
                 });
 
@@ -186,25 +236,49 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const normalizedItem = {
                 ...item,
                 image: normalizeCartImage(item.image),
+                stockQuantity: normalizeStockQuantity(item.stockQuantity),
             };
             const existingItem = prev.find((entry) => entry.id === item.id);
 
             if (existingItem) {
-                return prev.map((entry) =>
-                    entry.id === item.id
-                        ? {
-                              ...entry,
-                              quantity: entry.quantity + normalizedItem.quantity,
-                              slug: entry.slug ?? normalizedItem.slug,
-                              sku: entry.sku ?? normalizedItem.sku,
-                              variant: entry.variant ?? normalizedItem.variant,
-                              image: normalizedItem.image,
-                          }
-                        : entry,
-                );
+                return prev.flatMap((entry) => {
+                    if (entry.id !== item.id) {
+                        return [entry];
+                    }
+
+                    const stockQuantity = normalizedItem.stockQuantity ?? entry.stockQuantity;
+                    const nextQuantity = clampCartQuantity(entry.quantity + normalizedItem.quantity, stockQuantity);
+
+                    if (nextQuantity <= 0) {
+                        return [];
+                    }
+
+                    return [
+                        {
+                            ...entry,
+                            quantity: nextQuantity,
+                            slug: entry.slug ?? normalizedItem.slug,
+                            sku: entry.sku ?? normalizedItem.sku,
+                            variant: entry.variant ?? normalizedItem.variant,
+                            image: normalizedItem.image,
+                            stockQuantity,
+                        },
+                    ];
+                });
             }
 
-            return [...prev, normalizedItem];
+            const nextQuantity = clampCartQuantity(normalizedItem.quantity, normalizedItem.stockQuantity);
+            if (nextQuantity <= 0) {
+                return prev;
+            }
+
+            return [
+                ...prev,
+                {
+                    ...normalizedItem,
+                    quantity: nextQuantity,
+                },
+            ];
         });
     };
 
@@ -213,14 +287,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const updateQuantity = (id: number | string, quantity: number) => {
-        if (quantity <= 0) {
-            removeFromCart(id);
-            return;
-        }
+        setCartItems((prev) => {
+            const item = prev.find((entry) => entry.id === id);
+            if (!item) {
+                return prev;
+            }
+            const nextQuantity = clampCartQuantity(quantity, item.stockQuantity);
 
-        setCartItems((prev) =>
-            prev.map((entry) => (entry.id === id ? { ...entry, quantity } : entry)),
-        );
+            if (nextQuantity <= 0) {
+                return prev.filter((entry) => entry.id !== id);
+            }
+
+            return prev.map((entry) => (entry.id === id ? { ...entry, quantity: nextQuantity } : entry));
+        });
     };
 
     const clearCart = () => {
