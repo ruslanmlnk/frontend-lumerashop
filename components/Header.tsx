@@ -51,15 +51,16 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const desktopPrimaryMenuItems = useMemo(
-    () => [HOME_MENU_ITEM, ...payloadDesktopMenuItems, ...STATIC_PAGE_ITEMS],
-    [payloadDesktopMenuItems],
+  const desktopPrimaryMenuItems = useMemo(() => payloadDesktopMenuItems, [payloadDesktopMenuItems]);
+  const desktopOverflowMenuItems = useMemo(
+    () => [HOME_MENU_ITEM, ...STATIC_PAGE_ITEMS, ...payloadDesktopOverflowMenuItems],
+    [payloadDesktopOverflowMenuItems],
   );
   const mobileMenuItems = useMemo(
     () => [HOME_MENU_ITEM, ...payloadMobileMenuItems, ...STATIC_PAGE_ITEMS],
     [payloadMobileMenuItems],
   );
-  const hasDesktopOverflowMenu = payloadDesktopOverflowMenuItems.length > 0;
+  const hasDesktopOverflowMenu = desktopOverflowMenuItems.length > 0;
   const hasCartItems = cartItems.length > 0;
   const miniCartSubtotal = miniCartQuote?.totals?.subtotal ?? totalPrice;
   const miniCartCouponDiscountAmount = miniCartQuote?.discounts?.couponDiscountAmount ?? 0;
@@ -417,7 +418,7 @@ const Header = () => {
                 </button>
 
                 <div className="invisible absolute right-0 top-full z-50 mt-[1px] min-w-[280px] border border-[#111111]/10 bg-white opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/overflow-menu:visible group-hover/overflow-menu:opacity-100 group-focus-within/overflow-menu:visible group-focus-within/overflow-menu:opacity-100">
-                  {renderDesktopOverflowItems(payloadDesktopOverflowMenuItems)}
+                  {renderDesktopOverflowItems(desktopOverflowMenuItems)}
                 </div>
               </li>
             ) : null}
