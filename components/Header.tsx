@@ -33,6 +33,14 @@ const STATIC_PAGE_ITEMS: NavItem[] = [
   { label: 'Kontakt', href: '/kontakt' },
 ];
 
+const DesktopOverflowMenuIcon = () => (
+  <span aria-hidden="true" className="flex h-[14px] w-[20px] flex-col justify-between">
+    <span className="block h-[2px] w-[20px] rounded-full bg-current" />
+    <span className="block h-[2px] w-[12px] rounded-full bg-current" />
+    <span className="block h-[2px] w-[18px] rounded-full bg-current" />
+  </span>
+);
+
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -414,7 +422,7 @@ const Header = () => {
                   aria-label="Další kategorie"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#111111] transition-colors hover:text-[#C8A16A]"
                 >
-                  <Menu size={20} strokeWidth={1.8} />
+                  <DesktopOverflowMenuIcon />
                 </button>
 
                 <div className="invisible absolute right-0 top-full z-50 mt-[1px] min-w-[280px] border border-[#111111]/10 bg-white opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/overflow-menu:visible group-hover/overflow-menu:opacity-100 group-focus-within/overflow-menu:visible group-focus-within/overflow-menu:opacity-100">
