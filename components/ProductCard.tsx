@@ -108,7 +108,7 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
             </Link>
             <div className="flex flex-grow flex-col items-center px-1 text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
                 <h3
-                    className="mb-0 mt-[10px] font-serif text-[16px] font-normal leading-[1.2] text-[#111111] md:mt-[20px] md:text-[20px]"
+                    className="mb-0 mt-[10px] font-serif text-[16px] leading-[1.2] text-[#111111] md:mt-[20px] md:text-[20px] font-bold"
                     style={{ fontFamily: '"Cormorant Garamond", serif' }}
                 >
                     <Link href={`/product/${product.slug}`} className="transition-colors duration-200 hover:text-[#6f5640]">
