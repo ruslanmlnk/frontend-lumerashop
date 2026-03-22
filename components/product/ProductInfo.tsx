@@ -74,7 +74,7 @@ const ProductInfo = ({
         {oldPrice && <span className="text-[16px] text-[#9ca3af] line-through">{oldPrice}</span>}
       </div>
 
-      <div className="mb-[26px] mt-[20px] flex items-center gap-[15px]">
+      <div className="mb-[26px] mt-[20px] flex flex-col gap-[12px] sm:flex-row sm:items-center sm:gap-[15px]">
         <div className="flex h-[42px] w-[125px] items-center justify-between border border-[#e5e5e5] bg-white">
           <button
             type="button"
@@ -116,7 +116,7 @@ const ProductInfo = ({
             }
           }}
           disabled={stockStatus === "out-of-stock"}
-          className="inline-flex h-[42px] items-center justify-center bg-black px-[30px] text-[15px] font-bold uppercase tracking-[0.02em] text-white transition hover:bg-[#222222] disabled:cursor-not-allowed disabled:bg-[#8e8e8e]"
+          className="inline-flex h-[42px] w-full items-center justify-center whitespace-nowrap bg-black px-[30px] text-[15px] font-bold uppercase tracking-[0.02em] text-white transition hover:bg-[#222222] disabled:cursor-not-allowed disabled:bg-[#8e8e8e] sm:w-auto"
         >
           Přidat do košíku
         </button>
