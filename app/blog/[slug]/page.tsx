@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { fetchPayloadArticles } from '@/lib/payload-articles';
+import { isPayloadMediaProxyPath } from '@/lib/local-assets';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, Calendar, Tag, User } from 'lucide-react';
@@ -50,6 +51,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                 sizes="(min-width: 1024px) 900px, 100vw"
                                 className="object-cover"
                                 priority
+                                unoptimized={isPayloadMediaProxyPath(post.image)}
                             />
                         </div>
 

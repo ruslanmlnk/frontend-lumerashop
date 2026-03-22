@@ -120,6 +120,9 @@ export const getStoredAssetPath = (
 export const getPayloadMediaProxyPath = (value: string): string =>
   `/api/payload-media/${encodeURIComponent(value)}`;
 
+export const isPayloadMediaProxyPath = (value: string): boolean =>
+  value.startsWith("/api/payload-media/");
+
 export const shouldProxyPayloadMedia = (baseUrl: string): boolean => {
   try {
     return isPrivateHostname(new URL(baseUrl).hostname);

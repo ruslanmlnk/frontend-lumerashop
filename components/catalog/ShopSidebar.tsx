@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import type { CatalogCategoryNavItem } from '@/types/site';
 import CategoryFilter from './CategoryFilter';
@@ -34,6 +34,25 @@ interface ShopSidebarProps {
     onClearFilters?: () => void;
 }
 
+const deriveAutoExpandedMobileSections = (
+    filterGroups: SidebarFilterGroup[],
+    hasCustomPrice: boolean,
+) => {
+    const next = new Set<string>();
+
+    if (hasCustomPrice) {
+        next.add('price');
+    }
+
+    for (const group of filterGroups) {
+        if (group.selected.length > 0) {
+            next.add(`group:${group.key}`);
+        }
+    }
+
+    return next;
+};
+
 const ShopSidebarComponent = ({
     categoryItems,
     selectedCategorySlug,
@@ -51,28 +70,25 @@ const ShopSidebarComponent = ({
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
     const [expandedMobileSections, setExpandedMobileSections] = useState<string[]>([]);
     const hasCustomPrice = priceRange[0] !== priceBounds[0] || priceRange[1] !== priceBounds[1];
+    const autoExpandedMobileSections = useMemo(
+        () => deriveAutoExpandedMobileSections(filterGroups, hasCustomPrice),
+        [filterGroups, hasCustomPrice],
+    );
+    const availableMobileSections = useMemo(
+        () => new Set(['price', ...filterGroups.map((group) => `group:${group.key}`)]),
+        [filterGroups],
+    );
+    const visibleExpandedMobileSections = useMemo(() => {
+        const next = new Set(autoExpandedMobileSections);
 
-    useEffect(() => {
-        setExpandedMobileSections((prev) => {
-            const next = new Set(
-                prev.filter(
-                    (section) => section === 'price' || filterGroups.some((group) => `group:${group.key}` === section),
-                ),
-            );
-
-            if (hasCustomPrice) {
-                next.add('price');
+        for (const section of expandedMobileSections) {
+            if (availableMobileSections.has(section)) {
+                next.add(section);
             }
+        }
 
-            for (const group of filterGroups) {
-                if (group.selected.length > 0) {
-                    next.add(`group:${group.key}`);
-                }
-            }
-
-            return Array.from(next);
-        });
-    }, [filterGroups, hasCustomPrice]);
+        return next;
+    }, [autoExpandedMobileSections, availableMobileSections, expandedMobileSections]);
 
     const toggleMobileSection = (sectionKey: string) => {
         setExpandedMobileSections((prev) =>
@@ -81,7 +97,7 @@ const ShopSidebarComponent = ({
     };
 
     const renderMobileSection = (sectionKey: string, title: string, content: ReactNode, badge?: string) => {
-        const isExpanded = expandedMobileSections.includes(sectionKey);
+        const isExpanded = visibleExpandedMobileSections.has(sectionKey);
 
         return (
             <section key={sectionKey} className="overflow-hidden">
@@ -209,9 +225,8 @@ const ShopSidebarComponent = ({
         ],
     );
 
-    const mobileFiltersBody = useMemo(
-        () => (
-            <div className="w-full">
+    const mobileFiltersBody = (
+        <div className="w-full">
                 <div className="mb-[18px] flex items-center justify-between">
                     <h2
                         className="text-[20px] font-bold leading-[24px] text-[#111111]"
@@ -286,19 +301,6 @@ const ShopSidebarComponent = ({
                     )}
                 </div>
             </div>
-        ),
-        [
-            activeFilters,
-            expandedMobileSections,
-            filterGroups,
-            hasCustomPrice,
-            onClearFilters,
-            onPriceChange,
-            onRemoveFilter,
-            onToggleFilterOption,
-            priceBounds,
-            priceRange,
-        ],
     );
 
     return (

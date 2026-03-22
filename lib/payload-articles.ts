@@ -11,6 +11,11 @@ import type { BlogPost } from '@/types/site';
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const PAYLOAD_ARTICLES_REVALIDATE_SECONDS = 300;
+const payloadArticleDateFormatter = new Intl.DateTimeFormat('cs-CZ', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+});
 
 const ARTICLE_LIST_SELECT: PayloadSelect = {
     slug: true,
@@ -106,11 +111,7 @@ const mapPayloadArticle = (doc: PayloadArticleDoc, baseUrl: string): BlogPost | 
     if (typeof doc.updatedAt === 'string') {
         const d = new Date(doc.updatedAt);
         if (!isNaN(d.getTime())) {
-            date = d.toLocaleDateString('cs-CZ', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
+            date = payloadArticleDateFormatter.format(d);
         }
     }
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { isPayloadMediaProxyPath } from '@/lib/local-assets';
 import { fetchPayloadArticles } from '@/lib/payload-articles';
 
 const BlogPreview = async () => {
@@ -27,6 +28,8 @@ const BlogPreview = async () => {
                                     src={post.image}
                                     alt={post.title}
                                     fill
+                                    decoding="async"
+                                    unoptimized={isPayloadMediaProxyPath(post.image)}
                                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                                 />
                             </Link>

@@ -37,13 +37,13 @@ const sanitizeString = (value: unknown, maxLength: number) => {
   return value.trim().slice(0, maxLength);
 };
 
-const sanitizeCountry = (_value: unknown) => 'CZ';
+const sanitizeCountry = () => 'CZ';
 
 const sanitizeAddress = (value: AddressPayload | undefined, addressType: AddressType) => ({
   firstName: sanitizeString(value?.firstName, 120),
   lastName: sanitizeString(value?.lastName, 120),
   phone: sanitizeString(value?.phone, 40),
-  country: sanitizeCountry(value?.country),
+  country: sanitizeCountry(),
   address: sanitizeString(value?.address, 160),
   city: sanitizeString(value?.city, 120),
   zip: sanitizeString(value?.zip, 40),

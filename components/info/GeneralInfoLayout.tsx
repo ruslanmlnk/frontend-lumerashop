@@ -9,6 +9,10 @@ interface GeneralInfoLayoutProps {
 }
 
 const GeneralInfoLayout = ({ title, children, heroImageUrl }: GeneralInfoLayoutProps) => {
+    const heroBackgroundImage = heroImageUrl
+        ? `linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)), url("${heroImageUrl.replaceAll('"', '\\"')}")`
+        : 'linear-gradient(rgba(17, 17, 17, 0.58), rgba(17, 17, 17, 0.58))';
+
     return (
         <div className="min-h-screen font-sans text-[#111111] bg-white">
             <Header />
@@ -18,9 +22,7 @@ const GeneralInfoLayout = ({ title, children, heroImageUrl }: GeneralInfoLayoutP
                     <div
                         className="relative flex min-h-[180px] items-center justify-center overflow-hidden md:min-h-[220px]"
                         style={{
-                            backgroundImage: heroImageUrl
-                                ? `linear-gradient(rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.38)), url(${heroImageUrl})`
-                                : 'linear-gradient(rgba(17, 17, 17, 0.58), rgba(17, 17, 17, 0.58))',
+                            backgroundImage: heroBackgroundImage,
                             backgroundPosition: 'center',
                             backgroundSize: 'cover',
                             backgroundRepeat: 'no-repeat',

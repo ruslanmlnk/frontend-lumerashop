@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { isPayloadMediaProxyPath } from '@/lib/local-assets';
 import type { Product } from '../types/site';
 
 type ProductCardProps = {
@@ -31,6 +32,8 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                             alt={product.name}
                             fill
                             sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 50vw"
+                            decoding="async"
+                            unoptimized={isPayloadMediaProxyPath(product.image)}
                             className={primaryImageClasses}
                         />
                         {secondaryImage ? (
@@ -40,6 +43,8 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                                 aria-hidden="true"
                                 fill
                                 sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 50vw"
+                                decoding="async"
+                                unoptimized={isPayloadMediaProxyPath(secondaryImage)}
                                 className={secondaryImageClasses}
                             />
                         ) : null}
@@ -80,6 +85,8 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                     alt={product.name}
                     fill
                     sizes="(min-width: 1024px) 320px, (min-width: 768px) 33vw, 50vw"
+                    decoding="async"
+                    unoptimized={isPayloadMediaProxyPath(product.image)}
                     className={
                         hasSecondaryImage
                             ? 'object-contain p-2 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-0 md:p-0'
@@ -93,6 +100,8 @@ const ProductCardComponent = ({ product, variant = 'default' }: ProductCardProps
                         aria-hidden="true"
                         fill
                         sizes="(min-width: 1024px) 320px, (min-width: 768px) 33vw, 50vw"
+                        decoding="async"
+                        unoptimized={isPayloadMediaProxyPath(secondaryImage)}
                         className="object-contain p-2 opacity-0 transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100 md:p-0"
                     />
                 ) : null}

@@ -4,7 +4,7 @@ import { memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { DEFAULT_LOCAL_ASSET_FALLBACK } from '@/lib/local-assets';
+import { DEFAULT_LOCAL_ASSET_FALLBACK, isPayloadMediaProxyPath } from '@/lib/local-assets';
 
 type CatalogChildLinkItem = {
     id: string;
@@ -39,6 +39,8 @@ const CatalogChildLinksComponent = ({ items }: CatalogChildLinksProps) => {
                                 alt={item.name}
                                 fill
                                 sizes="26px"
+                                decoding="async"
+                                unoptimized={isPayloadMediaProxyPath(imageSrc)}
                                 className="object-contain transition-transform duration-300 group-hover:scale-[1.04]"
                             />
                         </div>

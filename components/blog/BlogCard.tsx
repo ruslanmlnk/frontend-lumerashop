@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { isPayloadMediaProxyPath } from '@/lib/local-assets';
 import { BlogPost } from '@/types/site';
 
 const BlogCard = ({ post }: { post: BlogPost }) => {
@@ -22,6 +23,8 @@ const BlogCard = ({ post }: { post: BlogPost }) => {
                         src={post.image}
                         alt={post.title}
                         fill
+                        decoding="async"
+                        unoptimized={isPayloadMediaProxyPath(post.image)}
                         className="object-cover group-hover:scale-102 transition-transform duration-[1000ms]"
                     />
                 </Link>

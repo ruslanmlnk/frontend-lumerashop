@@ -182,7 +182,8 @@ type MapPayloadProductOptions = {
     includeDetails?: boolean;
 };
 
-const formatPrice = (value: number) => `${new Intl.NumberFormat('cs-CZ').format(value)} Kč`;
+const payloadProductPriceFormatter = new Intl.NumberFormat('cs-CZ');
+const formatPrice = (value: number) => `${payloadProductPriceFormatter.format(value)} Kč`;
 
 const resolveUrl = (value: unknown, baseUrl: string): string | null => {
     if (typeof value !== 'string' || value.length === 0) {
@@ -218,21 +219,29 @@ const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUr
         return [];
     }
 
-    return gallery
-        .map((item) => {
-            const uploaded =
-                typeof item?.image === 'object' && item.image ? resolveUrl(item.image.url, baseUrl) : null;
-            const linked = resolveUrl(item?.imageUrl, baseUrl);
-            return uploaded || linked;
-        })
-        .filter((value): value is string => Boolean(value));
+    return Array.from(
+        new Set(
+            gallery
+                .map((item) => {
+                    const uploaded =
+                        typeof item?.image === 'object' && item.image ? resolveUrl(item.image.url, baseUrl) : null;
+                    const linked = resolveUrl(item?.imageUrl, baseUrl);
+                    return uploaded || linked;
+                })
+                .filter((value): value is string => Boolean(value)),
+        ),
+    );
 };
 
-const resolvePrimaryImage = (doc: PayloadVariantDoc, baseUrl: string): string => {
+const resolvePrimaryImage = (
+    doc: PayloadVariantDoc,
+    baseUrl: string,
+    resolvedGallery: string[] = resolveGallery(doc.gallery, baseUrl),
+): string => {
     const mainUploadUrl =
         typeof doc.mainImage === 'object' && doc.mainImage ? resolveUrl(doc.mainImage.url, baseUrl) : null;
     const imageUrl = resolveUrl(doc.imageUrl, baseUrl);
-    const galleryImage = resolveGallery(doc.gallery, baseUrl)[0];
+    const galleryImage = resolvedGallery[0];
 
     return mainUploadUrl || imageUrl || galleryImage || DEFAULT_LOCAL_ASSET_FALLBACK;
 };
@@ -357,11 +366,13 @@ const mapVariantProduct = (doc: PayloadVariantDoc, baseUrl: string): ProductVari
         return null;
     }
 
+    const gallery = resolveGallery(doc.gallery, baseUrl);
+
     return {
         id,
         name,
         slug,
-        image: resolvePrimaryImage(doc, baseUrl),
+        image: resolvePrimaryImage(doc, baseUrl, gallery),
     };
 };
 
@@ -415,8 +426,8 @@ const mapPayloadProduct = (
     const numericPurchaseCount =
         typeof doc.purchaseCount === 'number' ? doc.purchaseCount : Number(doc.purchaseCount);
 
-    const image = resolvePrimaryImage(doc, baseUrl);
     const gallery = resolveGallery(doc.gallery, baseUrl);
+    const image = resolvePrimaryImage(doc, baseUrl, gallery);
     const description =
         typeof doc.description === 'string' && doc.description.trim().length > 0 ? doc.description : undefined;
     const shortDescription =

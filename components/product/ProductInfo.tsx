@@ -18,6 +18,7 @@ interface ProductInfoProps {
 }
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, "").trim();
+const isPayloadMediaProxyPath = (value: string) => value.startsWith("/api/payload-media/");
 
 const ProductInfo = ({
   name,
@@ -136,7 +137,10 @@ const ProductInfo = ({
                   src={variant.image}
                   alt={variant.name}
                   fill
+                  loading="lazy"
+                  decoding="async"
                   sizes="70px"
+                  unoptimized={isPayloadMediaProxyPath(variant.image)}
                   className="object-contain p-[2px]"
                 />
               </Link>

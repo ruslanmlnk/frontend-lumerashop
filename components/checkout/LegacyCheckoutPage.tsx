@@ -14,7 +14,7 @@ import {
     SHIPPING_METHODS as SHIPPING_METHODS_CLEAN,
     type CheckoutPickupPoint,
 } from '@/lib/checkout-shipping';
-import { getStoredAssetPath } from '@/lib/local-assets';
+import { getStoredAssetPath, isPayloadMediaProxyPath } from '@/lib/local-assets';
 import { Check, Truck, CreditCard, User, Receipt, Info, ArrowLeft, Loader2 } from 'lucide-react';
 import '@/app/checkout2.css';
 
@@ -772,10 +772,20 @@ export default function CheckoutPage() {
                                 <h2 className="summary-title">Přehled objednávky</h2>
 
                                 <div className="space-y-4 mb-6 max-h-[400px] overflow-y-auto pr-2">
-                                    {cartItems.map((item) => (
+                                    {cartItems.map((item) => {
+                                        const itemImageSrc = getStoredAssetPath(item.image);
+
+                                        return (
                                         <div key={item.id} className="summary-item flex items-start gap-3 text-[14px]">
                                             <div className="relative w-[60px] h-[60px] bg-white border border-[#eee] rounded-md overflow-hidden flex-shrink-0">
-                                                <Image src={getStoredAssetPath(item.image)} alt={item.name} fill className="object-cover" />
+                                                <Image
+                                                    src={itemImageSrc}
+                                                    alt={item.name}
+                                                    fill
+                                                    decoding="async"
+                                                    unoptimized={isPayloadMediaProxyPath(itemImageSrc)}
+                                                    className="object-cover"
+                                                />
                                                 <div className="absolute top-[-5px] right-[-5px] bg-[#111] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
                                                     {item.quantity}
                                                 </div>
@@ -786,7 +796,8 @@ export default function CheckoutPage() {
                                             </div>
                                             <p className="font-semibold text-[#111]">{(item.price * item.quantity).toLocaleString('cs-CZ')} Kč</p>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
 
                                 <div className="space-y-3 pt-6 border-t border-[#e5e7eb]">

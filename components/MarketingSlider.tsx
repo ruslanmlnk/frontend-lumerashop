@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,17 +12,64 @@ interface MarketingSliderProps {
     slides?: MarketingSlide[];
 }
 
+const slideVariants: Variants = {
+    enter: (direction: number) => ({
+        x: direction > 0 ? '100%' : '-100%',
+        opacity: 1,
+        zIndex: 1,
+    }),
+    center: {
+        x: 0,
+        opacity: 1,
+        zIndex: 1,
+    },
+    exit: (direction: number) => ({
+        x: direction > 0 ? '-100%' : '100%',
+        opacity: 1,
+        zIndex: 0,
+    }),
+};
+
+const getContentVariants = (enterX: number, centerDelay: number, exitDuration: number = 0.5): Variants => ({
+    enter: {
+        opacity: 0,
+        x: enterX,
+    },
+    center: {
+        opacity: 1,
+        x: 0,
+        transition: {
+            duration: 1.0,
+            delay: centerDelay,
+            ease: [0.33, 1, 0.68, 1],
+        },
+    },
+    exit: {
+        opacity: 0,
+        x: enterX,
+        transition: {
+            duration: exitDuration,
+            ease: 'easeIn',
+        },
+    },
+});
+
 const MarketingSlider = ({ slides }: MarketingSliderProps) => {
-    const sliderSlides = (slides && slides.length > 0 ? slides : DEFAULT_MARKETING_SLIDES).map((slide) => ({
-        ...slide,
-        bg: getLocalAssetPath(slide.bg) ?? slide.bg,
-        overlayImage: getLocalAssetPath(slide.overlayImage) ?? slide.overlayImage,
-    }));
+    const sliderSlides = useMemo(
+        () =>
+            (slides && slides.length > 0 ? slides : DEFAULT_MARKETING_SLIDES).map((slide) => ({
+                ...slide,
+                bg: getLocalAssetPath(slide.bg) ?? slide.bg,
+                overlayImage: getLocalAssetPath(slide.overlayImage) ?? slide.overlayImage,
+            })),
+        [slides],
+    );
     const [current, setCurrent] = useState(0);
     const [direction, setDirection] = useState(0);
     const [isInitialSlideReady, setIsInitialSlideReady] = useState(false);
     const autoplayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const activeIndex = current % sliderSlides.length;
+    const slideCount = sliderSlides.length;
+    const activeIndex = current % slideCount;
 
     const clearAutoplay = useCallback(() => {
         if (autoplayTimeoutRef.current !== null) {
@@ -33,25 +80,25 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
 
     const advanceToNextSlide = useCallback(() => {
         setDirection(1);
-        setCurrent((prev) => (prev + 1) % sliderSlides.length);
-    }, [sliderSlides.length]);
+        setCurrent((prev) => (prev + 1) % slideCount);
+    }, [slideCount]);
 
     const scheduleAutoplay = useCallback(() => {
         clearAutoplay();
 
-        if (sliderSlides.length <= 1) {
+        if (slideCount <= 1) {
             return;
         }
 
         autoplayTimeoutRef.current = setTimeout(() => {
             advanceToNextSlide();
         }, 7000);
-    }, [advanceToNextSlide, clearAutoplay, sliderSlides.length]);
+    }, [advanceToNextSlide, clearAutoplay, slideCount]);
 
     const paginate = (newDirection: number) => {
         clearAutoplay();
         setDirection(newDirection);
-        setCurrent((prev) => (prev + newDirection + sliderSlides.length) % sliderSlides.length);
+        setCurrent((prev) => (prev + newDirection + slideCount) % slideCount);
     };
 
     useEffect(() => {
@@ -71,48 +118,6 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
         setDirection(nextIndex > activeIndex ? 1 : -1);
         setCurrent(nextIndex);
     };
-
-    const slideVariants: Variants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? '100%' : '-100%',
-            opacity: 1,
-            zIndex: 1
-        }),
-        center: {
-            x: 0,
-            opacity: 1,
-            zIndex: 1
-        },
-        exit: (direction: number) => ({
-            x: direction > 0 ? '-100%' : '100%',
-            opacity: 1,
-            zIndex: 0
-        })
-    };
-
-    const getVariants = (enterX: number, centerDelay: number, exitDuration: number = 0.5): Variants => ({
-        enter: {
-            opacity: 0,
-            x: enterX
-        },
-        center: {
-            opacity: 1,
-            x: 0,
-            transition: {
-                duration: 1.0,
-                delay: centerDelay,
-                ease: [0.33, 1, 0.68, 1]
-            }
-        },
-        exit: {
-            opacity: 0,
-            x: enterX,
-            transition: {
-                duration: exitDuration,
-                ease: "easeIn"
-            }
-        }
-    });
 
     return (
         <section className="hidden lg:block bg-white overflow-hidden py-0" id="block-4">
@@ -169,7 +174,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                                         }}
                                     >
                                         <motion.h2
-                                            variants={getVariants(-200, 1.0)}
+                                            variants={getContentVariants(-200, 1.0)}
                                             className="text-[34px] md:text-[48px] font-serif font-bold leading-[1.1] mb-5"
                                             style={{
                                                 fontFamily: '"Cormorant Garamond", serif',
@@ -179,7 +184,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                                             {sliderSlides[activeIndex].title}
                                         </motion.h2>
                                         <motion.p
-                                            variants={getVariants(-200, 1.2)}
+                                            variants={getContentVariants(-200, 1.2)}
                                             className="text-[14px] md:text-[16px] font-sans font-normal leading-[1.6] mb-8"
                                             style={{
                                                 fontFamily: '"Work Sans", sans-serif',
@@ -189,7 +194,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                                             {sliderSlides[activeIndex].description}
                                         </motion.p>
                                         <motion.div
-                                            variants={getVariants(-200, 1.4)}
+                                            variants={getContentVariants(-200, 1.4)}
                                         >
                                             <Link
                                                 href={sliderSlides[activeIndex].link}
@@ -203,7 +208,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                                     {/* Right Overlay Image */}
                                     <div className="hidden lg:block">
                                         <motion.div
-                                            variants={getVariants(300, 0.8, 0.7)}
+                                            variants={getContentVariants(300, 0.8, 0.7)}
                                             className="absolute z-10"
                                             style={{
                                                 width: `${sliderSlides[activeIndex].layout.img.w}px`,

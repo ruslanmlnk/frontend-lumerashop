@@ -48,6 +48,7 @@ export type PayloadFeedProductDoc = {
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
 const DEFAULT_BRAND = 'Lumera';
 export const MERCHANT_FEED_REVALIDATE_SECONDS = 3600;
+const merchantFeedPriceFormatter = new Intl.NumberFormat('cs-CZ');
 
 const FEED_PRODUCT_SELECT: PayloadSelect = {
     id: true,
@@ -181,12 +182,12 @@ export const mapPayloadFeedProduct = (doc: PayloadFeedProductDoc, baseUrl: strin
         name,
         slug,
         image: resolvePrimaryImage(doc, baseUrl),
-        price: `${new Intl.NumberFormat('cs-CZ').format(Math.max(0, Math.round(safePrice)))} Kc`,
+        price: `${merchantFeedPriceFormatter.format(Math.max(0, Math.round(safePrice)))} Kc`,
         oldPrice:
             (() => {
                 const numericOldPrice = typeof doc.oldPrice === 'number' ? doc.oldPrice : Number(doc.oldPrice);
                 return Number.isFinite(numericOldPrice) && numericOldPrice > 0
-                    ? `${new Intl.NumberFormat('cs-CZ').format(Math.max(0, Math.round(numericOldPrice)))} Kc`
+                    ? `${merchantFeedPriceFormatter.format(Math.max(0, Math.round(numericOldPrice)))} Kc`
                     : undefined;
             })(),
         category,

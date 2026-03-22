@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CheckoutQuoteResponse } from '@/components/checkout/types';
 import type { NavItem } from '@/types/site';
 import { useCart } from '@/context/CartContext';
@@ -14,7 +14,7 @@ import {
   readPendingCoupon,
   sanitizeCouponCode,
 } from '@/lib/coupon-storage';
-import { getStoredAssetPath } from '@/lib/local-assets';
+import { getStoredAssetPath, isPayloadMediaProxyPath } from '@/lib/local-assets';
 import HeaderSearchForm from '@/components/header/HeaderSearchForm';
 import { Menu, X, ChevronDown, ArrowRight, Phone, Mail, Facebook, Instagram, Tag } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
@@ -22,7 +22,8 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-
 const MENU_ARROW_DOWN_BG =
   'url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHdpZHRoPSIxNnB4IiBoZWlnaHQ9IjE2cHgiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTYgMTYiIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHBhdGggZmlsbD0iIzgwODA4MCIgZD0iTTIuMSw1LjJMMi4xLDUuMmMwLjMtMC4zLDAuOC0wLjMsMS4xLDBMOCwxMC4zbDQuNy01QzEzLDUsMTMuNSw1LDEzLjksNS4zbDAsMGMwLjMsMC4zLDAuMSwwLjctMC4yLDENCglsLTUsNS40Yy0wLjMsMC4zLTAuOCwwLjMtMS4xLDBMMi40LDYuNEMyLjEsNi4xLDEuOCw1LjUsMi4xLDUuMnoiLz4NCjwvc3ZnPg0K)';
 
-const formatPrice = (value: number) => `${value.toLocaleString('cs-CZ')} Kč`;
+const headerPriceFormatter = new Intl.NumberFormat('cs-CZ');
+const formatPrice = (value: number) => `${headerPriceFormatter.format(value)} Kč`;
 
 const HOME_MENU_ITEM: NavItem = { label: 'Domů', href: '/' };
 
@@ -46,8 +47,14 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const desktopMenuItems = [HOME_MENU_ITEM, ...payloadDesktopMenuItems, ...STATIC_PAGE_ITEMS];
-  const mobileMenuItems = [HOME_MENU_ITEM, ...payloadMobileMenuItems, ...STATIC_PAGE_ITEMS];
+  const desktopMenuItems = useMemo(
+    () => [HOME_MENU_ITEM, ...payloadDesktopMenuItems, ...STATIC_PAGE_ITEMS],
+    [payloadDesktopMenuItems],
+  );
+  const mobileMenuItems = useMemo(
+    () => [HOME_MENU_ITEM, ...payloadMobileMenuItems, ...STATIC_PAGE_ITEMS],
+    [payloadMobileMenuItems],
+  );
   const hasCartItems = cartItems.length > 0;
   const miniCartSubtotal = miniCartQuote?.totals?.subtotal ?? totalPrice;
   const miniCartCouponDiscountAmount = miniCartQuote?.discounts?.couponDiscountAmount ?? 0;
@@ -68,11 +75,7 @@ const Header = () => {
   };
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
-    if (latest > 20 && !scrolled) {
-      setScrolled(true);
-    } else if (latest <= 20 && scrolled) {
-      setScrolled(false);
-    }
+    setScrolled(latest > 20);
   });
 
   useEffect(() => {
@@ -500,17 +503,22 @@ const Header = () => {
                 {hasCartItems ? (
                   <div className="flex-1 overflow-y-auto pl-4 pr-6 pb-5">
                     <div className="space-y-1">
-                      {cartItems.map((item) => (
+                      {cartItems.map((item) => {
+                        const itemImageSrc = getStoredAssetPath(item.image);
+
+                        return (
                         <article
                           key={item.id}
                           className="grid grid-cols-[64px_minmax(0,1fr)_68px] items-start gap-4 border-b border-[#111]/8 py-4 last:border-b-0"
                         >
                           <div className="relative h-[72px] w-[64px] shrink-0 overflow-hidden rounded-[12px] border border-[#111]/6 bg-[#f7f6f3]">
                             <Image
-                              src={getStoredAssetPath(item.image)}
+                              src={itemImageSrc}
                               alt={item.name}
                               fill
                               sizes="64px"
+                              decoding="async"
+                              unoptimized={isPayloadMediaProxyPath(itemImageSrc)}
                               className="object-contain p-2"
                             />
                           </div>
@@ -560,7 +568,8 @@ const Header = () => {
                             </p>
                           </div>
                         </article>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (

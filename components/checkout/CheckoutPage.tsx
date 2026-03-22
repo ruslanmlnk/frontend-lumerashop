@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Loader2, Truck, User } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -189,6 +189,9 @@ export default function CheckoutPage({
     const [couponErrorMessage, setCouponErrorMessage] = useState('');
     const [isQuoteLoading, setIsQuoteLoading] = useState(false);
     const autoAppliedCouponRef = useRef('');
+    const applyCouponCodeRef = useRef<
+        ((rawCode: string, options?: { silent?: boolean }) => Promise<void>) | null
+    >(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -327,7 +330,10 @@ export default function CheckoutPage({
 
             if (currentUser?.id) {
                 autoAppliedCouponRef.current = couponCode;
-                void applyCouponCode(couponCode, { silent: true });
+                const applyCoupon = applyCouponCodeRef.current;
+                if (applyCoupon) {
+                    void applyCoupon(couponCode, { silent: true });
+                }
             } else {
                 setAppliedPromoCode(couponCode);
                 setCouponErrorMessage('');
@@ -341,13 +347,13 @@ export default function CheckoutPage({
         };
     }, [currentUser?.id]);
 
-    const requestCheckoutQuote = async ({
+    const requestCheckoutQuote = useCallback(async ({
         promoCode = appliedPromoCode,
         useBonusBalance = formData.useBonusBalance,
     }: {
         promoCode?: string;
         useBonusBalance?: boolean;
-    }) => {
+    } = {}) => {
         const response = await fetch('/api/checkout/quote', {
             method: 'POST',
             headers: {
@@ -369,9 +375,9 @@ export default function CheckoutPage({
 
         setQuote(payload);
         return payload;
-    };
+    }, [appliedPromoCode, cartItems, formData.shippingMethod, formData.useBonusBalance]);
 
-    const applyCouponCode = async (rawCode: string, options?: { silent?: boolean }) => {
+    const applyCouponCode = useCallback(async (rawCode: string, options?: { silent?: boolean }) => {
         const normalizedCode = sanitizeCouponCode(rawCode);
 
         if (!normalizedCode) {
@@ -441,7 +447,11 @@ export default function CheckoutPage({
         } finally {
             setIsQuoteLoading(false);
         }
-    };
+    }, [currentUser?.id, formData.useBonusBalance, requestCheckoutQuote]);
+
+    useEffect(() => {
+        applyCouponCodeRef.current = applyCouponCode;
+    }, [applyCouponCode]);
 
     useEffect(() => {
         let cancelled = false;
@@ -450,21 +460,8 @@ export default function CheckoutPage({
             setIsQuoteLoading(true);
 
             try {
-                const response = await fetch('/api/checkout/quote', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        items: cartItems,
-                        shippingMethodId: formData.shippingMethod || undefined,
-                        promoCode: appliedPromoCode,
-                        useBonusBalance: formData.useBonusBalance,
-                    }),
-                });
-
-                const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
-                if (!cancelled && response.ok && payload?.totals) {
+                const payload = await requestCheckoutQuote();
+                if (!cancelled && payload?.totals) {
                     setQuote(payload);
                 }
             } catch {
@@ -481,7 +478,7 @@ export default function CheckoutPage({
         return () => {
             cancelled = true;
         };
-    }, [appliedPromoCode, cartItems, formData.shippingMethod, formData.useBonusBalance]);
+    }, [requestCheckoutQuote]);
 
     useEffect(() => {
         if (!currentUser?.id) {
@@ -495,7 +492,7 @@ export default function CheckoutPage({
 
         autoAppliedCouponRef.current = pendingCoupon;
         void applyCouponCode(pendingCoupon, { silent: true });
-    }, [appliedPromoCode, currentUser?.id, formData.shippingMethod, formData.useBonusBalance]);
+    }, [appliedPromoCode, applyCouponCode, currentUser?.id]);
 
     const nextStep = (step: Step, next: Step) => {
         if (!completedSteps.includes(step)) {

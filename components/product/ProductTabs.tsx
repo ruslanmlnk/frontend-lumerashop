@@ -50,6 +50,10 @@ type ReviewStarsProps = {
   onChange?: (value: number) => void;
 };
 
+const reviewDateFormatter = new Intl.DateTimeFormat("cs-CZ", {
+  dateStyle: "long",
+});
+
 const formatReviewDate = (value?: string) => {
   if (!value) {
     return null;
@@ -60,9 +64,7 @@ const formatReviewDate = (value?: string) => {
     return null;
   }
 
-  return new Intl.DateTimeFormat("cs-CZ", {
-    dateStyle: "long",
-  }).format(new Date(timestamp));
+  return reviewDateFormatter.format(new Date(timestamp));
 };
 
 const getViewerLabel = (user: ViewerUser | null) => {

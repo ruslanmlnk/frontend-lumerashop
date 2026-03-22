@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 import ProductGrid from "@/components/ProductGrid";
 import Features from "@/components/Features";
 import ProductGallery from "@/components/product/ProductGallery";
@@ -29,7 +31,12 @@ export default function ProductPageClient({
   recommendedProducts,
 }: ProductPageClientProps) {
   const { addToCart } = useCart();
-  const gallery = product.gallery?.length ? product.gallery : [product.image];
+  const gallery = useMemo(() => {
+    const sourceImages = product.gallery?.length ? product.gallery : [product.image];
+    return Array.from(new Set(sourceImages.filter(Boolean)));
+  }, [product.gallery, product.image]);
+  const normalizedPrice = useMemo(() => normalizePrice(product.price), [product.price]);
+  const primaryCartImage = gallery[0] || product.image;
   const descriptionHtml = product.descriptionHtml || "";
   const specifications = product.specifications;
   const reviews = product.reviews;
@@ -39,8 +46,8 @@ export default function ProductPageClient({
     addToCart({
       id: product.id,
       name: product.name,
-      price: normalizePrice(product.price),
-      image: gallery[0] || product.image,
+      price: normalizedPrice,
+      image: primaryCartImage,
       quantity,
       slug: product.slug,
       sku: product.sku,
@@ -58,7 +65,7 @@ export default function ProductPageClient({
 
         <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-[60px]">
           <div className="w-full">
-            <ProductGallery images={gallery} productName={product.name} />
+            <ProductGallery key={product.id} images={gallery} productName={product.name} />
           </div>
 
           <div className="w-full lg:pt-[30px]">

@@ -25,7 +25,9 @@ type PayloadInfoPageGlobal = {
   title?: string | null
   heroImage?: {
     url?: unknown
-  } | number | null
+    filename?: unknown
+  } | string | number | null
+  heroImageUrl?: string | null
   content?: unknown
   seo?: {
     title?: string | null
@@ -102,14 +104,31 @@ const resolveUrl = (value: unknown, baseUrl: string): string | null => {
   return getRenderablePayloadMediaPath(normalizedValue, baseUrl)
 }
 
+const resolveHeroImageUrl = (
+  doc: PayloadInfoPageGlobal,
+  baseUrl: string,
+  fallbackHeroImageUrl?: string,
+): string | null => {
+  const mediaRelationUrl =
+    typeof doc?.heroImage === 'object' && doc.heroImage
+      ? resolveUrl(doc.heroImage.url ?? doc.heroImage.filename, baseUrl)
+      : typeof doc?.heroImage === 'string'
+        ? resolveUrl(doc.heroImage, baseUrl)
+        : null
+
+  return (
+    mediaRelationUrl ||
+    resolveUrl(doc?.heroImageUrl, baseUrl) ||
+    resolveUrl(fallbackHeroImageUrl, baseUrl) ||
+    null
+  )
+}
+
 async function fetchInfoPage(config: InfoPageConfig) {
   const doc = (await getGlobal(config.globalSlug)) as PayloadInfoPageGlobal
   const baseUrl = (process.env.PAYLOAD_API_URL?.trim() || DEFAULT_PAYLOAD_API_URL).replace(/\/+$/, '')
   const title = doc?.title?.trim() || config.fallbackTitle
-  const heroImageUrl =
-    (typeof doc?.heroImage === 'object' && doc.heroImage ? resolveUrl(doc.heroImage.url, baseUrl) : null) ||
-    config.fallbackHeroImageUrl ||
-    null
+  const heroImageUrl = resolveHeroImageUrl(doc, baseUrl, config.fallbackHeroImageUrl)
   const seoTitle = doc?.seo?.title?.trim() || title
   const seoDescription = doc?.seo?.description?.trim() || config.fallbackDescription
   const contentHtml = renderLexicalToHTML(doc?.content)

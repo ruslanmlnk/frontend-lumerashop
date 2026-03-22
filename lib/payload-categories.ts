@@ -168,6 +168,18 @@ const isMenuVisible = (value: unknown) => value === true;
 
 type MenuViewport = 'desktop' | 'mobile';
 
+type FetchPayloadCatalogCategoriesOptions = {
+    onlyMenuVisible?: boolean;
+    viewport?: MenuViewport;
+};
+
+type PayloadCatalogDocuments = {
+    baseUrl: string;
+    categoryDocs: PayloadCategoryDoc[];
+    categoryGroupDocs: PayloadCategoryGroupDoc[];
+    subcategoryDocs: PayloadSubcategoryDoc[];
+};
+
 const isVisibleForViewport = (
     doc: { showInMenu?: unknown; showInDesktopMenu?: unknown; showInMobileMenu?: unknown },
     viewport: MenuViewport,
@@ -226,10 +238,7 @@ const mapSubcategory = (
     };
 };
 
-export async function fetchPayloadCatalogCategories(options?: {
-    onlyMenuVisible?: boolean;
-    viewport?: MenuViewport;
-}): Promise<CatalogCategoryNavItem[]> {
+const fetchPayloadCatalogDocuments = async (): Promise<PayloadCatalogDocuments | null> => {
     const baseUrl = getPayloadBaseUrl();
     const categoriesParams = new URLSearchParams({ depth: '0', limit: '200', sort: 'sortOrder' });
     const categoryGroupsParams = new URLSearchParams({ depth: '1', limit: '500', sort: 'sortOrder' });
@@ -253,7 +262,7 @@ export async function fetchPayloadCatalogCategories(options?: {
         ]);
 
         if (!categoriesResponse.ok || !categoryGroupsResponse.ok || !subcategoriesResponse.ok) {
-            return [];
+            return null;
         }
 
         const categoriesPayload = (await categoriesResponse.json()) as PayloadListResponse<PayloadCategoryDoc>;
@@ -266,92 +275,119 @@ export async function fetchPayloadCatalogCategories(options?: {
         );
         const subcategoryDocs = sortByMenuOrderAsc(Array.isArray(subcategoriesPayload.docs) ? subcategoriesPayload.docs : []);
 
-        const subcategoriesByGroup = new Map<string, CatalogSubcategoryNavItem[]>();
-        for (const doc of subcategoryDocs) {
-            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
-                continue;
-            }
-
-            const parentGroupSlug =
-                typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.slug === 'string'
-                    ? doc.categoryGroup.slug.trim()
-                    : '';
-            const categorySlug =
-                typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
-                    ? doc.category.slug.trim()
-                    : '';
-
-            if (!parentGroupSlug || !categorySlug) {
-                continue;
-            }
-
-            const mapped = mapSubcategory(doc, categorySlug, parentGroupSlug, baseUrl);
-            if (!mapped) {
-                continue;
-            }
-
-            const items = subcategoriesByGroup.get(parentGroupSlug) ?? [];
-            items.push(mapped);
-            subcategoriesByGroup.set(parentGroupSlug, items);
-        }
-
-        const groupsByCategory = new Map<string, CatalogCategoryGroupNavItem[]>();
-        for (const doc of categoryGroupDocs) {
-            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
-                continue;
-            }
-
-            const parentSlug =
-                typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
-                    ? doc.category.slug.trim()
-                    : '';
-
-            if (!parentSlug) {
-                continue;
-            }
-
-            const mapped = mapCategoryGroup(doc, parentSlug, baseUrl);
-            if (!mapped) {
-                continue;
-            }
-
-            const children = subcategoriesByGroup.get(mapped.slug) ?? [];
-            const items = groupsByCategory.get(parentSlug) ?? [];
-            items.push({
-                ...mapped,
-                children: children.length ? children : undefined,
-            });
-            groupsByCategory.set(parentSlug, items);
-        }
-
-        return categoryDocs.reduce<CatalogCategoryNavItem[]>((items, doc) => {
-            if (options?.onlyMenuVisible && !isVisibleForViewport(doc, options.viewport ?? 'desktop')) {
-                return items;
-            }
-
-            const id = doc.id != null ? String(doc.id) : '';
-            const name = typeof doc.name === 'string' ? doc.name.trim() : '';
-            const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
-
-            if (!id || !name || !slug) {
-                return items;
-            }
-
-            const children = groupsByCategory.get(slug) ?? [];
-
-            items.push({
-                id,
-                name,
-                slug,
-                href: getCategoryHref(slug),
-                children: children.length ? children : undefined,
-            });
-
-            return items;
-        }, []);
+        return {
+            baseUrl,
+            categoryDocs,
+            categoryGroupDocs,
+            subcategoryDocs,
+        };
     } catch {
+        return null;
+    }
+};
+
+const mapPayloadCatalogCategories = (
+    documents: PayloadCatalogDocuments,
+    options?: FetchPayloadCatalogCategoriesOptions,
+): CatalogCategoryNavItem[] => {
+    const { baseUrl, categoryDocs, categoryGroupDocs, subcategoryDocs } = documents;
+    const viewport = options?.viewport ?? 'desktop';
+    const subcategoriesByGroup = new Map<string, CatalogSubcategoryNavItem[]>();
+
+    for (const doc of subcategoryDocs) {
+        if (options?.onlyMenuVisible && !isVisibleForViewport(doc, viewport)) {
+            continue;
+        }
+
+        const parentGroupSlug =
+            typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.slug === 'string'
+                ? doc.categoryGroup.slug.trim()
+                : '';
+        const categorySlug =
+            typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
+                ? doc.category.slug.trim()
+                : '';
+
+        if (!parentGroupSlug || !categorySlug) {
+            continue;
+        }
+
+        const mapped = mapSubcategory(doc, categorySlug, parentGroupSlug, baseUrl);
+        if (!mapped) {
+            continue;
+        }
+
+        const items = subcategoriesByGroup.get(parentGroupSlug) ?? [];
+        items.push(mapped);
+        subcategoriesByGroup.set(parentGroupSlug, items);
+    }
+
+    const groupsByCategory = new Map<string, CatalogCategoryGroupNavItem[]>();
+    for (const doc of categoryGroupDocs) {
+        if (options?.onlyMenuVisible && !isVisibleForViewport(doc, viewport)) {
+            continue;
+        }
+
+        const parentSlug =
+            typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
+                ? doc.category.slug.trim()
+                : '';
+
+        if (!parentSlug) {
+            continue;
+        }
+
+        const mapped = mapCategoryGroup(doc, parentSlug, baseUrl);
+        if (!mapped) {
+            continue;
+        }
+
+        const children = subcategoriesByGroup.get(mapped.slug) ?? [];
+        const items = groupsByCategory.get(parentSlug) ?? [];
+        items.push({
+            ...mapped,
+            children: children.length ? children : undefined,
+        });
+        groupsByCategory.set(parentSlug, items);
+    }
+
+    return categoryDocs.reduce<CatalogCategoryNavItem[]>((items, doc) => {
+        if (options?.onlyMenuVisible && !isVisibleForViewport(doc, viewport)) {
+            return items;
+        }
+
+        const id = doc.id != null ? String(doc.id) : '';
+        const name = typeof doc.name === 'string' ? doc.name.trim() : '';
+        const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
+
+        if (!id || !name || !slug) {
+            return items;
+        }
+
+        const children = groupsByCategory.get(slug) ?? [];
+
+        items.push({
+            id,
+            name,
+            slug,
+            href: getCategoryHref(slug),
+            children: children.length ? children : undefined,
+        });
+
+        return items;
+    }, []);
+};
+
+export async function fetchPayloadCatalogCategories(
+    options?: FetchPayloadCatalogCategoriesOptions,
+): Promise<CatalogCategoryNavItem[]> {
+    const documents = await fetchPayloadCatalogDocuments();
+
+    if (!documents) {
         return [];
     }
+
+    return mapPayloadCatalogCategories(documents, options);
 }
 
 const mapCategoriesToHeaderItems = (categories: CatalogCategoryNavItem[]): NavItem[] =>
@@ -373,10 +409,23 @@ const mapCategoriesToHeaderItems = (categories: CatalogCategoryNavItem[]): NavIt
     }));
 
 export async function fetchPayloadHeaderMenus(): Promise<HeaderMenus> {
-    const [desktopCategories, mobileCategories] = await Promise.all([
-        fetchPayloadCatalogCategories({ onlyMenuVisible: true, viewport: 'desktop' }),
-        fetchPayloadCatalogCategories({ onlyMenuVisible: true, viewport: 'mobile' }),
-    ]);
+    const documents = await fetchPayloadCatalogDocuments();
+
+    if (!documents) {
+        return {
+            desktopMenuItems: [],
+            mobileMenuItems: [],
+        };
+    }
+
+    const desktopCategories = mapPayloadCatalogCategories(documents, {
+        onlyMenuVisible: true,
+        viewport: 'desktop',
+    });
+    const mobileCategories = mapPayloadCatalogCategories(documents, {
+        onlyMenuVisible: true,
+        viewport: 'mobile',
+    });
 
     return {
         desktopMenuItems: mapCategoriesToHeaderItems(desktopCategories),

@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type HeaderSearchFormProps = {
     placeholder: string;
@@ -25,16 +24,8 @@ export default function HeaderSearchForm({
 }: HeaderSearchFormProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const [currentQuery, setCurrentQuery] = useState('');
-
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        const nextQuery = new URLSearchParams(window.location.search).get('q') || '';
-        setCurrentQuery(nextQuery);
-    }, [pathname]);
+    const searchParams = useSearchParams();
+    const currentQuery = searchParams.get('q') || '';
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -57,8 +48,7 @@ export default function HeaderSearchForm({
             <input
                 type="search"
                 name="q"
-                value={currentQuery}
-                onChange={(event) => setCurrentQuery(event.target.value)}
+                defaultValue={currentQuery}
                 placeholder={placeholder}
                 className={inputClassName}
                 autoComplete="off"

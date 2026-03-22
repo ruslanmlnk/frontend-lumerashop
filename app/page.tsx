@@ -11,6 +11,7 @@ import MarketingSlider from '@/components/MarketingSlider';
 import ProductGrid from '@/components/ProductGrid';
 import Testimonials from '@/components/Testimonials';
 import type { MarketingSlide } from '@/data/marketing-slides';
+import { isPayloadMediaProxyPath } from '@/lib/local-assets';
 import { fetchPayloadArticles } from '@/lib/payload-articles';
 import { getGlobal } from '@/lib/payload-data';
 import { fetchPayloadProducts } from '@/lib/payload-products';
@@ -257,6 +258,8 @@ export default async function Home() {
                         alt={post.title}
                         fill
                         sizes="(min-width: 768px) 33vw, 100vw"
+                        decoding="async"
+                        unoptimized={isPayloadMediaProxyPath(post.image)}
                         className="object-cover"
                       />
                     </Link>

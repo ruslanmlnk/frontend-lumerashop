@@ -8,6 +8,8 @@ interface ProductGalleryProps {
   productName: string;
 }
 
+const isPayloadMediaProxyPath = (value: string) => value.startsWith("/api/payload-media/");
+
 const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -45,7 +47,9 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
                   priority={index === 0}
                   loading={index === 0 ? "eager" : "lazy"}
                   fetchPriority={index === 0 ? "high" : "low"}
+                  decoding="async"
                   sizes="(min-width: 1024px) 540px, calc(100vw - 110px)"
+                  unoptimized={isPayloadMediaProxyPath(image)}
                   className="object-contain"
                 />
               ) : null}
@@ -99,7 +103,9 @@ const ProductGallery = ({ images, productName }: ProductGalleryProps) => {
                 alt={`${productName} thumbnail ${index + 1}`}
                 fill
                 loading="lazy"
+                decoding="async"
                 sizes="100px"
+                unoptimized={isPayloadMediaProxyPath(image)}
                 className="object-contain p-1"
               />
             </button>
