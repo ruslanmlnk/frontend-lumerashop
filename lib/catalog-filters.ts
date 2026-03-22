@@ -69,5 +69,5 @@ export const buildFilterGroups = (products: Product[]): FilterGroup[] => {
             title: payload.title,
             options: Array.from(payload.options),
         }))
-        .filter((group) => group.options.length > 0);
+        .filter((group) => group.options.length > 1);
 };

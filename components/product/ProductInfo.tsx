@@ -45,6 +45,19 @@ const ProductInfo = ({
   const canIncreaseQuantity = typeof availableToAdd === "number" ? quantity < availableToAdd : true;
 
   const stock = useMemo(() => {
+    if (typeof stockQuantity === "number") {
+      if (stockQuantity <= 0) {
+        return { label: "VyprodĂˇno", color: "text-[#c40000]" };
+      }
+
+      if (stockQuantity === 1) {
+        return { label: "PoslednĂ­ kus", color: "text-[#c9791d]" };
+      }
+
+      if (stockQuantity <= 3) {
+        return { label: `PoslednĂ­ ${stockQuantity} ks`, color: "text-[#c9791d]" };
+      }
+    }
     switch (stockStatus) {
       case "low-stock":
         return { label: "Poslední kus", color: "text-[#c9791d]" };
@@ -53,7 +66,7 @@ const ProductInfo = ({
       default:
         return { label: "Skladem", color: "text-[#008000]" };
     }
-  }, [stockStatus]);
+  }, [stockQuantity, stockStatus]);
 
   const summaryItems = useMemo(() => {
     const items: string[] = [];
