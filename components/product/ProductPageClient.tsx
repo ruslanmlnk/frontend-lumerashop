@@ -49,7 +49,7 @@ export default function ProductPageClient({
 
   return (
     <main className="pb-16">
-      <div className="mx-auto w-full max-w-[1140px] px-7 lg:px-0">
+      <div className="mx-auto w-full max-w-[1140px] px-[55px] lg:px-0">
         <div className="mb-6 md:hidden">
           <h1 className="font-serif text-[34px] font-bold leading-[1.08] text-[#111111]">
             {product.name}
