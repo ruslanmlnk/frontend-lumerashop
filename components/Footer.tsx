@@ -18,7 +18,7 @@ const Footer = () => {
                             />
                         </div>
 
-                        <p className="max-w-[285px] text-[17px] leading-[1.65] text-[#111111]">
+                        <p className="max-w-[285px] text-[14px] leading-[1.65] text-[#111111]">
                             LumeraShop.cz – Prémiové kožené kabelky, peněženky a doplňky přímo z Itálie.
                         </p>
                     </div>
