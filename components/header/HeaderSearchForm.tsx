@@ -1,6 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import { Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type HeaderSearchFormProps = {
@@ -13,15 +14,53 @@ type HeaderSearchFormProps = {
     onSubmitComplete?: () => void;
 };
 
-export default function HeaderSearchForm({
+type HeaderSearchFormMarkupProps = HeaderSearchFormProps & {
+    currentQuery: string;
+    pathname?: string;
+    onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
+};
+
+const HeaderSearchFormMarkup = ({
     placeholder,
     inputClassName,
     wrapperClassName,
     iconClassName,
     iconSize,
     buttonClassName,
+    currentQuery,
+    pathname,
+    onSubmit,
+}: HeaderSearchFormMarkupProps) => (
+    <form
+        className={wrapperClassName}
+        onSubmit={onSubmit}
+        role="search"
+        action="/shop"
+        method="get"
+        key={pathname ? `${pathname}-${currentQuery}` : undefined}
+    >
+        <input
+            type="search"
+            name="q"
+            defaultValue={currentQuery}
+            placeholder={placeholder}
+            className={inputClassName}
+            autoComplete="off"
+        />
+        <button
+            type="submit"
+            className={buttonClassName || 'absolute right-0 top-0 h-full px-3'}
+            aria-label={placeholder}
+        >
+            <Search size={iconSize} className={iconClassName} />
+        </button>
+    </form>
+);
+
+const HeaderSearchFormContent = ({
     onSubmitComplete,
-}: HeaderSearchFormProps) {
+    ...props
+}: HeaderSearchFormProps) => {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -44,22 +83,23 @@ export default function HeaderSearchForm({
     };
 
     return (
-        <form className={wrapperClassName} onSubmit={handleSubmit} role="search" key={`${pathname}-${currentQuery}`}>
-            <input
-                type="search"
-                name="q"
-                defaultValue={currentQuery}
-                placeholder={placeholder}
-                className={inputClassName}
-                autoComplete="off"
-            />
-            <button
-                type="submit"
-                className={buttonClassName || 'absolute right-0 top-0 h-full px-3'}
-                aria-label={placeholder}
-            >
-                <Search size={iconSize} className={iconClassName} />
-            </button>
-        </form>
+        <HeaderSearchFormMarkup
+            {...props}
+            currentQuery={currentQuery}
+            pathname={pathname}
+            onSubmit={handleSubmit}
+        />
+    );
+};
+
+const HeaderSearchFormFallback = (props: HeaderSearchFormProps) => (
+    <HeaderSearchFormMarkup {...props} currentQuery="" />
+);
+
+export default function HeaderSearchForm(props: HeaderSearchFormProps) {
+    return (
+        <Suspense fallback={<HeaderSearchFormFallback {...props} />}>
+            <HeaderSearchFormContent {...props} />
+        </Suspense>
     );
 }
