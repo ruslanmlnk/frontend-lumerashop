@@ -28,6 +28,7 @@ type PayloadCategoryDoc = {
     createdAt?: unknown;
     showInMenu?: unknown;
     showInDesktopMenu?: unknown;
+    showInDesktopDropdownMenu?: unknown;
     showInMobileMenu?: unknown;
     sortOrder?: unknown;
 };
@@ -78,6 +79,7 @@ const CATEGORY_SELECT: PayloadSelect = {
     createdAt: true,
     showInMenu: true,
     showInDesktopMenu: true,
+    showInDesktopDropdownMenu: true,
     showInMobileMenu: true,
     sortOrder: true,
 };
@@ -165,6 +167,7 @@ const sortByMenuOrderAsc = <T extends { createdAt?: unknown; sortOrder?: unknown
     });
 
 const isMenuVisible = (value: unknown) => value === true;
+const isDesktopOverflowVisible = (value: unknown) => value === true;
 
 type MenuViewport = 'desktop' | 'mobile';
 
@@ -414,6 +417,7 @@ export async function fetchPayloadHeaderMenus(): Promise<HeaderMenus> {
     if (!documents) {
         return {
             desktopMenuItems: [],
+            desktopOverflowMenuItems: [],
             mobileMenuItems: [],
         };
     }
@@ -426,9 +430,28 @@ export async function fetchPayloadHeaderMenus(): Promise<HeaderMenus> {
         onlyMenuVisible: true,
         viewport: 'mobile',
     });
+    const desktopOverflowCategorySlugs = new Set(
+        documents.categoryDocs
+            .filter(
+                (doc) =>
+                    isVisibleForViewport(doc, 'desktop') &&
+                    isDesktopOverflowVisible(doc.showInDesktopDropdownMenu) &&
+                    typeof doc.slug === 'string' &&
+                    doc.slug.trim().length > 0,
+            )
+            .map((doc) => (typeof doc.slug === 'string' ? doc.slug.trim() : ''))
+            .filter((slug): slug is string => slug.length > 0),
+    );
+    const desktopPrimaryCategories = desktopCategories.filter(
+        (category) => !desktopOverflowCategorySlugs.has(category.slug),
+    );
+    const desktopOverflowCategories = desktopCategories.filter((category) =>
+        desktopOverflowCategorySlugs.has(category.slug),
+    );
 
     return {
-        desktopMenuItems: mapCategoriesToHeaderItems(desktopCategories),
+        desktopMenuItems: mapCategoriesToHeaderItems(desktopPrimaryCategories),
+        desktopOverflowMenuItems: mapCategoriesToHeaderItems(desktopOverflowCategories),
         mobileMenuItems: mapCategoriesToHeaderItems(mobileCategories),
     };
 }

@@ -43,11 +43,15 @@ const Header = () => {
   const [isMiniCartQuoteLoading, setIsMiniCartQuoteLoading] = useState(false);
   const [miniCartQuote, setMiniCartQuote] = useState<CheckoutQuoteResponse | null>(null);
   const { cartItems, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
-  const { desktopMenuItems: payloadDesktopMenuItems, mobileMenuItems: payloadMobileMenuItems } = useNavigation();
+  const {
+    desktopMenuItems: payloadDesktopMenuItems,
+    desktopOverflowMenuItems: payloadDesktopOverflowMenuItems,
+    mobileMenuItems: payloadMobileMenuItems,
+  } = useNavigation();
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const desktopMenuItems = useMemo(
+  const desktopPrimaryMenuItems = useMemo(
     () => [HOME_MENU_ITEM, ...payloadDesktopMenuItems, ...STATIC_PAGE_ITEMS],
     [payloadDesktopMenuItems],
   );
@@ -55,6 +59,7 @@ const Header = () => {
     () => [HOME_MENU_ITEM, ...payloadMobileMenuItems, ...STATIC_PAGE_ITEMS],
     [payloadMobileMenuItems],
   );
+  const hasDesktopOverflowMenu = payloadDesktopOverflowMenuItems.length > 0;
   const hasCartItems = cartItems.length > 0;
   const miniCartSubtotal = miniCartQuote?.totals?.subtotal ?? totalPrice;
   const miniCartCouponDiscountAmount = miniCartQuote?.discounts?.couponDiscountAmount ?? 0;
@@ -201,11 +206,13 @@ const Header = () => {
     setAppliedMiniCartCouponCode(normalizedCode);
   };
 
-  const renderDesktopChildren = (items: NavItem[], level = 1) => {
+  const renderDesktopChildren = (items: NavItem[], level = 1, rootVariant: 'top' | 'overflow' = 'top') => {
     const containerClass =
       level === 1
-        ? 'invisible absolute left-0 top-full z-50 min-w-[220px] border border-[#e8d0ab] bg-[#C8A16A] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/top:visible group-hover/top:opacity-100'
-        : 'invisible absolute left-full top-[-1px] z-50 ml-[1px] min-w-[220px] border border-[#e8d0ab] bg-[#B88E56] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/sub:visible group-hover/sub:opacity-100';
+        ? rootVariant === 'top'
+          ? 'invisible absolute left-0 top-full z-50 min-w-[220px] border border-[#e8d0ab] bg-[#C8A16A] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/top:visible group-hover/top:opacity-100 group-focus-within/top:visible group-focus-within/top:opacity-100'
+          : 'invisible absolute left-full top-[-1px] z-50 ml-[1px] min-w-[220px] border border-[#e8d0ab] bg-[#B88E56] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/overflow:visible group-hover/overflow:opacity-100 group-focus-within/overflow:visible group-focus-within/overflow:opacity-100'
+        : 'invisible absolute left-full top-[-1px] z-50 ml-[1px] min-w-[220px] border border-[#e8d0ab] bg-[#B88E56] opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/sub:visible group-hover/sub:opacity-100 group-focus-within/sub:visible group-focus-within/sub:opacity-100';
 
     return (
       <div className={containerClass}>
@@ -223,7 +230,7 @@ const Header = () => {
                   {hasChildren ? <ArrowRight size={14} className="shrink-0" /> : null}
                 </Link>
 
-                {hasChildren ? renderDesktopChildren(item.children ?? [], level + 1) : null}
+                {hasChildren ? renderDesktopChildren(item.children ?? [], level + 1, rootVariant) : null}
               </div>
             );
           })}
@@ -231,6 +238,28 @@ const Header = () => {
       </div>
     );
   };
+
+  const renderDesktopOverflowItems = (items: NavItem[]) => (
+    <div className="py-2">
+      {items.map((item) => {
+        const hasChildren = Boolean(item.children?.length);
+
+        return (
+          <div key={item.href} className="group/overflow relative">
+            <Link
+              href={item.href}
+              className="flex items-center justify-between gap-4 px-5 py-3 text-[16px] font-medium text-[#111111] transition-colors hover:bg-[#f7f4ef] hover:text-[#b98743]"
+            >
+              <span>{item.label}</span>
+              {hasChildren ? <ArrowRight size={15} className="shrink-0" /> : null}
+            </Link>
+
+            {hasChildren ? renderDesktopChildren(item.children ?? [], 1, 'overflow') : null}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   const renderMobileItems = (items: NavItem[], depth = 0) =>
     items.map((item) => {
@@ -352,10 +381,10 @@ const Header = () => {
           />
         </div>
 
-        {desktopMenuItems.length > 0 ? (
+        {desktopPrimaryMenuItems.length > 0 || hasDesktopOverflowMenu ? (
         <nav className="mx-auto hidden h-[53px] max-w-[1140px] px-4 md:block lg:px-0">
           <ul className="flex h-full items-center justify-center gap-[32px] font-sans text-[#111111] lg:gap-[40px] xl:gap-[52px]">
-            {desktopMenuItems.map((item) => {
+            {desktopPrimaryMenuItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
 
               return (
@@ -374,9 +403,24 @@ const Header = () => {
                   )}
                 </Link>
 
-                {hasChildren ? renderDesktopChildren(item.children ?? []) : null}
+                {hasChildren ? renderDesktopChildren(item.children ?? [], 1, 'top') : null}
               </li>
             )})}
+            {hasDesktopOverflowMenu ? (
+              <li className="group/overflow-menu relative flex h-full items-center">
+                <button
+                  type="button"
+                  aria-label="Další kategorie"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#111111] transition-colors hover:text-[#C8A16A]"
+                >
+                  <Menu size={20} strokeWidth={1.8} />
+                </button>
+
+                <div className="invisible absolute right-0 top-full z-50 mt-[1px] min-w-[280px] border border-[#111111]/10 bg-white opacity-0 shadow-[0_18px_40px_rgba(17,17,17,0.12)] transition-all duration-200 group-hover/overflow-menu:visible group-hover/overflow-menu:opacity-100 group-focus-within/overflow-menu:visible group-focus-within/overflow-menu:opacity-100">
+                  {renderDesktopOverflowItems(payloadDesktopOverflowMenuItems)}
+                </div>
+              </li>
+            ) : null}
           </ul>
         </nav>
         ) : null}

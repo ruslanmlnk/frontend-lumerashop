@@ -5,6 +5,7 @@ import type { HeaderMenus } from '@/types/site';
 
 const NavigationContext = createContext<HeaderMenus>({
     desktopMenuItems: [],
+    desktopOverflowMenuItems: [],
     mobileMenuItems: [],
 });
 

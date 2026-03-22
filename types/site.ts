@@ -56,6 +56,7 @@ export interface NavItem {
 
 export interface HeaderMenus {
     desktopMenuItems: NavItem[];
+    desktopOverflowMenuItems: NavItem[];
     mobileMenuItems: NavItem[];
 }
 

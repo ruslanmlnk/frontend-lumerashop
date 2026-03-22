@@ -1,5 +1,5 @@
 const ProductSkeletonCard = () => (
-    <div className="flex h-full flex-col rounded-[18px]">
+    <div className="flex h-full w-full flex-col rounded-[18px]">
         <div className="aspect-square rounded-[18px] bg-[#f3efe9]" />
         <div className="mx-auto mt-5 h-6 w-[78%] rounded-full bg-[#f3efe9]" />
         <div className="mx-auto mt-4 h-5 w-[34%] rounded-full bg-[#f3efe9]" />
@@ -40,13 +40,13 @@ export default function CatalogPageSkeleton() {
                         </div>
                     </aside>
 
-                    <div className="min-w-0 flex-1">
-                        <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
+                    <div className="min-w-0 w-full flex-1">
+                        <div className="mb-10 flex w-full flex-col items-center justify-between gap-4 md:flex-row">
                             <div className="h-4 w-36 rounded-full bg-[#efe8de]" />
                             <div className="h-12 w-[220px] rounded-full bg-[#efe8de]" />
                         </div>
 
-                        <div className="grid min-h-[780px] grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3">
+                        <div className="grid w-full min-h-[780px] grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3">
                             {Array.from({ length: 9 }).map((_, index) => (
                                 <ProductSkeletonCard key={index} />
                             ))}
