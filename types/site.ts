@@ -5,6 +5,12 @@ export interface ProductFilterValue {
     optionSlug?: string;
 }
 
+export interface CatalogFilterReference {
+    id: string;
+    name: string;
+    slug: string;
+}
+
 export interface ProductVariant {
     id: string;
     image: string;
@@ -74,6 +80,8 @@ export interface CatalogSubcategoryNavItem {
     slug: string;
     href: string;
     image?: string;
+    hiddenFilterGroups?: CatalogFilterReference[];
+    hiddenFilterOptions?: CatalogFilterReference[];
 }
 
 export interface CatalogCategoryGroupNavItem {
@@ -82,6 +90,8 @@ export interface CatalogCategoryGroupNavItem {
     slug: string;
     href: string;
     image?: string;
+    hiddenFilterGroups?: CatalogFilterReference[];
+    hiddenFilterOptions?: CatalogFilterReference[];
     children?: CatalogSubcategoryNavItem[];
 }
 
@@ -90,6 +100,8 @@ export interface CatalogCategoryNavItem {
     name: string;
     slug: string;
     href: string;
+    hiddenFilterGroups?: CatalogFilterReference[];
+    hiddenFilterOptions?: CatalogFilterReference[];
     children?: CatalogCategoryGroupNavItem[];
 }
 

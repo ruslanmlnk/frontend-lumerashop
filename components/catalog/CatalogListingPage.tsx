@@ -8,6 +8,7 @@ import CatalogChildLinks from '@/components/catalog/CatalogChildLinks';
 import CatalogHeader from '@/components/catalog/CatalogHeader';
 import ProductSort from '@/components/catalog/ProductSort';
 import ShopSidebar from '@/components/catalog/ShopSidebar';
+import { getCatalogFilterVisibility } from '@/lib/catalog-visibility';
 import { buildFilterGroups, getProductFilterValues, normalizeFilterKey, parseProductPrice } from '@/lib/catalog-filters';
 import { compareProductsByPopularity } from '@/lib/product-sorting';
 import { matchesProductSearch } from '@/lib/product-search';
@@ -139,18 +140,47 @@ export default function CatalogListingPage({
         setPriceRange(priceBounds);
     }, [priceBounds]);
 
-    const filterGroups = useMemo(() => buildFilterGroups(searchedProducts), [searchedProducts]);
+    const hiddenCatalogFilters = useMemo(
+        () =>
+            getCatalogFilterVisibility(
+                categoryItems,
+                selectedCategorySlug,
+                selectedCategoryGroupSlug,
+                selectedSubcategorySlug,
+            ),
+        [categoryItems, selectedCategoryGroupSlug, selectedCategorySlug, selectedSubcategorySlug],
+    );
+
+    const filterGroups = useMemo(
+        () => buildFilterGroups(searchedProducts, hiddenCatalogFilters),
+        [hiddenCatalogFilters, searchedProducts],
+    );
 
     useEffect(() => {
-        const validKeys = new Set(filterGroups.map((group) => group.key));
+        const validGroups = new Map(filterGroups.map((group) => [group.key, new Set(group.options)]));
         setSelectedFilters((prev) => {
             const next: Record<string, string[]> = {};
+            let hasChanges = false;
+
             for (const [key, values] of Object.entries(prev)) {
-                if (validKeys.has(key) && values.length > 0) {
-                    next[key] = values;
+                const validOptions = validGroups.get(key);
+                if (!validOptions) {
+                    hasChanges = true;
+                    continue;
+                }
+
+                const nextValues = values.filter((value) => validOptions.has(value));
+
+                if (nextValues.length > 0) {
+                    next[key] = nextValues;
+                }
+
+                if (nextValues.length !== values.length) {
+                    hasChanges = true;
                 }
             }
-            return next;
+
+            return hasChanges ? next : prev;
         });
     }, [filterGroups]);
 
@@ -218,7 +248,7 @@ export default function CatalogListingPage({
             }
 
             const productFilterMap = new Map<string, Set<string>>();
-            for (const filter of getProductFilterValues(product)) {
+            for (const filter of getProductFilterValues(product, hiddenCatalogFilters)) {
                 const key = normalizeFilterKey(filter.group);
                 if (!key) continue;
 
@@ -259,7 +289,7 @@ export default function CatalogListingPage({
         });
 
         return results;
-    }, [priceRange, searchedProducts, selectedFilters, sortOrder]);
+    }, [hiddenCatalogFilters, priceRange, searchedProducts, selectedFilters, sortOrder]);
 
     const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
 

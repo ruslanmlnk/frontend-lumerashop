@@ -1,4 +1,4 @@
-import type { Product, ProductFilterValue } from '@/types/site';
+import type { CatalogFilterReference, Product, ProductFilterValue } from '@/types/site';
 
 export const normalizeFilterKey = (value: string) =>
     value
@@ -19,24 +19,60 @@ export const parseProductPrice = (price: string) => {
     return Number.isFinite(fallback) ? fallback : 0;
 };
 
-export const getProductFilterValues = (product: Product): ProductFilterValue[] => {
-    if (Array.isArray(product.filterValues) && product.filterValues.length > 0) {
-        return product.filterValues
-            .map((item) => ({
-                group: item.group?.trim() || '',
-                option: item.option?.trim() || '',
-                groupSlug: item.groupSlug,
-                optionSlug: item.optionSlug,
-            }))
-            .filter((item) => item.group.length > 0 && item.option.length > 0);
+export type HiddenCatalogFilters = {
+    hiddenFilterGroups?: CatalogFilterReference[];
+    hiddenFilterOptions?: CatalogFilterReference[];
+};
+
+const matchesHiddenReference = (
+    label: string,
+    slug: string | undefined,
+    hiddenReferences: CatalogFilterReference[] | undefined,
+) => {
+    if (!Array.isArray(hiddenReferences) || hiddenReferences.length === 0) {
+        return false;
     }
 
-    const fromSpecs = Object.entries(product.specifications ?? {}).map(([group, option]) => ({
-        group: String(group).trim(),
-        option: String(option).trim(),
-    }));
+    const normalizedLabel = normalizeFilterKey(label);
 
-    return fromSpecs.filter((item) => item.group.length > 0 && item.option.length > 0);
+    return hiddenReferences.some((reference) => {
+        const normalizedReferenceName = normalizeFilterKey(reference.name);
+        return reference.slug === slug || reference.slug === normalizedLabel || normalizedReferenceName === normalizedLabel;
+    });
+};
+
+const filterHiddenValues = (values: ProductFilterValue[], hiddenFilters?: HiddenCatalogFilters) =>
+    values.filter((item) => {
+        if (matchesHiddenReference(item.group, item.groupSlug, hiddenFilters?.hiddenFilterGroups)) {
+            return false;
+        }
+
+        if (matchesHiddenReference(item.option, item.optionSlug, hiddenFilters?.hiddenFilterOptions)) {
+            return false;
+        }
+
+        return true;
+    });
+
+export const getProductFilterValues = (product: Product, hiddenFilters?: HiddenCatalogFilters): ProductFilterValue[] => {
+    const values =
+        Array.isArray(product.filterValues) && product.filterValues.length > 0
+            ? product.filterValues
+                  .map((item) => ({
+                      group: item.group?.trim() || '',
+                      option: item.option?.trim() || '',
+                      groupSlug: item.groupSlug,
+                      optionSlug: item.optionSlug,
+                  }))
+                  .filter((item) => item.group.length > 0 && item.option.length > 0)
+            : Object.entries(product.specifications ?? {})
+                  .map(([group, option]) => ({
+                      group: String(group).trim(),
+                      option: String(option).trim(),
+                  }))
+                  .filter((item) => item.group.length > 0 && item.option.length > 0);
+
+    return filterHiddenValues(values, hiddenFilters);
 };
 
 export type FilterGroup = {
@@ -45,11 +81,11 @@ export type FilterGroup = {
     options: string[];
 };
 
-export const buildFilterGroups = (products: Product[]): FilterGroup[] => {
+export const buildFilterGroups = (products: Product[], hiddenFilters?: HiddenCatalogFilters): FilterGroup[] => {
     const groups = new Map<string, { title: string; options: Set<string> }>();
 
     for (const product of products) {
-        const values = getProductFilterValues(product);
+        const values = getProductFilterValues(product, hiddenFilters);
 
         for (const value of values) {
             const key = normalizeFilterKey(value.group);

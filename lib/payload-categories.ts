@@ -1,4 +1,5 @@
 import type {
+    CatalogFilterReference,
     CatalogCategoryGroupNavItem,
     CatalogCategoryNavItem,
     CatalogSubcategoryNavItem,
@@ -21,6 +22,12 @@ type PayloadMediaDoc = {
     url?: unknown;
 };
 
+type PayloadFilterReferenceDoc = {
+    id?: unknown;
+    name?: unknown;
+    slug?: unknown;
+};
+
 type PayloadCategoryDoc = {
     id?: unknown;
     name?: unknown;
@@ -31,6 +38,8 @@ type PayloadCategoryDoc = {
     showInDesktopDropdownMenu?: unknown;
     showInMobileMenu?: unknown;
     sortOrder?: unknown;
+    hiddenFilterGroups?: Array<PayloadFilterReferenceDoc | number> | null;
+    hiddenFilterOptions?: Array<PayloadFilterReferenceDoc | number> | null;
 };
 
 type PayloadCategoryGroupDoc = {
@@ -47,6 +56,8 @@ type PayloadCategoryGroupDoc = {
         slug?: unknown;
     } | number | null;
     image?: PayloadMediaDoc | number | null;
+    hiddenFilterGroups?: Array<PayloadFilterReferenceDoc | number> | null;
+    hiddenFilterOptions?: Array<PayloadFilterReferenceDoc | number> | null;
 };
 
 type PayloadSubcategoryDoc = {
@@ -67,6 +78,8 @@ type PayloadSubcategoryDoc = {
         slug?: unknown;
     } | number | null;
     image?: PayloadMediaDoc | number | null;
+    hiddenFilterGroups?: Array<PayloadFilterReferenceDoc | number> | null;
+    hiddenFilterOptions?: Array<PayloadFilterReferenceDoc | number> | null;
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
@@ -82,6 +95,16 @@ const CATEGORY_SELECT: PayloadSelect = {
     showInDesktopDropdownMenu: true,
     showInMobileMenu: true,
     sortOrder: true,
+    hiddenFilterGroups: {
+        id: true,
+        name: true,
+        slug: true,
+    },
+    hiddenFilterOptions: {
+        id: true,
+        name: true,
+        slug: true,
+    },
 };
 
 const CATEGORY_GROUP_SELECT: PayloadSelect = {
@@ -169,6 +192,34 @@ const sortByMenuOrderAsc = <T extends { createdAt?: unknown; sortOrder?: unknown
 const isMenuVisible = (value: unknown) => value === true;
 const isDesktopOverflowVisible = (value: unknown) => value === true;
 
+const mapCatalogFilterReferences = (
+    docs: Array<PayloadFilterReferenceDoc | number> | null | undefined,
+): CatalogFilterReference[] | undefined => {
+    if (!Array.isArray(docs) || docs.length === 0) {
+        return undefined;
+    }
+
+    const items = docs
+        .map((doc) => {
+            if (!doc || typeof doc !== 'object') {
+                return null;
+            }
+
+            const id = doc.id != null ? String(doc.id) : '';
+            const name = typeof doc.name === 'string' ? doc.name.trim() : '';
+            const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
+
+            if (!id || !name || !slug) {
+                return null;
+            }
+
+            return { id, name, slug };
+        })
+        .filter((item): item is CatalogFilterReference => Boolean(item));
+
+    return items.length ? items : undefined;
+};
+
 type MenuViewport = 'desktop' | 'mobile';
 
 type FetchPayloadCatalogCategoriesOptions = {
@@ -215,6 +266,8 @@ const mapCategoryGroup = (
         slug,
         href: getCategoryGroupHref(categorySlug, slug),
         image: typeof doc.image === 'object' && doc.image ? resolveCategoryImageUrl(doc.image.url, baseUrl) : undefined,
+        hiddenFilterGroups: mapCatalogFilterReferences(doc.hiddenFilterGroups),
+        hiddenFilterOptions: mapCatalogFilterReferences(doc.hiddenFilterOptions),
     };
 };
 
@@ -238,6 +291,8 @@ const mapSubcategory = (
         slug,
         href: getSubcategoryHref(categorySlug, groupSlug, slug),
         image: typeof doc.image === 'object' && doc.image ? resolveCategoryImageUrl(doc.image.url, baseUrl) : undefined,
+        hiddenFilterGroups: mapCatalogFilterReferences(doc.hiddenFilterGroups),
+        hiddenFilterOptions: mapCatalogFilterReferences(doc.hiddenFilterOptions),
     };
 };
 
@@ -374,6 +429,8 @@ const mapPayloadCatalogCategories = (
             name,
             slug,
             href: getCategoryHref(slug),
+            hiddenFilterGroups: mapCatalogFilterReferences(doc.hiddenFilterGroups),
+            hiddenFilterOptions: mapCatalogFilterReferences(doc.hiddenFilterOptions),
             children: children.length ? children : undefined,
         });
 
