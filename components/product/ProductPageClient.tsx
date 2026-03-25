@@ -8,6 +8,7 @@ import Features from "@/components/Features";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
+import CatalogHeader from "@/components/catalog/CatalogHeader";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/types/site";
 
@@ -60,18 +61,20 @@ export default function ProductPageClient({
     });
   };
 
-  const breadcrumbs = useMemo(() => {
-    const items = [{ label: "Domů", href: "/" }];
+  const breadcrumbItems = useMemo(() => {
+    const items = [{ label: "Obchod", href: "/shop" }];
+
+    if (product.category && product.categorySlug) {
+      items.push({
+        label: product.category,
+        href: `/product-category/${product.categorySlug}`,
+      });
+    }
 
     if (product.categoryGroup && product.categoryGroupSlug) {
       items.push({
         label: product.categoryGroup,
         href: `/product-category/${product.categorySlug}/${product.categoryGroupSlug}`,
-      });
-    } else if (product.category && product.categorySlug) {
-      items.push({
-        label: product.category,
-        href: `/product-category/${product.categorySlug}`,
       });
     }
 
@@ -79,23 +82,16 @@ export default function ProductPageClient({
   }, [product.category, product.categoryGroup, product.categoryGroupSlug, product.categorySlug]);
 
   return (
-    <main className="pt-6 pb-16 md:pt-0">
+    <main className="min-h-[calc(100vh-220px)] bg-white pb-16">
+      {/* Mobile Header */}
+      <div className="md:hidden">
+        <CatalogHeader title={product.name} breadcrumbs={breadcrumbItems} />
+      </div>
+
       <div className="mx-auto w-full max-w-[1140px] px-[55px] sm:px-7 lg:px-0">
-        <nav className="mb-6 flex items-center gap-2.5 text-[13px] text-[#7a7164] md:mb-8 md:mt-8">
-          {breadcrumbs.map((crumb, index) => (
-            <div key={index} className="flex items-center gap-2.5">
-              <Link href={crumb.href} className="transition hover:text-black hover:underline">
-                {crumb.label}
-              </Link>
-              <span>&gt;</span>
-            </div>
-          ))}
-          <span className="font-medium text-[#111111]">{product.name}</span>
-        </nav>
-        <div className="mb-6 md:hidden">
-          <h1 className="font-serif text-[34px] font-bold leading-[1.08] text-[#111111]">
-            {product.name}
-          </h1>
+        {/* Desktop Header */}
+        <div className="mb-8 hidden md:block">
+          <CatalogHeader title={product.name} breadcrumbs={breadcrumbItems} variant="inline" />
         </div>
 
         <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-[60px]">
@@ -116,6 +112,7 @@ export default function ProductPageClient({
               variants={variants}
               onAddToCart={handleAddToCart}
               showTitleOnMobile={false}
+              showTitle={false}
             />
           </div>
         </section>

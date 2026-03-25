@@ -20,24 +20,24 @@ const CatalogHeader = ({ title, breadcrumbs, variant = 'page' }: CatalogHeaderPr
         <div className={isInline ? 'mb-8' : 'border-b border-neutral-100 bg-[#f9f9f9] py-8'}>
             <div className={isInline ? '' : 'mx-auto max-w-[1140px] px-4 lg:px-0'}>
                 <nav className="mb-4 flex" aria-label="Breadcrumb">
-                    <ol className="flex items-center space-x-2 font-sans text-[13px] text-gray-400">
+                    <ol className="flex flex-wrap items-center gap-2 font-sans text-[13px] text-[#7a7164]">
                         <li>
-                            <Link href="/" className="uppercase tracking-wider transition-colors hover:text-black">
-                                {'Dom\u016F'}
+                            <Link href="/" className="transition-colors hover:text-black hover:underline">
+                                Domů
                             </Link>
                         </li>
                         {breadcrumbs.map((crumb, index) => (
-                            <li key={`${crumb.label}-${index}`} className="flex items-center space-x-2">
-                                <span className="text-gray-300">/</span>
+                            <li key={`${crumb.label}-${index}`} className="flex items-center gap-2">
+                                <span className="text-[#d1cfcd]">&gt;</span>
                                 {crumb.href ? (
                                     <Link
                                         href={crumb.href}
-                                        className="uppercase tracking-wider transition-colors hover:text-black"
+                                        className="transition-colors hover:text-black hover:underline"
                                     >
                                         {crumb.label}
                                     </Link>
                                 ) : (
-                                    <span className="font-medium uppercase tracking-wider text-black">{crumb.label}</span>
+                                    <span className="font-medium text-[#111111]">{crumb.label}</span>
                                 )}
                             </li>
                         ))}

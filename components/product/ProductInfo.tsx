@@ -18,6 +18,7 @@ interface ProductInfoProps {
   variants?: ProductVariant[];
   onAddToCart?: (quantity: number) => void;
   showTitleOnMobile?: boolean;
+  showTitle?: boolean;
 }
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, "").trim();
@@ -35,6 +36,7 @@ const ProductInfo = ({
   variants,
   onAddToCart,
   showTitleOnMobile = true,
+  showTitle = true,
 }: ProductInfoProps) => {
   const [quantity, setQuantity] = useState(1);
   const availableToAdd = useMemo(
@@ -91,11 +93,13 @@ const ProductInfo = ({
 
   return (
     <div className="w-full pb-[36px] text-[#111111]">
-      <h1
-        className={`${showTitleOnMobile ? "block" : "hidden md:block"} mb-[20px] font-serif text-[36px] font-bold leading-[1.1] lg:text-[48px] lg:leading-[52.8px]`}
-      >
-        {name}
-      </h1>
+      {showTitle && (
+        <h1
+          className={`${showTitleOnMobile ? "block" : "hidden md:block"} mb-[20px] font-serif text-[36px] font-bold leading-[1.1] lg:text-[48px] lg:leading-[52.8px]`}
+        >
+          {name}
+        </h1>
+      )}
 
       <p className={`mb-[14px] mt-[-8px] text-[15px] font-bold ${stock.color}`}>{stock.label}</p>
 
