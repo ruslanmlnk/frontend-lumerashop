@@ -89,7 +89,7 @@ type PayloadProductDoc = PayloadVariantDoc & {
     isFeatured?: unknown;
     isRecommended?: unknown;
     stockQuantity?: unknown;
-    stockStatus?: unknown;
+    deliveryTime?: unknown;
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
@@ -144,7 +144,7 @@ const PRODUCT_LIST_SELECT: PayloadSelect = {
     isFeatured: true,
     isRecommended: true,
     stockQuantity: true,
-    stockStatus: true,
+    deliveryTime: true,
 };
 
 const PRODUCT_DETAIL_SELECT: PayloadSelect = {
@@ -247,19 +247,6 @@ const resolvePrimaryImage = (
     return mainUploadUrl || imageUrl || galleryImage || DEFAULT_LOCAL_ASSET_FALLBACK;
 };
 
-const normalizeStockStatus = (value: unknown, quantity: unknown): Product['stockStatus'] => {
-    if (value === 'in-stock' || value === 'low-stock' || value === 'out-of-stock') {
-        return value;
-    }
-
-    const numericQuantity = normalizeStockQuantity(quantity);
-    if (typeof numericQuantity === 'number') {
-        if (numericQuantity <= 0) return 'out-of-stock';
-        if (numericQuantity <= 3) return 'low-stock';
-    }
-
-    return 'in-stock';
-};
 
 const toSpecificationsObject = (specs: PayloadProductDoc['specifications']): Record<string, string> | undefined => {
     if (!Array.isArray(specs) || specs.length === 0) {
@@ -475,7 +462,7 @@ const mapPayloadProduct = (
         filterValues: toFilterValues(doc.filterOptions),
         highlights: includeDetails ? toHighlights(doc.highlights) : undefined,
         stockQuantity,
-        stockStatus: normalizeStockStatus(doc.stockStatus, stockQuantity),
+        deliveryTime: typeof doc.deliveryTime === 'number' ? doc.deliveryTime : Number(doc.deliveryTime) || undefined,
         variants: variants?.length ? variants : undefined,
         isFeatured: doc.isFeatured === true,
         isRecommended: doc.isRecommended === true,

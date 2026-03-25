@@ -161,11 +161,6 @@ const ProductInfo = ({
         </button>
       </div>
 
-      {/* {availableToAdd === 0 && stockStatus !== "out-of-stock" ? (
-        <p className="mb-[16px] mt-[-10px] text-[13px] leading-[1.5] text-[#6b6257]">
-          V koĹˇĂ­ku uĹľ mĂˇte maximĂˇlnĂ­ dostupnĂ© mnoĹľstvĂ­ tohoto produktu.
-        </p>
-      ) : null} */}
 
       {variants && variants.length > 0 && (
         <div className="mb-[14px]">

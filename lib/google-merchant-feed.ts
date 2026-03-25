@@ -33,7 +33,8 @@ export type PayloadFeedProductDoc = {
     sku?: unknown;
     description?: unknown;
     shortDescription?: unknown;
-    stockStatus?: unknown;
+    stockQuantity?: unknown;
+    deliveryTime?: unknown;
     imageUrl?: unknown;
     mainImage?: PayloadMediaDoc | number | null;
     gallery?: PayloadGalleryItem[] | null;
@@ -59,7 +60,8 @@ const FEED_PRODUCT_SELECT: PayloadSelect = {
     sku: true,
     description: true,
     shortDescription: true,
-    stockStatus: true,
+    stockQuantity: true,
+    deliveryTime: true,
     mainImage: {
         url: true,
     },
@@ -90,8 +92,8 @@ const escapeXml = (value: string) =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
-const toGoogleAvailability = (status: Product['stockStatus']) =>
-    status === 'out-of-stock' ? 'out of stock' : 'in stock';
+const toGoogleAvailability = (product: Product) =>
+    (product.stockQuantity ?? 0) > 0 || (product.deliveryTime && product.deliveryTime > 0) ? 'in stock' : 'out of stock';
 
 const toGooglePrice = (value: string) => {
     const numeric = Number(value.replace(/\s+/g, '').replace(',', '.').replace(/[^\d.]/g, ''));
@@ -195,10 +197,8 @@ export const mapPayloadFeedProduct = (doc: PayloadFeedProductDoc, baseUrl: strin
         description: typeof doc.description === 'string' ? doc.description : undefined,
         shortDescription: typeof doc.shortDescription === 'string' ? doc.shortDescription : undefined,
         gallery: resolvePayloadGallery(doc.gallery, baseUrl),
-        stockStatus:
-            doc.stockStatus === 'in-stock' || doc.stockStatus === 'low-stock' || doc.stockStatus === 'out-of-stock'
-                ? doc.stockStatus
-                : 'in-stock',
+        stockQuantity: typeof doc.stockQuantity === 'number' ? doc.stockQuantity : Number(doc.stockQuantity) || 0,
+        deliveryTime: typeof doc.deliveryTime === 'number' ? doc.deliveryTime : Number(doc.deliveryTime) || undefined,
     };
 };
 
@@ -263,7 +263,7 @@ const buildProductItemXml = (product: Product, siteUrl: string, populatedCategor
         `    <g:link>${escapeXml(`${siteUrl}/product/${product.slug}`)}</g:link>`,
         `    <g:image_link>${escapeXml(toAbsoluteSiteUrl(product.image, siteUrl))}</g:image_link>`,
         additionalImages,
-        `    <g:availability>${toGoogleAvailability(product.stockStatus)}</g:availability>`,
+        `    <g:availability>${toGoogleAvailability(product)}</g:availability>`,
         '    <g:condition>new</g:condition>',
         `    <g:price>${toGooglePrice(price)}</g:price>`,
         salePrice ? `    <g:sale_price>${toGooglePrice(salePrice)}</g:sale_price>` : '',
