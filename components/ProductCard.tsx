@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { isPayloadMediaProxyPath } from '@/lib/local-assets';
@@ -32,6 +32,24 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
     const currentPrice = parseFormattedPrice(product.price);
     const previousPrice = parseFormattedPrice(product.oldPrice);
     const hasDiscount = showDiscount && typeof currentPrice === 'number' && typeof previousPrice === 'number' && previousPrice > currentPrice;
+
+    const stock = useMemo(() => {
+        if (typeof product.deliveryTime === 'number' && product.deliveryTime > 0) {
+            return { label: `Do ${product.deliveryTime} dnů`, color: 'text-[#c9791d]' };
+        }
+
+        if (typeof product.stockQuantity === 'number') {
+            if (product.stockQuantity <= 0) {
+                return { label: 'Vyprodáno', color: 'text-[#c40000]' };
+            }
+            if (product.stockQuantity === 1) {
+                return { label: 'Poslední kus', color: 'text-[#c9791d]' };
+            }
+            return { label: 'Skladem', color: 'text-[#008000]' };
+        }
+
+        return { label: 'Skladem', color: 'text-[#008000]' };
+    }, [product.stockQuantity, product.deliveryTime]);
 
     const primaryImageClasses = hasSecondaryImage
         ? 'object-contain transition-all duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-0'
@@ -95,6 +113,10 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                             {product.price}
                         </p>
                     </div>
+
+                    <p className={`mt-1 text-[13px] font-bold ${stock.color}`} style={{ fontFamily: '"Work Sans", sans-serif' }}>
+                        {stock.label}
+                    </p>
                 </div>
             </div>
         );
@@ -152,6 +174,10 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                         {product.price}
                     </p>
                 </div>
+                
+                <p className={`mt-2 text-[13px] font-bold ${stock.color} md:text-[14px]`} style={{ fontFamily: '"Work Sans", sans-serif' }}>
+                    {stock.label}
+                </p>
             </div>
         </div>
     );
