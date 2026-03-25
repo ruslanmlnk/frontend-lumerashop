@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 
 import ProductGrid from "@/components/ProductGrid";
 import Features from "@/components/Features";
@@ -59,9 +60,38 @@ export default function ProductPageClient({
     });
   };
 
+  const breadcrumbs = useMemo(() => {
+    const items = [{ label: "Domů", href: "/" }];
+
+    if (product.categoryGroup && product.categoryGroupSlug) {
+      items.push({
+        label: product.categoryGroup,
+        href: `/product-category/${product.categorySlug}/${product.categoryGroupSlug}`,
+      });
+    } else if (product.category && product.categorySlug) {
+      items.push({
+        label: product.category,
+        href: `/product-category/${product.categorySlug}`,
+      });
+    }
+
+    return items;
+  }, [product.category, product.categoryGroup, product.categoryGroupSlug, product.categorySlug]);
+
   return (
     <main className="pt-6 pb-16 md:pt-0">
       <div className="mx-auto w-full max-w-[1140px] px-[55px] sm:px-7 lg:px-0">
+        <nav className="mb-6 flex items-center gap-2.5 text-[13px] text-[#7a7164] md:mb-8 md:mt-8">
+          {breadcrumbs.map((crumb, index) => (
+            <div key={index} className="flex items-center gap-2.5">
+              <Link href={crumb.href} className="transition hover:text-black hover:underline">
+                {crumb.label}
+              </Link>
+              <span>&gt;</span>
+            </div>
+          ))}
+          <span className="font-medium text-[#111111]">{product.name}</span>
+        </nav>
         <div className="mb-6 md:hidden">
           <h1 className="font-serif text-[34px] font-bold leading-[1.08] text-[#111111]">
             {product.name}

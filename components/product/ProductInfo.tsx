@@ -45,19 +45,17 @@ const ProductInfo = ({
   const canIncreaseQuantity = typeof availableToAdd === "number" ? quantity < availableToAdd : true;
 
   const stock = useMemo(() => {
-    // if (typeof stockQuantity === "number") {
-    //   if (stockQuantity <= 0) {
-    //     return { label: "Vyprodáno", color: "text-[#c40000]" };
-    //   }
+    if (typeof stockQuantity === "number") {
+      if (stockQuantity <= 0) {
+        return { label: "Vyprodáno", color: "text-[#c40000]" };
+      }
 
-    //   if (stockQuantity === 1) {
-    //     return { label: "Poslední kus", color: "text-[#c9791d]" };
-    //   }
+      if (stockQuantity === 1) {
+        return { label: "Poslední kus", color: "text-[#c9791d]" };
+      }
 
-    //   // if (stockQuantity <= 3) {
-    //   //   return { label: `PoslednĂ­ ${stockQuantity} ks`, color: "text-[#c9791d]" };
-    //   // }
-    // }
+      return { label: "Skladem", color: "text-[#008000]" };
+    }
     switch (stockStatus) {
       case "low-stock":
         return { label: "Poslední kus", color: "text-[#c9791d]" };
