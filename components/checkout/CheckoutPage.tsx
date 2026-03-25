@@ -543,44 +543,6 @@ export default function CheckoutPage({
             missingFields.push('Telefon pro dopravce');
         }
 
-        if (formData.isCompany) {
-            if (isBlank(formData.companyName)) {
-                missingFields.push('Název firmy');
-            }
-
-            if (isBlank(formData.companyId)) {
-                missingFields.push('IČ');
-            }
-        }
-
-        if (!formData.billingSameAsShipping) {
-            if (isBlank(formData.billingFirstName)) {
-                missingFields.push('Fakturační jméno');
-            }
-
-            if (isBlank(formData.billingLastName)) {
-                missingFields.push('Fakturační příjmení');
-            }
-
-            if (isBlank(formData.billingAddress)) {
-                missingFields.push('Fakturační ulice a číslo');
-            }
-
-            if (isBlank(formData.billingCity)) {
-                missingFields.push('Fakturační město');
-            }
-
-            if (isBlank(formData.billingZip)) {
-                missingFields.push('Fakturační PSČ');
-            }
-        }
-
-        return missingFields;
-    };
-
-    const getMissingOrderFields = () => {
-        const missingFields: string[] = [];
-
         if (isBlank(formData.firstName)) {
             missingFields.push('Jméno');
         }
@@ -600,6 +562,22 @@ export default function CheckoutPage({
         if (isBlank(formData.zip)) {
             missingFields.push('PSČ');
         }
+
+        if (formData.isCompany) {
+            if (isBlank(formData.companyName)) {
+                missingFields.push('Název firmy');
+            }
+
+            if (isBlank(formData.companyId)) {
+                missingFields.push('IČ');
+            }
+        }
+
+        return missingFields;
+    };
+
+    const getMissingOrderFields = () => {
+        const missingFields: string[] = [];
 
         if (!formData.shippingMethod) {
             missingFields.push('Způsob dopravy');
@@ -1589,171 +1567,6 @@ export default function CheckoutPage({
 
             <div className={theme.surface}>
                 <div>
-                    <p className={theme.eyebrow}>Fakturace</p>
-                    <h3 className={theme.stageTitle}>Fakturacni udaje</h3>
-                </div>
-
-                <div className={theme.toggleGrid}>
-                    <label className={cn(theme.check, theme.checkCard)}>
-                        <input
-                            type="checkbox"
-                            className={checkboxClassName}
-                            checked={formData.billingSameAsShipping}
-                            onChange={(event) => updateFormData('billingSameAsShipping', event.target.checked)}
-                        />
-                        <span>Fakturacni adresa bude stejna jako dorucovaci</span>
-                    </label>
-
-                    <label className={cn(theme.check, theme.checkCard)}>
-                        <input
-                            type="checkbox"
-                            className={checkboxClassName}
-                            checked={formData.isCompany}
-                            onChange={(event) => updateFormData('isCompany', event.target.checked)}
-                        />
-                        <span>Nakupuji na firmu</span>
-                    </label>
-                </div>
-
-                {formData.isCompany ? (
-                    <div className={theme.surface}>
-                        <div>
-                            <p className={theme.eyebrow}>Firma</p>
-                            <h3 className={theme.stageTitle}>Firemni identifikace</h3>
-                        </div>
-
-                        <div className={theme.field}>
-                            <label className={theme.label}>Nazev firmy *</label>
-                            <input
-                                type="text"
-                                className={theme.input}
-                                value={formData.companyName}
-                                onChange={(event) => updateFormData('companyName', event.target.value)}
-                            />
-                        </div>
-
-                        <div className={theme.inputGrid}>
-                            <div className={theme.field}>
-                                <label className={theme.label}>IC *</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.companyId}
-                                    onChange={(event) => updateFormData('companyId', event.target.value)}
-                                />
-                            </div>
-                            <div className={theme.field}>
-                                <label className={theme.label}>DIC</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.vatId}
-                                    onChange={(event) => updateFormData('vatId', event.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                ) : null}
-
-                {!formData.billingSameAsShipping ? (
-                    <div className={theme.surface}>
-                        <div>
-                            <p className={theme.eyebrow}>Fakturace</p>
-                            <h3 className={theme.stageTitle}>Samostatna fakturacni adresa</h3>
-                        </div>
-
-                        <div className={theme.inputGrid}>
-                            <div className={theme.field}>
-                                <label className={theme.label}>Jmeno *</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.billingFirstName}
-                                    onChange={(event) => updateFormData('billingFirstName', event.target.value)}
-                                />
-                            </div>
-                            <div className={theme.field}>
-                                <label className={theme.label}>Prijmeni *</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.billingLastName}
-                                    onChange={(event) => updateFormData('billingLastName', event.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className={theme.field}>
-                            <label className={theme.label}>Ulice a cislo *</label>
-                            <input
-                                type="text"
-                                className={theme.input}
-                                value={formData.billingAddress}
-                                onChange={(event) => updateFormData('billingAddress', event.target.value)}
-                            />
-                        </div>
-
-                        <div className={theme.inputGrid}>
-                            <div className={theme.field}>
-                                <label className={theme.label}>Mesto *</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.billingCity}
-                                    onChange={(event) => updateFormData('billingCity', event.target.value)}
-                                />
-                            </div>
-                            <div className={theme.field}>
-                                <label className={theme.label}>PSC *</label>
-                                <input
-                                    type="text"
-                                    className={theme.input}
-                                    value={formData.billingZip}
-                                    onChange={(event) => updateFormData('billingZip', event.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                ) : null}
-
-                <p className={theme.help}>Dorucovaci adresu, zpusob dopravy a platbu vyberete v dalsim kroku.</p>
-            </div>
-
-            {errorMessage ? (
-                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
-                    {errorMessage}
-                </p>
-            ) : null}
-
-            <button
-                type="button"
-                className={theme.primary}
-                onClick={() => {
-                    if (!validateCustomerStep('pokračujte k dopravě a platbě')) {
-                        return;
-                    }
-
-                    nextStep('customer', 'order');
-                }}
-            >
-                Pokracovat k doprave a platbe
-            </button>
-        </CheckoutSectionCard>
-    );
-
-    const renderShippingPaymentSection = () => (
-        <CheckoutSectionCard
-            variant={variant}
-            stepNumber={2}
-            eyebrow="Krok 2"
-            title="Doprava a platba"
-            active={currentStep === 'order'}
-            completed={completedSteps.includes('order')}
-            onOpen={() => goToStep('order')}
-            summary={orderSummary}
-        >
-            <div className={theme.surface}>
-                <div>
                     <p className={theme.eyebrow}>Doruceni</p>
                     <h3 className={theme.stageTitle}>Kontakt pro doruceni a adresa</h3>
                 </div>
@@ -1826,7 +1639,96 @@ export default function CheckoutPage({
                         onChange={(event) => updateFormData('notes', event.target.value)}
                     />
                 </div>
+            </div>
 
+            <div className={theme.surface}>
+                <div>
+                    <p className={theme.eyebrow}>Fakturace</p>
+                    <h3 className={theme.stageTitle}>Fakturacni udaje</h3>
+                </div>
+
+                <div className={theme.toggleGrid}>
+                    <label className={cn(theme.check, theme.checkCard)}>
+                        <input
+                            type="checkbox"
+                            className={checkboxClassName}
+                            checked={formData.isCompany}
+                            onChange={(event) => updateFormData('isCompany', event.target.checked)}
+                        />
+                        <span>Nakupuji na firmu</span>
+                    </label>
+                </div>
+
+                {formData.isCompany ? (
+                    <div className="mt-6 flex flex-col gap-5 border-t border-black/8 pt-6">
+                        <div className={theme.field}>
+                            <label className={theme.label}>Nazev firmy *</label>
+                            <input
+                                type="text"
+                                className={theme.input}
+                                value={formData.companyName}
+                                onChange={(event) => updateFormData('companyName', event.target.value)}
+                            />
+                        </div>
+
+                        <div className={theme.inputGrid}>
+                            <div className={theme.field}>
+                                <label className={theme.label}>IC *</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.companyId}
+                                    onChange={(event) => updateFormData('companyId', event.target.value)}
+                                />
+                            </div>
+                            <div className={theme.field}>
+                                <label className={theme.label}>DIC</label>
+                                <input
+                                    type="text"
+                                    className={theme.input}
+                                    value={formData.vatId}
+                                    onChange={(event) => updateFormData('vatId', event.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
+            </div>
+
+            {errorMessage ? (
+                <p className="rounded-[12px] border border-[#b42318]/15 bg-[#fff4f2] px-3 py-2.5 text-[12px] leading-5 text-[#b42318]">
+                    {errorMessage}
+                </p>
+            ) : null}
+
+            <button
+                type="button"
+                className={theme.primary}
+                onClick={() => {
+                    if (!validateCustomerStep('pokračujte k dopravě a platbě')) {
+                        return;
+                    }
+
+                    nextStep('customer', 'order');
+                }}
+            >
+                Pokracovat k doprave a platbe
+            </button>
+        </CheckoutSectionCard>
+    );
+
+    const renderShippingPaymentSection = () => (
+        <CheckoutSectionCard
+            variant={variant}
+            stepNumber={2}
+            eyebrow="Krok 2"
+            title="Doprava a platba"
+            active={currentStep === 'order'}
+            completed={completedSteps.includes('order')}
+            onOpen={() => goToStep('order')}
+            summary={orderSummary}
+        >
+            <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Doprava</p>
                     <h3 className={theme.stageTitle}>Zpusob doruceni</h3>
