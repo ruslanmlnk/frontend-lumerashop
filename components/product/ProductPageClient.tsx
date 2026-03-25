@@ -118,11 +118,11 @@ export default function ProductPageClient({
               sku={product.sku}
               highlights={product.highlights}
               stockQuantity={product.stockQuantity}
-              stockStatus={product.stockStatus || "in-stock"}
               currentCartQuantity={currentCartQuantity}
               variants={variants}
               onAddToCart={handleAddToCart}
               showTitleOnMobile={false}
+              deliveryTime={product.deliveryTime}
             />
           </div>
         </section>

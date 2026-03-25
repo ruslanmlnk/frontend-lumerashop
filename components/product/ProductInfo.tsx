@@ -13,11 +13,11 @@ interface ProductInfoProps {
   sku?: string;
   highlights?: string[];
   stockQuantity?: number;
-  stockStatus?: "in-stock" | "low-stock" | "out-of-stock";
   currentCartQuantity?: number;
   variants?: ProductVariant[];
   onAddToCart?: (quantity: number) => void;
   showTitleOnMobile?: boolean;
+  deliveryTime?: number;
 }
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, "").trim();
@@ -30,21 +30,25 @@ const ProductInfo = ({
   sku,
   highlights,
   stockQuantity,
-  stockStatus = "in-stock",
   currentCartQuantity = 0,
   variants,
   onAddToCart,
   showTitleOnMobile = true,
+  deliveryTime,
 }: ProductInfoProps) => {
   const [quantity, setQuantity] = useState(1);
   const availableToAdd = useMemo(
     () => getRemainingStock(stockQuantity, currentCartQuantity),
     [currentCartQuantity, stockQuantity],
   );
-  const isAddToCartDisabled = stockStatus === "out-of-stock" || availableToAdd === 0;
+  const isAddToCartDisabled = availableToAdd === 0;
   const canIncreaseQuantity = typeof availableToAdd === "number" ? quantity < availableToAdd : true;
 
   const stock = useMemo(() => {
+    if (typeof deliveryTime === "number" && deliveryTime > 0) {
+      return { label: `Do ${deliveryTime} dnů`, color: "text-[#c9791d]" };
+    }
+
     if (typeof stockQuantity === "number") {
       if (stockQuantity <= 0) {
         return { label: "Vyprodáno", color: "text-[#c40000]" };
@@ -56,15 +60,9 @@ const ProductInfo = ({
 
       return { label: "Skladem", color: "text-[#008000]" };
     }
-    switch (stockStatus) {
-      case "low-stock":
-        return { label: "Poslední kus", color: "text-[#c9791d]" };
-      case "out-of-stock":
-        return { label: "Vyprodáno", color: "text-[#c40000]" };
-      default:
-        return { label: "Skladem", color: "text-[#008000]" };
-    }
-  }, [stockQuantity, stockStatus]);
+
+    return { label: "Skladem", color: "text-[#008000]" };
+  }, [stockQuantity, deliveryTime]);
 
   const summaryItems = useMemo(() => {
     const items: string[] = [];

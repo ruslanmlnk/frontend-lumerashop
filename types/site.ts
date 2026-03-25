@@ -48,7 +48,7 @@ export interface Product {
     filterValues?: ProductFilterValue[];
     highlights?: string[];
     stockQuantity?: number;
-    stockStatus?: 'in-stock' | 'low-stock' | 'out-of-stock';
+    deliveryTime?: number;
     variants?: ProductVariant[];
     reviews?: ProductReview[];
     isFeatured?: boolean;
