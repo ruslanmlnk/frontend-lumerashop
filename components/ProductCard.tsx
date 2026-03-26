@@ -85,6 +85,11 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                             />
                         ) : null}
                     </div>
+                    {hasDiscount ? (
+                        <span className="absolute left-3 top-3 z-10 inline-flex rounded-[4px] bg-[#8f2b10] px-[10px] py-[4px] text-[11px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(143,43,16,0.22)]">
+                            Akce
+                        </span>
+                    ) : null}
                 </Link>
 
                 <div className="flex flex-grow flex-col items-center px-[12px] pt-[20px] text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
@@ -128,6 +133,11 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                 href={`/product/${product.slug}`}
                 className="relative block aspect-[1/1] overflow-hidden rounded-[18px] bg-transparent md:h-[216px]"
             >
+                {hasDiscount ? (
+                    <span className="absolute left-3 top-3 z-10 inline-flex rounded-[4px] bg-[#8f2b10] px-[10px] py-[4px] text-[11px] font-semibold leading-none text-white shadow-[0_10px_24px_rgba(143,43,16,0.22)]">
+                        Akce
+                    </span>
+                ) : null}
                 <Image
                     src={product.image}
                     alt={product.name}
