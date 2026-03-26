@@ -45,7 +45,7 @@ const CatalogHeader = ({ title, breadcrumbs, variant = 'page' }: CatalogHeaderPr
                 </nav>
                 <h1
                     className={`font-serif font-bold leading-tight text-[#111111] ${
-                        isInline ? 'text-[38px] xl:text-[42px]' : 'text-[42px]'
+                        isInline ? 'text-[38px] xl:text-[36px]' : 'text-[36px]'
                     }`}
                     style={{ fontFamily: '"Cormorant Garamond", serif' }}
                 >
