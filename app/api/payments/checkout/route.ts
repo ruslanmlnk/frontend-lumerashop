@@ -4,7 +4,7 @@ import { fetchPayloadShippingMethods } from '@/lib/payload-shipping-methods';
 import { createGlobalPaymentsHppSession } from '@/lib/payments/global-payments';
 import { getBaseUrl, sanitizeCheckoutItems } from '@/lib/payments/checkout-utils';
 import { buildCheckoutQuote } from '@/lib/payments/checkout-benefits';
-import type { CheckoutPayload, CheckoutProvider } from '@/lib/payments/checkout-types';
+import type { CheckoutPayload, CheckoutProvider, OrderProvider } from '@/lib/payments/checkout-types';
 import { createPaymentOrder, updatePaymentOrder } from '@/lib/payments/internal-orders';
 import { getStripeClient } from '@/lib/payments/stripe';
 
@@ -228,13 +228,15 @@ export async function POST(request: NextRequest) {
             request.headers.get('x-forwarded-host') || request.headers.get('host'),
             request.headers.get('x-forwarded-proto'),
         );
+        const orderProvider: OrderProvider =
+            selectedShippingMethod?.cashOnDelivery === true ? 'cash-on-delivery' : payload.provider;
 
         const orderId = `LMR-${Date.now()}`;
         createdOrderId = orderId;
 
         await createPaymentOrder({
             orderId,
-            provider: payload.provider,
+            provider: orderProvider,
             currency: quote.totals.currency,
             subtotal: quote.totals.subtotal,
             shippingTotal: quote.totals.shipping,
@@ -271,12 +273,21 @@ export async function POST(request: NextRequest) {
             customer: payload.customer,
             shipping: {
                 methodId: shippingMethodId,
-                label: payload.shipping?.label,
+                label: selectedShippingMethod?.label || payload.shipping?.label,
                 price: quote.totals.shipping,
+                cashOnDelivery: selectedShippingMethod?.cashOnDelivery === true,
                 pickupPoint: pickupPoint || undefined,
             },
             billing: payload.billing,
         });
+
+        if (orderProvider === 'cash-on-delivery') {
+            return NextResponse.json({
+                provider: orderProvider,
+                orderId,
+                redirectUrl: `${baseUrl}/checkout/success?provider=${encodeURIComponent(orderProvider)}&orderId=${encodeURIComponent(orderId)}`,
+            });
+        }
 
         if (payload.provider === 'stripe') {
             const stripe = getStripeClient();

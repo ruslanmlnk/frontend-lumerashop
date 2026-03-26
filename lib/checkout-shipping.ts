@@ -26,6 +26,7 @@ export type ShippingMethod = {
   price: number;
   sortOrder: number;
   pickupCarrier?: PickupCarrier;
+  cashOnDelivery?: boolean;
   isActive?: boolean;
 };
 

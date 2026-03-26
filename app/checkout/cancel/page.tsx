@@ -7,6 +7,10 @@ import {
 } from '@/lib/payments/internal-orders';
 
 const getProviderLabel = (provider?: string) => {
+    if (provider === 'cash-on-delivery') {
+        return 'Dobirka / platba pri prevzeti';
+    }
+
     if (provider === 'global-payments') {
         return 'Global Payments';
     }

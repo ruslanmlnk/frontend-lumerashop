@@ -1,6 +1,7 @@
 import type { CheckoutPickupPoint, ShippingMethodId } from '@/lib/checkout-shipping';
 
 export type CheckoutProvider = 'stripe' | 'global-payments';
+export type OrderProvider = CheckoutProvider | 'cash-on-delivery';
 
 export type CheckoutItemInput = {
     id?: number | string;

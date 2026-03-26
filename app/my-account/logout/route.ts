@@ -1,11 +1,12 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPayloadAuthConfig, resolveSecureAuthCookie } from '@/lib/payload-auth';
 
-export default async function LogoutPage() {
+export async function GET(request: NextRequest) {
   const config = getPayloadAuthConfig();
   const cookieName = config?.cookieName || process.env.PAYLOAD_AUTH_COOKIE?.trim() || 'lumera_auth';
-  const secureCookie = resolveSecureAuthCookie();
+  const secureCookie = resolveSecureAuthCookie(request);
 
   const cookieStore = await cookies();
   cookieStore.set({
@@ -18,5 +19,5 @@ export default async function LogoutPage() {
     maxAge: 0,
   });
 
-  redirect('/my-account');
+  return NextResponse.redirect(new URL('/my-account', request.url));
 }

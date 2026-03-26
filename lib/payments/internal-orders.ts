@@ -1,14 +1,14 @@
 import 'server-only';
 
 import type { CheckoutPickupPoint } from '@/lib/checkout-shipping';
-import type { CheckoutPayload, CheckoutProvider } from '@/lib/payments/checkout-types';
+import type { CheckoutPayload, OrderProvider } from '@/lib/payments/checkout-types';
 
 export type PaymentOrderStatus = 'pending' | 'paid' | 'failed' | 'canceled';
 
 export type PaymentOrderSummary = {
     id: number;
     orderId: string;
-    provider: CheckoutProvider;
+    provider: OrderProvider;
     paymentStatus: PaymentOrderStatus;
     userId: string;
     customerEmail: string;
@@ -35,7 +35,7 @@ export type PaymentOrderSummary = {
 
 export type CreatePaymentOrderInput = {
     orderId: string;
-    provider: CheckoutProvider;
+    provider: OrderProvider;
     currency: string;
     subtotal: number;
     shippingTotal: number;
@@ -72,6 +72,7 @@ export type CreatePaymentOrderInput = {
         methodId?: string;
         label?: string;
         price?: number;
+        cashOnDelivery?: boolean;
         pickupPoint?: CheckoutPickupPoint | null;
     };
     billing?: CheckoutPayload['billing'];

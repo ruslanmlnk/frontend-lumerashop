@@ -1,11 +1,13 @@
 import type { CheckoutPickupPoint, ShippingMethodId } from '@/lib/checkout-shipping';
+import type { CheckoutProvider, OrderProvider } from '@/lib/payments/checkout-types';
 
-export type PaymentProvider = 'global-payments' | 'stripe';
+export type PaymentProvider = CheckoutProvider;
+export type CheckoutExecutionProvider = OrderProvider;
 export type Step = 'customer' | 'order' | 'contact' | 'shipping' | 'billing' | 'payment';
 export type CheckoutVariant = 'minimal' | 'refined';
 
 export type CheckoutStartResponse = {
-    provider?: PaymentProvider;
+    provider?: OrderProvider;
     orderId?: string;
     redirectUrl?: string;
     actionUrl?: string;

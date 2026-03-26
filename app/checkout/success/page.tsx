@@ -6,6 +6,10 @@ import ClearCartOnSuccess from '@/components/checkout/ClearCartOnSuccess';
 import { fetchPaymentOrder, type PaymentOrderStatus } from '@/lib/payments/internal-orders';
 
 const getProviderLabel = (provider?: string) => {
+    if (provider === 'cash-on-delivery') {
+        return 'Dobirka / platba pri prevzeti';
+    }
+
     if (provider === 'global-payments') {
         return 'Global Payments';
     }
@@ -17,7 +21,11 @@ const getProviderLabel = (provider?: string) => {
     return provider || '';
 };
 
-const getPaymentStatusLabel = (status?: PaymentOrderStatus) => {
+const getPaymentStatusLabel = (status?: PaymentOrderStatus, provider?: string) => {
+    if (provider === 'cash-on-delivery' && status !== 'paid') {
+        return 'Platba pri prevzeti';
+    }
+
     if (status === 'paid') {
         return 'Zaplaceno';
     }
@@ -40,17 +48,22 @@ export default async function CheckoutSuccessPage({
 }) {
     const params = await searchParams;
     const order = params.orderId ? await fetchPaymentOrder(params.orderId).catch(() => null) : null;
-    const providerLabel = getProviderLabel(order?.provider || params.provider);
+    const provider = order?.provider || params.provider;
+    const providerLabel = getProviderLabel(provider);
     const paymentStatus = order?.paymentStatus || 'pending';
     const displayOrderId = order?.orderId || params.orderId || '';
     const title =
-        paymentStatus === 'paid'
-            ? 'Platba proběhla úspěšně'
-            : 'Objednávku jsme přijali';
+        provider === 'cash-on-delivery'
+            ? 'Objednavku jsme prijali'
+            : paymentStatus === 'paid'
+              ? 'Platba proběhla úspěšně'
+              : 'Objednávku jsme přijali';
     const description =
-        paymentStatus === 'paid'
-            ? 'Děkujeme za objednávku. Potvrzení vám zašleme e-mailem.'
-            : 'Děkujeme za objednávku. Platbu ještě potvrzujeme a brzy vám pošleme e-mail.';
+        provider === 'cash-on-delivery'
+            ? 'Dekujeme za objednavku. Jde o dobirku, takze zaplatite az pri prevzeti zasilky.'
+            : paymentStatus === 'paid'
+              ? 'Dekujeme za objednavku. Platba byla prijata a objednavku jsme zaevidovali.'
+              : 'Dekujeme za objednavku. Platbu jeste potvrzujeme.';
 
     return (
         <div className="flex min-h-screen flex-col bg-white">
@@ -90,7 +103,7 @@ export default async function CheckoutSuccessPage({
                         <p className="mt-1 text-[14px] text-[#666666]">
                             {'Stav platby:'}{' '}
                             <span className="font-semibold text-[#111111]">
-                                {getPaymentStatusLabel(paymentStatus)}
+                                {getPaymentStatusLabel(paymentStatus, provider)}
                             </span>
                         </p>
 

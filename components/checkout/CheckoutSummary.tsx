@@ -18,6 +18,7 @@ type CheckoutSummaryProps = {
     selectedShippingMethod?: ShippingMethod;
     formData: CheckoutFormState;
     paymentLabel: string;
+    isCashOnDelivery?: boolean;
     formatPrice: (value: number) => string;
     loyaltySummary?: {
         balance: number;
@@ -39,6 +40,7 @@ export default function CheckoutSummary({
     selectedShippingMethod,
     formData,
     paymentLabel,
+    isCashOnDelivery = false,
     formatPrice,
     loyaltySummary,
 }: CheckoutSummaryProps) {
@@ -129,7 +131,11 @@ export default function CheckoutSummary({
 
             <div className={theme.note}>
                 <Info size={16} className="mt-[2px] shrink-0 text-[#b98743]" />
-                <p>Objednavku dokoncite pres zabezpecenou platebni branu. Vsechny ceny jsou vcetne DPH.</p>
+                <p>
+                    {isCashOnDelivery
+                        ? 'Objednavku odeslete bez online platby. Castku uhradite pri prevzeti, vsechny ceny jsou vcetne DPH.'
+                        : 'Objednavku dokoncite pres zabezpecenou platebni branu. Vsechny ceny jsou vcetne DPH.'}
+                </p>
             </div>
 
             <div className="grid gap-2">

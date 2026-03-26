@@ -9,6 +9,7 @@ type PayloadShippingMethodDoc = {
   methodId?: unknown;
   price?: unknown;
   isActive?: unknown;
+  cashOnDelivery?: unknown;
   sortOrder?: unknown;
 };
 
@@ -19,6 +20,7 @@ type PayloadListResponse<T> = {
 const defaultShippingMethods: ShippingMethod[] = SHIPPING_METHOD_PRESETS.map((method) => ({
   ...method,
   pickupCarrier: method.pickupCarrier ?? undefined,
+  cashOnDelivery: method.cashOnDelivery === true,
   isActive: true,
 }));
 
@@ -70,6 +72,10 @@ export async function fetchPayloadShippingMethods(): Promise<ShippingMethod[]> {
         return {
           ...method,
           price: Number.isFinite(numericPrice) && numericPrice >= 0 ? numericPrice : method.price,
+          cashOnDelivery:
+            typeof configured.cashOnDelivery === 'boolean'
+              ? configured.cashOnDelivery
+              : method.cashOnDelivery === true,
           sortOrder: Number.isFinite(numericSortOrder) ? numericSortOrder : method.sortOrder,
           isActive: configured.isActive !== false,
         };

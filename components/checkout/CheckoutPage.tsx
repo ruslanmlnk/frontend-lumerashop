@@ -12,6 +12,7 @@ import CheckoutSummary from '@/components/checkout/CheckoutSummary';
 import PickupPointSelector from '@/components/checkout/PickupPointSelector';
 import { cn, getCheckoutTheme } from '@/components/checkout/theme';
 import type {
+    CheckoutExecutionProvider,
     CheckoutFormState,
     CheckoutQuoteResponse,
     CheckoutStartResponse,
@@ -121,8 +122,13 @@ const submitHppForm = (actionUrl: string, fields: Record<string, string>) => {
     form.submit();
 };
 
-const getPaymentLabel = (provider: PaymentProvider) =>
-    provider === 'stripe' ? 'Online karta / Apple Pay (Stripe)' : 'Global Payments (GP webpay)';
+const getPaymentLabel = (provider: PaymentProvider | 'cash-on-delivery') => {
+    if (provider === 'cash-on-delivery') {
+        return 'Dobirka / platba pri prevzeti';
+    }
+
+    return provider === 'stripe' ? 'Online karta / Apple Pay (Stripe)' : 'Global Payments (GP webpay)';
+};
 
 const getItemLabel = (count: number) => {
     if (count === 1) return 'položka';
@@ -171,7 +177,7 @@ export default function CheckoutPage({
     const availableShippingMethods = shippingMethods.length ? shippingMethods : SHIPPING_METHODS;
     const [currentStep, setCurrentStep] = useState<Step>('customer');
     const [completedSteps, setCompletedSteps] = useState<Step[]>([]);
-    const [isSubmitting, setIsSubmitting] = useState<PaymentProvider | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState<CheckoutExecutionProvider | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [shippingErrorMessage, setShippingErrorMessage] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
@@ -690,7 +696,9 @@ export default function CheckoutPage({
         }
 
         const shippingMethodId = formData.shippingMethod as Exclude<typeof formData.shippingMethod, ''>;
-        const provider = formData.paymentProvider;
+        const provider: CheckoutExecutionProvider = selectedShippingMethod?.cashOnDelivery
+            ? 'cash-on-delivery'
+            : formData.paymentProvider;
         setErrorMessage(null);
 
         try {
@@ -702,7 +710,7 @@ export default function CheckoutPage({
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    provider,
+                    provider: formData.paymentProvider,
                     items: cartItems,
                     shipping: {
                         methodId: shippingMethodId,
@@ -745,12 +753,12 @@ export default function CheckoutPage({
                 return;
             }
 
-            if (provider === 'stripe' && payload.redirectUrl) {
+            if (payload.redirectUrl) {
                 window.location.href = payload.redirectUrl;
                 return;
             }
 
-            if (provider === 'global-payments' && payload.actionUrl && payload.fields) {
+            if (payload.actionUrl && payload.fields) {
                 submitHppForm(payload.actionUrl, payload.fields);
                 return;
             }
@@ -777,6 +785,7 @@ export default function CheckoutPage({
     const progress = ((currentStepIndex + 1) / stepsInfo.length) * 100;
     const selectedShippingMethod =
         formData.shippingMethod ? getShippingMethodById(formData.shippingMethod, availableShippingMethods) : undefined;
+    const isCashOnDelivery = selectedShippingMethod?.cashOnDelivery === true;
     const shippingPrice = quote?.totals?.shipping ?? selectedShippingMethod?.price ?? 0;
     const subtotalPrice = quote?.totals?.subtotal ?? totalPrice;
     const couponDiscountAmount = quote?.discounts?.couponDiscountAmount ?? 0;
@@ -788,6 +797,10 @@ export default function CheckoutPage({
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const effectiveLoyaltySettings = quote?.loyaltySettings || loyaltySettings;
     const isCustomerStep = currentStep === 'customer';
+    const paymentLabel = getPaymentLabel(isCashOnDelivery ? 'cash-on-delivery' : formData.paymentProvider);
+    const submitButtonLabel = isCashOnDelivery
+        ? `Odeslat objednavku ${formatPrice(orderTotal)}`
+        : `Objednat a zaplatit ${formatPrice(orderTotal)}`;
     const description =
         variant === 'minimal'
             ? 'Čistší a klidnější pokladna v jednodušším rozvržení, ale stále ve stylu Lumera.'
@@ -1502,7 +1515,7 @@ export default function CheckoutPage({
     const orderSummary = (
         <>
             <div>{selectedShippingMethod?.label || 'Dopravu vyberete v druhem kroku.'}</div>
-            <div className="mt-1 text-[#7a7164]">{getPaymentLabel(formData.paymentProvider)}</div>
+            <div className="mt-1 text-[#7a7164]">{paymentLabel}</div>
             {formData.pickupPoint ? (
                 <div className="mt-1 text-[12px] text-[#6b6257]">
                     {formData.pickupPoint.name}
@@ -1722,7 +1735,7 @@ export default function CheckoutPage({
             variant={variant}
             stepNumber={2}
             eyebrow="Krok 2"
-            title="Doprava a platba"
+            title={isCashOnDelivery ? 'Doprava a potvrzeni' : 'Doprava a platba'}
             active={currentStep === 'order'}
             completed={completedSteps.includes('order')}
             onOpen={() => goToStep('order')}
@@ -1874,49 +1887,65 @@ export default function CheckoutPage({
                     ) : null}
 
                     <p className="text-[13px] leading-5 text-[#6b6257]">
-                        Po uspesne platbe se pripise {quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.
+                        {isCashOnDelivery
+                            ? `Po potvrzeni a uhrade objednavky se pripise ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.`
+                            : `Po uspesne platbe se pripise ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.`}
                     </p>
                 </div>
             ) : null}
 
-            <div className={theme.surface}>
-                <div>
-                    <p className={theme.eyebrow}>Platba</p>
-                    <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+            {isCashOnDelivery ? (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Platba</p>
+                        <h3 className={theme.stageTitle}>Platba pri prevzeti</h3>
+                    </div>
+
+                    <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
+                        Vybrana doprava je nastavena jako na dobirku, proto se online platba nezobrazuje. Castku
+                        uhradite az pri prevzeti zasilky.
+                    </div>
                 </div>
+            ) : (
+                <div className={theme.surface}>
+                    <div>
+                        <p className={theme.eyebrow}>Platba</p>
+                        <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+                    </div>
 
-                {([
-                    {
-                        value: 'stripe',
-                        title: 'Online karta / Apple Pay (Stripe)',
-                        copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
-                    },
-                    {
-                        value: 'global-payments',
-                        title: 'Global Payments (GP webpay)',
-                        copy: 'Tradicni platebni brana pro karty i lokalni metody.',
-                    },
-                ] as const).map((option) => {
-                    const isSelected = formData.paymentProvider === option.value;
+                    {([
+                        {
+                            value: 'stripe',
+                            title: 'Online karta / Apple Pay (Stripe)',
+                            copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
+                        },
+                        {
+                            value: 'global-payments',
+                            title: 'Global Payments (GP webpay)',
+                            copy: 'Tradicni platebni brana pro karty i lokalni metody.',
+                        },
+                    ] as const).map((option) => {
+                        const isSelected = formData.paymentProvider === option.value;
 
-                    return (
-                        <button
-                            key={option.value}
-                            type="button"
-                            className={cn(theme.option, isSelected ? theme.optionSelected : theme.optionIdle)}
-                            onClick={() => updateFormData('paymentProvider', option.value)}
-                        >
-                            <span className={theme.optionControl}>
-                                {isSelected ? <span className="h-2 w-2 rounded-full bg-[#b98743]" /> : null}
-                            </span>
-                            <span className={theme.optionCopy}>
-                                <span className={theme.optionTitle}>{option.title}</span>
-                                <span className={theme.optionMeta}>{option.copy}</span>
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
+                        return (
+                            <button
+                                key={option.value}
+                                type="button"
+                                className={cn(theme.option, isSelected ? theme.optionSelected : theme.optionIdle)}
+                                onClick={() => updateFormData('paymentProvider', option.value)}
+                            >
+                                <span className={theme.optionControl}>
+                                    {isSelected ? <span className="h-2 w-2 rounded-full bg-[#b98743]" /> : null}
+                                </span>
+                                <span className={theme.optionCopy}>
+                                    <span className={theme.optionTitle}>{option.title}</span>
+                                    <span className={theme.optionMeta}>{option.copy}</span>
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             <label className={theme.check}>
                 <input
@@ -1956,7 +1985,7 @@ export default function CheckoutPage({
                         Presmerovani...
                     </span>
                 ) : (
-                    `Objednat a zaplatit ${formatPrice(orderTotal)}`
+                    submitButtonLabel
                 )}
             </button>
         </CheckoutSectionCard>
@@ -2015,7 +2044,11 @@ export default function CheckoutPage({
                                 <div>
                                     <p className={theme.eyebrow}>{isCustomerStep ? 'Etapa 1 / 2' : 'Etapa 2 / 2'}</p>
                                     <h2 className={theme.stageTitle}>
-                                        {isCustomerStep ? 'Kontakt a fakturace' : 'Doprava a platba'}
+                                        {isCustomerStep
+                                            ? 'Kontakt a fakturace'
+                                            : isCashOnDelivery
+                                              ? 'Doprava a potvrzeni'
+                                              : 'Doprava a platba'}
                                     </h2>
                                 </div>
 
@@ -2042,7 +2075,8 @@ export default function CheckoutPage({
                             orderTotal={orderTotal}
                             selectedShippingMethod={selectedShippingMethod}
                             formData={formData}
-                            paymentLabel={getPaymentLabel(formData.paymentProvider)}
+                            paymentLabel={paymentLabel}
+                            isCashOnDelivery={isCashOnDelivery}
                             formatPrice={formatPrice}
                             loyaltySummary={
                                 currentUser
