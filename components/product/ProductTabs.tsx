@@ -212,7 +212,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
 
   return (
     <div className="w-full text-[#111111]">
-      <div className="no-scrollbar flex w-full overflow-x-auto border-b border-[#d4d4d4] pt-[10px]">
+      <div className="grid w-full grid-cols-3 border-b border-[#d4d4d4] pt-[10px] md:no-scrollbar md:flex md:overflow-x-auto">
         {[
           { key: "description", label: "Popis" },
           { key: "additional", label: "Dalsi informace" },
@@ -225,7 +225,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key as TabKey)}
-              className={`relative whitespace-nowrap border border-b-0 px-[20px] py-[10px] text-[15px] transition ${
+              className={`relative min-w-0 border border-b-0 px-3 py-3 text-center text-[13px] leading-[1.2] transition sm:px-4 sm:text-[14px] md:whitespace-nowrap md:px-[20px] md:py-[10px] md:text-[15px] ${
                 isActive
                   ? "translate-y-[1px] border-[#cccccc] bg-[#f2f2f2] text-[#111111]"
                   : "translate-y-[1px] border-transparent bg-transparent text-[#333333] hover:text-[#111111]"
@@ -240,7 +240,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
       <div className="py-[40px]">
         {activeTab === "description" && (
           <div
-            className="animate-fadeIn text-[#111111] [&_blockquote]:border-l-[3px] [&_blockquote]:border-[#111111]/12 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:mb-5 [&_h1]:font-serif [&_h1]:text-[34px] [&_h1]:font-normal [&_h1]:leading-[1.1] [&_h1]:lg:text-[42px] [&_h2]:mb-4 [&_h2]:font-serif [&_h2]:text-[28px] [&_h2]:font-normal [&_h2]:leading-[1.15] [&_h3]:mb-3 [&_h3]:font-serif [&_h3]:text-[22px] [&_h3]:font-normal [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p]:my-0 [&_p]:text-[16px] [&_p]:leading-[1.7] [&_p:not(:last-child)]:mb-4 [&_strong]:font-semibold [&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
+            className="animate-fadeIn text-[#111111] [&_blockquote]:border-l-[3px] [&_blockquote]:border-[#111111]/12 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:mb-5 [&_h1]:font-serif [&_h1]:text-[34px] [&_h1]:font-normal [&_h1]:leading-[1.1] [&_h1]:lg:text-[42px] [&_h2]:mb-4 [&_h2]:font-serif [&_h2]:text-[28px] [&_h2]:font-normal [&_h2]:leading-[1.15] [&_h3]:mb-3 [&_h3]:font-serif [&_h3]:text-[22px] [&_h3]:font-normal [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_p]:my-0 [&_p]:text-[16px] [&_p]:leading-[1.7] [&_p:not(:last-child)]:mb-4 [&_strong]:font-bold [&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5"
             dangerouslySetInnerHTML={{ __html: contentHtml || "" }}
           />
         )}
