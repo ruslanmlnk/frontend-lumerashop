@@ -18,6 +18,12 @@ export interface ProductVariant {
     name: string;
 }
 
+export interface ProductMedia {
+    type: 'image' | 'video';
+    url: string;
+    alt?: string;
+}
+
 export interface ProductReview {
     id: string;
     author: string;
@@ -44,6 +50,7 @@ export interface Product {
     descriptionHtml?: string;
     shortDescription?: string;
     gallery?: string[];
+    mediaGallery?: ProductMedia[];
     specifications?: Record<string, string>;
     filterValues?: ProductFilterValue[];
     highlights?: string[];

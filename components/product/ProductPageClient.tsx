@@ -8,9 +8,8 @@ import Features from "@/components/Features";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
-import CatalogHeader from "@/components/catalog/CatalogHeader";
 import { useCart } from "@/context/CartContext";
-import type { Product } from "@/types/site";
+import type { Product, ProductMedia } from "@/types/site";
 
 type ProductPageClientProps = {
   product: Product;
@@ -33,16 +32,33 @@ export default function ProductPageClient({
   recommendedProducts,
 }: ProductPageClientProps) {
   const { addToCart, cartItems } = useCart();
-  const gallery = useMemo(() => {
-    const sourceImages = product.gallery?.length ? product.gallery : [product.image];
-    return Array.from(new Set(sourceImages.filter(Boolean)));
-  }, [product.gallery, product.image]);
+  const galleryItems = useMemo<ProductMedia[]>(() => {
+    const fallbackImages = (product.gallery ?? []).map((url) => ({
+      type: "image" as const,
+      url,
+    }));
+    const sourceItems = [
+      { type: "image" as const, url: product.image, alt: product.name },
+      ...(product.mediaGallery?.length ? product.mediaGallery : fallbackImages),
+    ];
+    const uniqueItems = new Map<string, ProductMedia>();
+
+    for (const item of sourceItems) {
+      if (!item?.url) {
+        continue;
+      }
+
+      uniqueItems.set(`${item.type}:${item.url}`, item);
+    }
+
+    return Array.from(uniqueItems.values());
+  }, [product.gallery, product.image, product.mediaGallery, product.name]);
   const normalizedPrice = useMemo(() => normalizePrice(product.price), [product.price]);
   const currentCartQuantity = useMemo(
     () => cartItems.find((item) => item.id === product.id)?.quantity ?? 0,
     [cartItems, product.id],
   );
-  const primaryCartImage = gallery[0] || product.image;
+  const primaryCartImage = product.image;
   const descriptionHtml = product.descriptionHtml || "";
   const specifications = product.specifications;
   const reviews = product.reviews;
@@ -107,7 +123,7 @@ export default function ProductPageClient({
 
         <section className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-[60px]">
           <div className="w-full">
-            <ProductGallery key={product.id} images={gallery} productName={product.name} />
+            <ProductGallery key={product.id} items={galleryItems} productName={product.name} />
           </div>
 
           <div className="w-full lg:pt-[30px]">

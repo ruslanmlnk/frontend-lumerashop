@@ -9,7 +9,7 @@ import {
 import { appendPayloadSelectParams, type PayloadSelect } from '@/lib/payload-select';
 import { createLexicalRichTextFromText, renderLexicalToHTML } from '@/lib/payload-richtext';
 import { normalizeStockQuantity } from '@/lib/stock';
-import type { Product, ProductFilterValue, ProductReview, ProductVariant } from '@/types/site';
+import type { Product, ProductFilterValue, ProductMedia, ProductReview, ProductVariant } from '@/types/site';
 
 type PayloadListResponse<T> = {
     docs?: T[];
@@ -17,6 +17,8 @@ type PayloadListResponse<T> = {
 
 type PayloadMediaDoc = {
     url?: unknown;
+    mimeType?: unknown;
+    alt?: unknown;
 };
 
 type PayloadGalleryItem = {
@@ -135,10 +137,13 @@ const PRODUCT_LIST_SELECT: PayloadSelect = {
     },
     mainImage: {
         url: true,
+        alt: true,
     },
     gallery: {
         image: {
             url: true,
+            mimeType: true,
+            alt: true,
         },
     },
     isFeatured: true,
@@ -156,10 +161,13 @@ const PRODUCT_DETAIL_SELECT: PayloadSelect = {
         slug: true,
         mainImage: {
             url: true,
+            alt: true,
         },
         gallery: {
             image: {
                 url: true,
+                mimeType: true,
+                alt: true,
             },
         },
     },
@@ -185,6 +193,7 @@ type MapPayloadProductOptions = {
 
 const payloadProductPriceFormatter = new Intl.NumberFormat('cs-CZ');
 const formatPrice = (value: number) => `${payloadProductPriceFormatter.format(value)} Kč`;
+const VIDEO_FILE_EXTENSION_PATTERN = /\.(mp4|webm|ogg|mov|m4v)(?:$|[?#])/i;
 
 const resolveUrl = (value: unknown, baseUrl: string): string | null => {
     if (typeof value !== 'string' || value.length === 0) {
@@ -215,23 +224,54 @@ const resolveUrl = (value: unknown, baseUrl: string): string | null => {
     return getRenderablePayloadMediaPath(normalizedValue, baseUrl);
 };
 
-const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
+const resolveMediaType = (url: string, mimeType?: unknown): ProductMedia['type'] => {
+    if (typeof mimeType === 'string' && mimeType.toLowerCase().startsWith('video/')) {
+        return 'video';
+    }
+
+    return VIDEO_FILE_EXTENSION_PATTERN.test(url) ? 'video' : 'image';
+};
+
+const resolveGalleryMedia = (
+    gallery: PayloadGalleryItem[] | null | undefined,
+    baseUrl: string,
+): ProductMedia[] => {
     if (!Array.isArray(gallery)) {
         return [];
     }
 
-    return Array.from(
-        new Set(
-            gallery
-                .map((item) => {
-                    const uploaded =
-                        typeof item?.image === 'object' && item.image ? resolveUrl(item.image.url, baseUrl) : null;
-                    const linked = resolveUrl(item?.imageUrl, baseUrl);
-                    return uploaded || linked;
-                })
-                .filter((value): value is string => Boolean(value)),
-        ),
-    );
+    const resolved = new Map<string, ProductMedia>();
+
+    for (const item of gallery) {
+        const uploadedDoc = typeof item?.image === 'object' && item.image ? item.image : null;
+        const uploadedUrl = uploadedDoc ? resolveUrl(uploadedDoc.url, baseUrl) : null;
+        const linkedUrl = resolveUrl(item?.imageUrl, baseUrl);
+        const url = uploadedUrl || linkedUrl;
+
+        if (!url) {
+            continue;
+        }
+
+        const type = resolveMediaType(url, uploadedDoc?.mimeType);
+        const alt =
+            uploadedDoc && typeof uploadedDoc.alt === 'string' && uploadedDoc.alt.trim().length > 0
+                ? uploadedDoc.alt.trim()
+                : undefined;
+
+        resolved.set(`${type}:${url}`, {
+            type,
+            url,
+            alt,
+        });
+    }
+
+    return Array.from(resolved.values());
+};
+
+const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
+    return resolveGalleryMedia(gallery, baseUrl)
+        .filter((item) => item.type === 'image')
+        .map((item) => item.url);
 };
 
 const resolvePrimaryImage = (
@@ -414,7 +454,8 @@ const mapPayloadProduct = (
     const numericPurchaseCount =
         typeof doc.purchaseCount === 'number' ? doc.purchaseCount : Number(doc.purchaseCount);
 
-    const gallery = resolveGallery(doc.gallery, baseUrl);
+    const mediaGallery = resolveGalleryMedia(doc.gallery, baseUrl);
+    const gallery = mediaGallery.filter((item) => item.type === 'image').map((item) => item.url);
     const image = resolvePrimaryImage(doc, baseUrl, gallery);
     const description =
         typeof doc.description === 'string' && doc.description.trim().length > 0 ? doc.description : undefined;
@@ -458,6 +499,7 @@ const mapPayloadProduct = (
         descriptionHtml: descriptionHtml || undefined,
         shortDescription,
         gallery: gallery.length ? gallery : [image],
+        mediaGallery: mediaGallery.length ? mediaGallery : undefined,
         specifications: includeDetails ? toSpecificationsObject(doc.specifications) : undefined,
         filterValues: toFilterValues(doc.filterOptions),
         highlights: includeDetails ? toHighlights(doc.highlights) : undefined,
