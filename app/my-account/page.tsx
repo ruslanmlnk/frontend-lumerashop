@@ -5,6 +5,7 @@ import CatalogHeader from '@/components/catalog/CatalogHeader';
 import LoginForm from '@/components/profile/LoginForm';
 import RegisterForm from '@/components/profile/RegisterForm';
 import ProfileLayout from '@/components/profile/ProfileLayout';
+import LogoutButton from '@/components/profile/LogoutButton';
 import { getCurrentUser } from '@/lib/auth';
 import type { AuthUser } from '@/lib/payload-auth';
 
@@ -49,9 +50,9 @@ export default async function MyAccountPage() {
       <div className="space-y-6">
         <p className="text-[16px] leading-relaxed text-gray-700">
           Dobry den, <span className="font-bold text-black">{displayName}</span> (nejste {displayName}?{' '}
-          <Link href="/my-account/logout" className="text-[#E1B12C] hover:underline">
+          <LogoutButton className="text-[#E1B12C] hover:underline">
             Odhlasit se
-          </Link>
+          </LogoutButton>
           )
         </p>
 
