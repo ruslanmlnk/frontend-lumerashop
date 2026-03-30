@@ -11,6 +11,8 @@ type OrdersResponse = {
         total?: unknown;
         currency?: unknown;
         createdAt?: unknown;
+        invoiceGeneratedAt?: unknown;
+        invoiceFileName?: unknown;
     }>;
 };
 
@@ -59,6 +61,14 @@ export default async function Downloads() {
 
         const payload = await parseJsonSafely<OrdersResponse>(response);
         const docs = Array.isArray(payload?.docs) ? payload.docs : [];
+        const invoiceDocs = docs.filter((order) => {
+            const invoiceGeneratedAt =
+                typeof order.invoiceGeneratedAt === 'string' ? order.invoiceGeneratedAt.trim() : '';
+            const invoiceFileName =
+                typeof order.invoiceFileName === 'string' ? order.invoiceFileName.trim() : '';
+
+            return invoiceGeneratedAt.length > 0 && invoiceFileName.length > 0;
+        });
 
         if (!response.ok) {
             return (
@@ -68,12 +78,12 @@ export default async function Downloads() {
             );
         }
 
-        if (docs.length === 0) {
+        if (invoiceDocs.length === 0) {
             return (
                 <div className="space-y-6">
                     <div className="flex items-center justify-between border-t-4 border-blue-400 bg-blue-50 p-4">
                         <span className="text-[15px] text-blue-700">
-                            Zatim tu nejsou zadne faktury ke stazeni.
+                            Faktury se tu objevi po jejich vystaveni v administraci.
                         </span>
                         <Link
                             href="/shop"
@@ -88,7 +98,7 @@ export default async function Downloads() {
 
         return (
             <div className="space-y-4">
-                {docs.map((order, index) => {
+                {invoiceDocs.map((order, index) => {
                     const documentId =
                         typeof order.id === 'string' || typeof order.id === 'number'
                             ? String(order.id)
@@ -103,6 +113,10 @@ export default async function Downloads() {
                     const currency = typeof order.currency === 'string' ? order.currency : 'CZK';
                     const createdAt =
                         typeof order.createdAt === 'string' ? new Date(order.createdAt) : null;
+                    const invoiceGeneratedAt =
+                        typeof order.invoiceGeneratedAt === 'string'
+                            ? new Date(order.invoiceGeneratedAt)
+                            : null;
 
                     if (!documentId) {
                         return null;
@@ -120,9 +134,13 @@ export default async function Downloads() {
                                     </p>
                                     <h3 className="text-[18px] font-semibold text-[#111111]">{orderId}</h3>
                                     <p className="text-[14px] text-[#6b6257]">{getStatusLabel(paymentStatus)}</p>
-                                    {createdAt ? (
+                                    {invoiceGeneratedAt ? (
                                         <p className="text-[13px] text-[#8a8275]">
-                                            Vystaveno k objednavce z {createdAt.toLocaleDateString('cs-CZ')}
+                                            Faktura vystavena {invoiceGeneratedAt.toLocaleDateString('cs-CZ')}
+                                        </p>
+                                    ) : createdAt ? (
+                                        <p className="text-[13px] text-[#8a8275]">
+                                            Objednavka z {createdAt.toLocaleDateString('cs-CZ')}
                                         </p>
                                     ) : null}
                                 </div>
