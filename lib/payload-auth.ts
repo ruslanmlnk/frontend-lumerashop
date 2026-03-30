@@ -171,6 +171,20 @@ export function validatePassword(password: string): string | null {
   return null;
 }
 
+export function validateRegistrationPassword(password: string): string | null {
+  const nonWhitespaceLength = password.replace(/\s+/g, '').length;
+
+  if (nonWhitespaceLength <= 5) {
+    return 'Password must contain more than 5 non-space characters.';
+  }
+
+  if (password.length > 128) {
+    return 'Password must be 128 characters or fewer.';
+  }
+
+  return null;
+}
+
 export function sanitizeAuthUser(value: unknown): AuthUser | null {
   if (!value || typeof value !== 'object') {
     return null;

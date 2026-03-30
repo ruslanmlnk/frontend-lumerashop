@@ -133,7 +133,7 @@ const RegisterForm = () => {
             disabled={isSubmitting}
           />
           <p className="mt-2 text-[12px] text-gray-500">
-            Minimum 10 chars, uppercase, lowercase, number and symbol.
+            Vice nez 5 znaku, mezery se nepocitaji.
           </p>
         </div>
 

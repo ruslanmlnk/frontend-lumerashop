@@ -9,7 +9,7 @@ import {
   parseJsonSafely,
   resolveSecureAuthCookie,
   sanitizeAuthUser,
-  validatePassword,
+  validateRegistrationPassword,
 } from '@/lib/payload-auth';
 
 type RegisterBody = {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please provide a valid email address.' }, { status: 400 });
   }
 
-  const passwordValidationError = validatePassword(password);
+  const passwordValidationError = validateRegistrationPassword(password);
   if (passwordValidationError) {
     return NextResponse.json({ error: passwordValidationError }, { status: 400 });
   }

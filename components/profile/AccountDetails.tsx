@@ -167,7 +167,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                             disabled={isSubmitting}
                         />
                         <p className="mt-2 text-[12px] text-gray-500">
-                            Minimum 10 znaku, velke a male pismeno, cislo a specialni znak.
+                            Vice nez 5 znaku, mezery se nepocitaji.
                         </p>
                     </div>
 

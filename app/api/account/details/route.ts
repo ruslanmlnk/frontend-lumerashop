@@ -6,7 +6,7 @@ import {
   isValidEmail,
   normalizeEmail,
   parseJsonSafely,
-  validatePassword,
+  validateRegistrationPassword,
 } from '@/lib/payload-auth';
 
 type UpdateBody = {
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Please enter your current password.' }, { status: 400 });
     }
 
-    const passwordValidationError = validatePassword(newPassword);
+    const passwordValidationError = validateRegistrationPassword(newPassword);
     if (passwordValidationError) {
       return NextResponse.json({ error: passwordValidationError }, { status: 400 });
     }
