@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import ProductGrid from "@/components/ProductGrid";
@@ -9,11 +9,14 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import { useCart } from "@/context/CartContext";
+import type { FirstPurchasePromoConfig } from "@/types/commerce";
 import type { Product, ProductMedia } from "@/types/site";
 
 type ProductPageClientProps = {
   product: Product;
   recommendedProducts: Product[];
+  firstPurchasePromo: FirstPurchasePromoConfig;
+  showBonusProgram: boolean;
 };
 
 const normalizePrice = (price: string) => {
@@ -30,8 +33,12 @@ const normalizePrice = (price: string) => {
 export default function ProductPageClient({
   product,
   recommendedProducts,
+  firstPurchasePromo,
+  showBonusProgram,
 }: ProductPageClientProps) {
   const { addToCart, cartItems } = useCart();
+  const [isAddConfirmationOpen, setIsAddConfirmationOpen] = useState(false);
+  const [lastAddedQuantity, setLastAddedQuantity] = useState(1);
   const galleryItems = useMemo<ProductMedia[]>(() => {
     const fallbackImages = (product.gallery ?? []).map((url) => ({
       type: "image" as const,
@@ -58,13 +65,41 @@ export default function ProductPageClient({
     () => cartItems.find((item) => item.id === product.id)?.quantity ?? 0,
     [cartItems, product.id],
   );
+  const addConfirmationCartTotal = useMemo(
+    () => normalizedPrice * lastAddedQuantity,
+    [lastAddedQuantity, normalizedPrice],
+  );
+  const hasFreeShippingInAddConfirmation = addConfirmationCartTotal >= 1500;
   const primaryCartImage = product.image;
   const descriptionHtml = product.descriptionHtml || "";
   const specifications = product.specifications;
   const reviews = product.reviews;
   const variants = product.variants ?? [];
 
+  useEffect(() => {
+    if (!isAddConfirmationOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAddConfirmationOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAddConfirmationOpen]);
+
   const handleAddToCart = (quantity: number) => {
+    const shouldOpenAddConfirmation = cartItems.length === 0;
+
     addToCart({
       id: product.id,
       name: product.name,
@@ -75,6 +110,24 @@ export default function ProductPageClient({
       sku: product.sku,
       stockQuantity: product.stockQuantity,
     });
+
+    if (shouldOpenAddConfirmation) {
+      setLastAddedQuantity(quantity);
+      setIsAddConfirmationOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("lumera:cart-open"));
+    }
+  };
+
+  const openCartDrawer = () => {
+    setIsAddConfirmationOpen(false);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("lumera:cart-open"));
+    }
   };
 
   const breadcrumbItems = useMemo(() => {
@@ -139,6 +192,8 @@ export default function ProductPageClient({
               onAddToCart={handleAddToCart}
               showTitleOnMobile={false}
               deliveryTime={product.deliveryTime}
+              firstPurchasePromo={firstPurchasePromo}
+              showBonusProgram={showBonusProgram}
             />
           </div>
         </section>
@@ -168,6 +223,58 @@ export default function ProductPageClient({
             variant="novinky"
             autoPlay={false}
           />
+        </div>
+      ) : null}
+
+      {isAddConfirmationOpen ? (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/45 px-4 py-6"
+          onClick={() => setIsAddConfirmationOpen(false)}
+        >
+          <div
+            className="w-full max-w-[760px] bg-white px-6 py-10 text-center shadow-[0_24px_80px_rgba(17,17,17,0.2)] sm:px-10"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-to-cart-modal-title"
+          >
+            <h2
+              id="add-to-cart-modal-title"
+              className="font-serif text-[34px] font-bold leading-[1.1] text-[#111111] sm:text-[52px]"
+            >
+              Pridano do kosiku
+            </h2>
+
+            <p className="mx-auto mt-6 max-w-[620px] text-[20px] leading-[1.5] text-[#2f2a24] sm:text-[24px]">
+              {product.name}
+            </p>
+
+            <p className="mt-8 text-[18px] font-semibold text-[#2f2a24] sm:text-[22px]">
+              {hasFreeShippingInAddConfirmation ? "Dopravu mate zdarma!" : "Doprava zdarma od 1 500 Kc"}
+            </p>
+
+            <p className="mt-5 text-[18px] leading-[1.5] text-[#3f382f] sm:text-[20px]">
+              {firstPurchasePromo.modalMessage}
+            </p>
+
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => setIsAddConfirmationOpen(false)}
+                className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] border border-[#7da07e] px-8 text-[16px] font-medium text-[#628163] transition-colors hover:bg-[#f5faf5]"
+              >
+                Zpet do obchodu
+              </button>
+
+              <button
+                type="button"
+                onClick={openCartDrawer}
+                className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] bg-[#222222] px-8 text-[16px] font-semibold text-white transition-colors hover:bg-black"
+              >
+                Nakupni kosik
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </main>

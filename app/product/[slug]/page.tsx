@@ -3,6 +3,8 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ProductPageClient from "@/components/product/ProductPageClient";
+import { fetchFirstPurchasePromo } from "@/lib/first-purchase-promo";
+import { fetchLoyaltySettings } from "@/lib/payments/checkout-benefits";
 import { fetchPayloadProductBySlug, fetchPayloadProducts } from "@/lib/payload-products";
 
 export default async function ProductPage({
@@ -11,12 +13,14 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [product, recommendedProducts] = await Promise.all([
+  const [product, recommendedProducts, firstPurchasePromo, loyaltySettings] = await Promise.all([
     fetchPayloadProductBySlug(slug),
     fetchPayloadProducts({
       recommendedOnly: true,
       limit: 7,
     }),
+    fetchFirstPurchasePromo(),
+    fetchLoyaltySettings(),
   ]);
 
   if (!product) {
@@ -47,6 +51,8 @@ export default async function ProductPage({
       <ProductPageClient
         product={product}
         recommendedProducts={recommendedForView}
+        firstPurchasePromo={firstPurchasePromo}
+        showBonusProgram={loyaltySettings.bonusesEnabled}
       />
       <Footer />
     </div>

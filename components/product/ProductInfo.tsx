@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getRemainingStock } from "@/lib/stock";
+import type { FirstPurchasePromoConfig } from "@/types/commerce";
 import type { ProductVariant } from "@/types/site";
 
 interface ProductInfoProps {
@@ -18,10 +19,13 @@ interface ProductInfoProps {
   onAddToCart?: (quantity: number) => void;
   showTitleOnMobile?: boolean;
   deliveryTime?: number;
+  firstPurchasePromo: FirstPurchasePromoConfig;
+  showBonusProgram: boolean;
 }
 
 const stripHtml = (value: string) => value.replace(/<[^>]+>/g, "").trim();
 const isPayloadMediaProxyPath = (value: string) => value.startsWith("/api/payload-media/");
+const isRemoteImageUrl = (value: string) => value.startsWith("http://") || value.startsWith("https://");
 
 const ProductInfo = ({
   name,
@@ -35,6 +39,8 @@ const ProductInfo = ({
   onAddToCart,
   showTitleOnMobile = true,
   deliveryTime,
+  firstPurchasePromo,
+  showBonusProgram,
 }: ProductInfoProps) => {
   const [quantity, setQuantity] = useState(1);
   const availableToAdd = useMemo(
@@ -148,12 +154,7 @@ const ProductInfo = ({
 
         <button
           type="button"
-          onClick={() => {
-            onAddToCart?.(quantity);
-            if (onAddToCart && typeof window !== "undefined") {
-              window.dispatchEvent(new CustomEvent("lumera:cart-open"));
-            }
-          }}
+          onClick={() => onAddToCart?.(quantity)}
           disabled={isAddToCartDisabled}
           className="inline-flex h-[42px] w-full items-center justify-center whitespace-nowrap bg-black px-[30px] text-[15px] font-bold uppercase tracking-[0.02em] text-white transition hover:bg-[#222222] disabled:cursor-not-allowed disabled:bg-[#8e8e8e] sm:w-auto"
         >
@@ -216,25 +217,30 @@ const ProductInfo = ({
 
         <div className="flex items-center gap-[10px]">
           <Image
-            src="/discount.png"
+            src={firstPurchasePromo.iconSrc}
             alt="Discount icon"
             width={22}
             height={22}
+            unoptimized={
+              isPayloadMediaProxyPath(firstPurchasePromo.iconSrc) || isRemoteImageUrl(firstPurchasePromo.iconSrc)
+            }
             className="object-contain"
           />
-          <span className="text-[14px] leading-[1.6] text-[#111111]">100 Kč sleva na první nákup</span>
+          <span className="text-[14px] leading-[1.6] text-[#111111]">{firstPurchasePromo.productMessage}</span>
         </div>
 
-        <div className="flex items-center gap-[10px]">
-          <Image
-            src="/coin.png"
-            alt="Coin icon"
-            width={22}
-            height={22}
-            className="object-contain"
-          />
-          <span className="text-[14px] leading-[1.6] text-[#111111]">Věrnostní program plný odměn</span>
-        </div>
+        {showBonusProgram ? (
+          <div className="flex items-center gap-[10px]">
+            <Image
+              src="/coin.png"
+              alt="Coin icon"
+              width={22}
+              height={22}
+              className="object-contain"
+            />
+            <span className="text-[14px] leading-[1.6] text-[#111111]">Věrnostní program plný odměn</span>
+          </div>
+        ) : null}
       </div>
 
       {summaryItems.length > 0 && (

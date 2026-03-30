@@ -613,7 +613,7 @@ const Header = () => {
                           <div className="flex min-h-[72px] flex-col items-end justify-between">
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#ef4444] text-white transition-colors hover:bg-[#dc2626]"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#c79200] text-white transition-colors hover:bg-[#af8100]"
                               aria-label={`Odstranit ${item.name}`}
                             >
                               <X size={13} />

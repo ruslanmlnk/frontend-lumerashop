@@ -69,7 +69,7 @@ export default function CheckoutSummary({
                 {firstPurchaseDiscountAmount > 0 ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
-                            <span>Sleva na prvni nakup</span>
+                            <span>Sleva po registraci na prvni nakup</span>
                         </div>
                         <span className={theme.summaryPrice}>- {formatPrice(firstPurchaseDiscountAmount)}</span>
                     </div>

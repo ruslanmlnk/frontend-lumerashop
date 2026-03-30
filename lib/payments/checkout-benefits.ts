@@ -3,9 +3,10 @@ import 'server-only';
 import { cookies } from 'next/headers';
 
 import { fetchPayloadShippingMethods } from '@/lib/payload-shipping-methods';
-import { getGlobal } from '@/lib/payload-data';
 import { getCurrentUser } from '@/lib/auth';
+import { fetchFirstPurchasePromo } from '@/lib/first-purchase-promo';
 import { getPayloadAuthConfig, parseJsonSafely } from '@/lib/payload-auth';
+import { fetchPayloadGlobal } from '@/lib/payload-globals';
 import { assertCheckoutItemsWithinStock, buildCheckoutTotals, sanitizeCheckoutItems } from '@/lib/payments/checkout-utils';
 import type { CheckoutItemInput } from '@/lib/payments/checkout-types';
 
@@ -70,8 +71,6 @@ const DEFAULT_SETTINGS: LoyaltySettings = {
     redemptionBonusUnits: 5,
     redemptionAmount: 100,
 };
-
-const FIRST_PURCHASE_DISCOUNT_AMOUNT = 100;
 
 const toPositiveMoney = (value: unknown, fallback = 0) => {
     const numeric = typeof value === 'number' ? value : Number(value);
@@ -219,7 +218,7 @@ const fetchAppliedCoupon = async (code: string, subtotal: number): Promise<Appli
 };
 
 export const fetchLoyaltySettings = async (): Promise<LoyaltySettings> => {
-    const global = await getGlobal('loyalty-settings');
+    const global = await fetchPayloadGlobal('loyalty-settings');
     return parseLoyaltySettings(global);
 };
 
@@ -234,10 +233,11 @@ export const buildCheckoutQuote = async ({
     couponCode?: string;
     useBonusBalance?: boolean;
 }): Promise<CheckoutQuote> => {
-    const [shippingMethods, currentUser, loyaltySettings] = await Promise.all([
+    const [shippingMethods, currentUser, loyaltySettings, firstPurchasePromo] = await Promise.all([
         fetchPayloadShippingMethods(),
         getCurrentUser(),
         fetchLoyaltySettings(),
+        fetchFirstPurchasePromo(),
     ]);
 
     const sanitizedItems = sanitizeCheckoutItems(items);
@@ -260,7 +260,7 @@ export const buildCheckoutQuote = async ({
     const subtotalAfterCoupon = Math.max(0, totals.subtotal - couponDiscountAmount);
     const firstPurchaseDiscountAmount =
         currentUser && currentUser.firstPurchaseDiscountUsed !== true
-            ? Math.min(subtotalAfterCoupon, FIRST_PURCHASE_DISCOUNT_AMOUNT)
+            ? Math.min(subtotalAfterCoupon, firstPurchasePromo.amount)
             : 0;
     const subtotalAfterFirstPurchaseDiscount = Math.max(0, subtotalAfterCoupon - firstPurchaseDiscountAmount);
 

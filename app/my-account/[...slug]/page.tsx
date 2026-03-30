@@ -6,6 +6,7 @@ import Downloads from '@/components/profile/Downloads';
 import Addresses from '@/components/profile/Addresses';
 import AccountDetails from '@/components/profile/AccountDetails';
 import { getCurrentUser } from '@/lib/auth';
+import { fetchLoyaltySettings } from '@/lib/payments/checkout-benefits';
 
 type ParamsShape = {
   slug?: string[];
@@ -16,7 +17,7 @@ type PageProps = {
 };
 
 export default async function MyAccountSubPage({ params }: PageProps) {
-  const user = await getCurrentUser();
+  const [user, loyaltySettings] = await Promise.all([getCurrentUser(), fetchLoyaltySettings()]);
   if (!user) {
     redirect('/my-account');
   }
@@ -28,7 +29,7 @@ export default async function MyAccountSubPage({ params }: PageProps) {
 
   switch (section) {
     case 'orders':
-      content = <Orders />;
+      content = <Orders showBonusProgram={loyaltySettings.bonusesEnabled} />;
       break;
     case 'downloads':
       content = <Downloads />;

@@ -41,7 +41,7 @@ const getStatusLabel = (value: string) => {
     }
 };
 
-export default async function Orders() {
+export default async function Orders({ showBonusProgram = true }: { showBonusProgram?: boolean }) {
     const config = getPayloadAuthConfig();
     const cookieStore = await cookies();
     const token = config ? cookieStore.get(config.cookieName)?.value : '';
@@ -133,10 +133,10 @@ export default async function Orders() {
                                     {couponCode ? (
                                         <p className="text-[13px] text-[#6b6257]">Kupon: {couponCode}</p>
                                     ) : null}
-                                    {bonusSpent > 0 || bonusEarned > 0 ? (
+                                    {showBonusProgram && (bonusSpent > 0 || bonusEarned > 0) ? (
                                         <p className="text-[13px] text-[#6b6257]">
                                             {bonusSpent > 0 ? `-${bonusSpent} bonusu` : ''}
-                                            {bonusSpent > 0 && bonusEarned > 0 ? ' · ' : ''}
+                                            {bonusSpent > 0 && bonusEarned > 0 ? ' | ' : ''}
                                             {bonusEarned > 0 ? `+${bonusEarned} bonusu` : ''}
                                         </p>
                                     ) : null}

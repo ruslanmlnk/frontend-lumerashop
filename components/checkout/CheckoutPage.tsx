@@ -2079,7 +2079,7 @@ export default function CheckoutPage({
                             isCashOnDelivery={isCashOnDelivery}
                             formatPrice={formatPrice}
                             loyaltySummary={
-                                currentUser
+                                currentUser && effectiveLoyaltySettings?.bonusesEnabled
                                     ? {
                                           balance: quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0,
                                           spent: quote?.loyalty?.bonusUnitsSpent ?? 0,

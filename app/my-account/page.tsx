@@ -7,6 +7,7 @@ import RegisterForm from '@/components/profile/RegisterForm';
 import ProfileLayout from '@/components/profile/ProfileLayout';
 import LogoutButton from '@/components/profile/LogoutButton';
 import { getCurrentUser } from '@/lib/auth';
+import { fetchLoyaltySettings } from '@/lib/payments/checkout-benefits';
 import type { AuthUser } from '@/lib/payload-auth';
 
 function getDisplayName(user: AuthUser): string {
@@ -22,7 +23,7 @@ function getDisplayName(user: AuthUser): string {
 }
 
 export default async function MyAccountPage() {
-  const user = await getCurrentUser();
+  const [user, loyaltySettings] = await Promise.all([getCurrentUser(), fetchLoyaltySettings()]);
 
   if (!user) {
     return (
@@ -72,13 +73,15 @@ export default async function MyAccountPage() {
           .
         </p>
 
-        <div className="rounded-[18px] border border-[#111111]/8 bg-[#fffaf3] p-6">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#8b7f6e]">Bonusovy ucet</p>
-          <p className="mt-3 text-[30px] font-semibold text-[#111111]">{user.bonusBalance ?? 0} jednotek</p>
-          <p className="mt-2 text-[14px] leading-relaxed text-[#6b6257]">
-            Nasbirane bonusy muzes pouzit primo v pokladne po prihlaseni. Pri kazde zaplacene objednavce se ti pripisou dalsi podle aktualniho nastaveni obchodu.
-          </p>
-        </div>
+        {loyaltySettings.bonusesEnabled ? (
+          <div className="rounded-[18px] border border-[#111111]/8 bg-[#fffaf3] p-6">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#8b7f6e]">Bonusovy ucet</p>
+            <p className="mt-3 text-[30px] font-semibold text-[#111111]">{user.bonusBalance ?? 0} jednotek</p>
+            <p className="mt-2 text-[14px] leading-relaxed text-[#6b6257]">
+              Nasbirane bonusy muzes pouzit primo v pokladne po prihlaseni. Pri kazde zaplacene objednavce se ti pripisou dalsi podle aktualniho nastaveni obchodu.
+            </p>
+          </div>
+        ) : null}
       </div>
     </ProfileLayout>
   );
