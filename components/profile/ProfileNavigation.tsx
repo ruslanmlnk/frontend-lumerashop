@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingBag, Download, MapPin, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Download, MapPin, User, LogOut, Gift } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 const ProfileNavigation = () => {
@@ -10,6 +10,7 @@ const ProfileNavigation = () => {
     const menuItems = [
         { label: 'Nástěnka', href: '/my-account', icon: LayoutDashboard },
         { label: 'Objednávky', href: '/my-account/orders', icon: ShoppingBag },
+        { label: 'Bonusy', href: '/my-account/bonuses', icon: Gift },
         { label: 'Stahování', href: '/my-account/downloads', icon: Download },
         { label: 'Adresa', href: '/my-account/edit-address', icon: MapPin },
         { label: 'Detaily účtu', href: '/my-account/edit-account', icon: User },

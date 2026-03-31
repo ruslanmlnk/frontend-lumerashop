@@ -5,6 +5,7 @@ import Orders from '@/components/profile/Orders';
 import Downloads from '@/components/profile/Downloads';
 import Addresses from '@/components/profile/Addresses';
 import AccountDetails from '@/components/profile/AccountDetails';
+import Bonuses from '@/components/profile/Bonuses';
 import { getCurrentUser } from '@/lib/auth';
 import { fetchLoyaltySettings } from '@/lib/payments/checkout-benefits';
 
@@ -30,6 +31,9 @@ export default async function MyAccountSubPage({ params }: PageProps) {
   switch (section) {
     case 'orders':
       content = <Orders showBonusProgram={loyaltySettings.bonusesEnabled} />;
+      break;
+    case 'bonuses':
+      content = <Bonuses user={user} loyaltySettings={loyaltySettings} />;
       break;
     case 'downloads':
       content = <Downloads />;
