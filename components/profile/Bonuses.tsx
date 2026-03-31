@@ -19,11 +19,13 @@ export default async function Bonuses({ user, loyaltySettings }: BonusesProps) {
             <div>
                 <h2 className="text-[24px] font-semibold text-[#111111] mb-4">Bonusy</h2>
 
-                {/* Current Bonus Balance */}
-                <div className="rounded-[18px] border border-[#111111]/10 bg-white p-6 shadow-sm">
-                    <h3 className="text-[18px] font-semibold text-[#111111] mb-2">Aktuální zůstatek bonusů</h3>
-                    <p className="text-[16px] text-[#6b6257]">{bonusBalance} bonusů</p>
-                </div>
+                {/* Current Bonus Balance - only show if bonuses are enabled */}
+                {loyaltySettings.bonusesEnabled && (
+                    <div className="rounded-[18px] border border-[#111111]/10 bg-white p-6 shadow-sm">
+                        <h3 className="text-[18px] font-semibold text-[#111111] mb-2">Aktuální zůstatek bonusů</h3>
+                        <p className="text-[16px] text-[#6b6257]">{bonusBalance} bonusů</p>
+                    </div>
+                )}
             </div>
 
             {/* First Purchase Bonus */}
