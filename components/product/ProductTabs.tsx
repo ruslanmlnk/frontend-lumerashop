@@ -390,9 +390,9 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
                       )}
                     </button>
 
-                    <p className="text-[13px] leading-[1.6] text-[#6b645d]">
+                    {/* <p className="text-[13px] leading-[1.6] text-[#6b645d]">
                       Recenze se na webu zobrazi az po schvaleni v administraci.
-                    </p>
+                    </p> */}
                   </div>
                 </form>
               )}
