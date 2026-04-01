@@ -179,6 +179,7 @@ const ProductGallery = ({ items, productName }: ProductGalleryProps) => {
                               }}
                               src={item.url}
                               controls
+                              muted
                               playsInline
                               preload={index === activeIndex ? "metadata" : "none"}
                               className="h-full w-full object-contain"
@@ -303,6 +304,9 @@ const ProductGallery = ({ items, productName }: ProductGalleryProps) => {
                           inlineVideoRefs.current[index] = node;
                         }}
                         src={item.url}
+                        autoPlay
+                        loop
+                        muted
                         controls
                         playsInline
                         preload={index === activeIndex ? "metadata" : "none"}

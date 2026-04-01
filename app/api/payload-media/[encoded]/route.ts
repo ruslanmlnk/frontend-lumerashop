@@ -67,7 +67,6 @@ export async function GET(
   try {
     upstream = await fetch(targetUrl.toString(), {
       headers: range ? { range } : undefined,
-      next: { revalidate: MEDIA_REVALIDATE_SECONDS },
       signal: request.signal,
     });
   } catch {
