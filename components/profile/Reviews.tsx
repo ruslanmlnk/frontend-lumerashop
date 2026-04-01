@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Star, MessageSquare } from 'lucide-react';
 import type { AuthUser } from '@/lib/payload-auth';
+import { getPayloadApiUrl } from '@/lib/payload-client';
 
 interface Review {
   id: string;
@@ -27,7 +28,8 @@ const Reviews = ({ user }: ReviewsProps) => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await fetch(`/api/product-reviews?where[user][equals]=${user.id}&depth=1`);
+        const payloadUrl = getPayloadApiUrl();
+        const response = await fetch(`${payloadUrl}/api/product-reviews?where[user][equals]=${user.id}&depth=1`);
         if (!response.ok) {
           throw new Error('Failed to fetch reviews');
         }
