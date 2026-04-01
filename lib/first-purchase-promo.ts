@@ -41,7 +41,7 @@ const formatAmountLabel = (amount: number) =>
     `${amount.toLocaleString('cs-CZ', {
         minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
         maximumFractionDigits: 2,
-    })} Kc`;
+    })} Kč`;
 
 const resolvePayloadMediaPath = (value: unknown, baseUrl: string): string | null => {
     if (typeof value !== 'string' || value.trim().length === 0) {
@@ -94,7 +94,7 @@ export async function fetchFirstPurchasePromo(): Promise<FirstPurchasePromoConfi
     return {
         amount,
         iconSrc: resolvePromoIconSrc(global?.icon, baseUrl),
-        productMessage: `${amountLabel} sleva po registraci na prvni nakup`,
-        modalMessage: `Ziskejte ${amountLabel} slevu po registraci.`,
+        productMessage: `${amountLabel} sleva po registraci na první nákup`,
+        modalMessage: `Získejte ${amountLabel} slevu po registraci.`,
     };
 }

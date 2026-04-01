@@ -267,14 +267,31 @@ export default function ProductPageClient({
             </p>
 
             <p className="mt-5 text-[18px] leading-[1.5] text-[#3f382f] sm:text-[20px]">
-              {firstPurchasePromo.modalMessage}
+              {(() => {
+                const parts = firstPurchasePromo.modalMessage.split("registraci");
+                if (parts.length === 2) {
+                  return (
+                    <>
+                      {parts[0]}
+                      <Link
+                        href="/my-account"
+                        className="font-bold text-[#c79200] underline transition-opacity hover:opacity-80"
+                      >
+                        registraci
+                      </Link>
+                      {parts[1]}
+                    </>
+                  );
+                }
+                return firstPurchasePromo.modalMessage;
+              })()}
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <button
                 type="button"
                 onClick={() => setIsAddConfirmationOpen(false)}
-                className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] border border-[#7da07e] px-8 text-[16px] font-medium text-[#628163] transition-colors hover:bg-[#f5faf5]"
+                className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] border border-[#c79200] px-8 text-[16px] font-medium text-[#c79200] transition-colors hover:bg-[#c79200]/5"
               >
                 Zpět do obchodu
               </button>
