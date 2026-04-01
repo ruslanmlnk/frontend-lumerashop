@@ -173,7 +173,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
     const trimmedComment = comment.trim();
     if (trimmedComment.length < 3) {
       setSuccessMessage("");
-      setErrorMessage("Review text must be at least 3 characters long.");
+      setErrorMessage("Text recenze musí mít alespoň 3 znaky.");
       return;
     }
 
@@ -196,15 +196,15 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
       const payload = (await response.json().catch(() => null)) as ReviewSubmitResponse | null;
 
       if (!response.ok) {
-        setErrorMessage(payload?.error || "Unable to submit your review right now.");
+        setErrorMessage(payload?.error || "Momentálně nelze odeslat recenzi.");
         return;
       }
 
       setComment("");
       setRating(5);
-      setSuccessMessage(payload?.message || "Review submitted successfully and is awaiting approval.");
+      setSuccessMessage(payload?.message || "Recenze byla úspěšně odeslána a čeká na schválení.");
     } catch {
-      setErrorMessage("Unable to submit your review right now.");
+      setErrorMessage("Momentálně nelze odeslat recenzi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -215,8 +215,8 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
       <div className="grid w-full grid-cols-3 border-b border-[#d4d4d4] pt-[10px] md:no-scrollbar md:flex md:overflow-x-auto">
         {[
           { key: "description", label: "Popis" },
-          { key: "additional", label: "Dalsi informace" },
-          { key: "reviews", label: `Hodnoceni (${approvedReviews.length})` },
+          { key: "additional", label: "Další informace" },
+          { key: "reviews", label: `Hodnocení (${approvedReviews.length})` },
         ].map((tab) => {
           const isActive = activeTab === tab.key;
 
@@ -248,7 +248,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
         {activeTab === "additional" && (
           <div className="animate-fadeIn">
             <h2 className="mb-[20px] font-serif text-[34px] font-normal leading-[1.1] lg:text-[42px]">
-              Dalsi informace
+              Další informace
             </h2>
             {specEntries.length > 0 ? (
               <div className="overflow-hidden border border-[#ececec]">
@@ -266,7 +266,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
               </div>
             ) : (
               <p className="text-[16px] leading-[1.6] text-[#111111]">
-                Zadne dalsi informace nejsou k dispozici.
+                Žádné další informace nejsou k dispozici.
               </p>
             )}
           </div>
@@ -275,7 +275,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
         {activeTab === "reviews" && (
           <div className="animate-fadeIn">
             <h2 className="mb-[20px] font-serif text-[34px] font-normal leading-[1.1] lg:text-[42px]">
-              Hodnoceni
+              Hodnocení
             </h2>
 
             {approvedReviews.length > 0 ? (
@@ -307,25 +307,25 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
               </div>
             ) : (
               <p className="text-[16px] leading-[1.6] text-[#111111]">
-                Zatim tu nejsou zadne schvalene recenze.
+                Zatím tu nejsou žádné schválené recenze.
               </p>
             )}
 
             <div className="mt-10 border-t border-[#111111]/10 pt-8">
               <h3 className="font-serif text-[28px] font-normal leading-[1.15] text-[#111111]">
-                Napis vlastni recenzi
+                Napiš vlastní recenzi
               </h3>
 
               {viewer.status === "loading" ? (
                 <div className="mt-4 flex items-center gap-3 text-[15px] text-[#5f584e]">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Kontroluji prihlaseni...</span>
+                  <span>Kontroluji přihlášení...</span>
                 </div>
               ) : viewer.status === "anonymous" ? (
                 <div className="mt-4 rounded-[18px] border border-[#111111]/10 bg-[#fffaf3] p-5 text-[15px] leading-[1.7] text-[#3c352f]">
-                  Pro odeslani recenze se prosim{" "}
+                  Pro odeslání recenze se prosím{" "}
                   <Link href="/my-account" className="font-semibold text-[#c8a16a] underline-offset-4 hover:underline">
-                    prihlas
+                    přihlas
                   </Link>
                   .
                 </div>
@@ -333,17 +333,17 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
                 <form className="mt-5 grid gap-5" onSubmit={handleReviewSubmit}>
                   <div className="rounded-[18px] border border-[#111111]/10 bg-white p-5 md:p-6">
                     <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-[#7f776e]">
-                      Prihlasen jako
+                      Přihlášen jako
                     </p>
                     <p className="mt-2 text-[16px] text-[#111111]">{viewerLabel}</p>
                   </div>
 
                   <div>
                     <label className="mb-3 block text-[15px] font-medium text-[#111111]">
-                      Tvoje hodnoceni
+                      Tvoje hodnocení
                     </label>
                     <ReviewStars value={rating} interactive onChange={setRating} />
-                    <p className="mt-2 text-[13px] text-[#6b645d]">{rating} z 5 hvezd</p>
+                    <p className="mt-2 text-[13px] text-[#6b645d]">{rating} z 5 hvězd</p>
                   </div>
 
                   <div>
@@ -354,7 +354,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
                       id="product-review-comment"
                       value={comment}
                       onChange={(event) => setComment(event.target.value)}
-                      placeholder="Co se ti na produktu libi? Jak jsi spokojen(a)?"
+                      placeholder="Co se ti na produktu líbí? Jak jsi spokojen(a)?"
                       rows={5}
                       maxLength={2000}
                       className="min-h-[148px] w-full rounded-[18px] border border-[#d8d1c8] bg-white px-4 py-3 text-[15px] leading-[1.7] text-[#111111] outline-none transition focus:border-[#c8a16a]"
@@ -383,7 +383,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
                       {isSubmitting ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Odesilam...
+                          Odesílám...
                         </>
                       ) : (
                         "Odeslat recenzi"

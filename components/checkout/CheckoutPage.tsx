@@ -124,7 +124,7 @@ const submitHppForm = (actionUrl: string, fields: Record<string, string>) => {
 
 const getPaymentLabel = (provider: PaymentProvider | 'cash-on-delivery') => {
     if (provider === 'cash-on-delivery') {
-        return 'Dobirka / platba pri prevzeti';
+        return 'Dobírka / platba při převzetí';
     }
 
     return provider === 'stripe' ? 'Online karta / Apple Pay (Stripe)' : 'Global Payments (GP webpay)';
@@ -365,7 +365,7 @@ export default function CheckoutPage({
             } else {
                 setAppliedPromoCode(couponCode);
                 setCouponErrorMessage('');
-                setCouponMessage('Kupon je nacteny. Sleva se prepocita i bez prihlaseni.');
+                setCouponMessage('Kupón je načtený. Sleva se přepočítá i bez přihlášení.');
             }
         };
 
@@ -398,7 +398,7 @@ export default function CheckoutPage({
         const payload = (await response.json().catch(() => null)) as CheckoutQuoteResponse | null;
 
         if (!response.ok || payload?.error || !payload?.totals) {
-            throw new Error(payload?.error || 'Nepodarilo se prepocitat objednavku.');
+            throw new Error(payload?.error || 'Nepodařilo se přepočítat objednávku.');
         }
 
         setQuote(payload);
@@ -434,7 +434,7 @@ export default function CheckoutPage({
 
                 if (saved.includes(normalizedCode)) {
                     setCouponMessage('');
-                    setCouponErrorMessage('Tento kupon uz byl na tomto uctu lokalne oznacen jako pouzity.');
+                    setCouponErrorMessage('Tento kupón už byl na tomto účtu lokálně označen jako použitý.');
                     clearPendingCoupon();
                     return;
                 }
@@ -459,14 +459,14 @@ export default function CheckoutPage({
                 setCouponMessage(
                     payload.coupon
                         ? currentUser?.id
-                            ? `Kupon ${payload.coupon.code} byl pouzit. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
-                            : `Kupon ${payload.coupon.code} je nacteny. Sleva ${formatPrice(payload.coupon.discountAmount)} se zobrazuje uz ted, pred dokonceni objednavky se ale prihlas.`
-                        : 'Kupon byl ulozen.',
+                            ? `Kupón ${payload.coupon.code} byl použit. Sleva ${formatPrice(payload.coupon.discountAmount)}.`
+                            : `Kupón ${payload.coupon.code} je načtený. Sleva ${formatPrice(payload.coupon.discountAmount)} se zobrazuje už teď, před dokončením objednávky se ale přihlas.`
+                        : 'Kupón byl uložen.',
                 );
             }
         } catch (error) {
             setCouponMessage('');
-            setCouponErrorMessage(error instanceof Error ? error.message : 'Kupon nelze pouzit.');
+            setCouponErrorMessage(error instanceof Error ? error.message : 'Kupón nelze použít.');
 
             const message = error instanceof Error ? error.message : '';
             if (/not found|not active|already been used/i.test(message)) {
@@ -632,7 +632,7 @@ export default function CheckoutPage({
 
     const validateShippingSelection = () => {
         if (!formData.shippingMethod) {
-            setShippingErrorMessage('Vyberte prosim zpusob dopravy.');
+            setShippingErrorMessage('Vyberte prosím způsob dopravy.');
             return false;
         }
 
@@ -662,7 +662,7 @@ export default function CheckoutPage({
 
     const handleFinalSubmit = async () => {
         if (cartItems.length === 0) {
-            setErrorMessage('KoĹˇĂ­k je prĂˇzdnĂ˝. PĹ™idejte produkty pĹ™ed platbou.');
+            setErrorMessage('Košík je prázdný. Přidejte produkty před platbou.');
             return;
         }
 
@@ -680,7 +680,7 @@ export default function CheckoutPage({
         }
 
         if (appliedPromoCode && !currentUser?.id) {
-            setErrorMessage('Pro dokonceni objednavky se slevovym kuponem se prosim prihlas.');
+            setErrorMessage('Pro dokončení objednávky se slevovým kupónem se prosím přihlas.');
             return;
         }
 
@@ -690,7 +690,7 @@ export default function CheckoutPage({
         }
 
         if (!validateShippingSelection()) {
-            setErrorMessage('Zkontrolujte prosim sekci dopravy.');
+            setErrorMessage('Zkontrolujte prosím sekci dopravy.');
             setCurrentStep('order');
             return;
         }

@@ -39,12 +39,12 @@ const Footer = () => {
                             </li>
                             <li>
                                 <Link href="/reklamace-a-vraceni" className="transition-colors hover:text-[#c8a16a]">
-                                    Reklamace a vraceni
+                                    Reklamace a vrácení
                                 </Link>
                             </li>
                             <li>
                                 <Link href="/obchodni-podminky" className="transition-colors hover:text-[#c8a16a]">
-                                    Obchodni podminky
+                                    Obchodní podmínky
                                 </Link>
                             </li>
                             <li>
@@ -52,7 +52,7 @@ const Footer = () => {
                                     href="/ochrana-osobnich-udaju"
                                     className="transition-colors hover:text-[#c8a16a]"
                                 >
-                                    Ochrana osobnich udaju
+                                    Ochrana osobních údajů
                                 </Link>
                             </li>
                             <li>

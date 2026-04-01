@@ -111,7 +111,7 @@ const normalizePacketaPickupPoint = (value: unknown): CheckoutPickupPoint | null
         zip: pickString(point.zip, point.postCode, point.postalCode),
         country: pickString(point.country, point.countryCode, 'CZ').toUpperCase(),
         type: pickString(point.pickupPointType, point.type, point.placeType),
-        providerLabel: 'Zasilkovna',
+        providerLabel: 'Zásilkovna',
     };
 };
 

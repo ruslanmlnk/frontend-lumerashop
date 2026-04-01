@@ -47,7 +47,8 @@ const isPrivateHostname = (hostname: string): boolean => {
     normalized === "localhost" ||
     normalized === "0.0.0.0" ||
     normalized.endsWith(".local") ||
-    normalized.endsWith(".internal")
+    normalized.endsWith(".internal") ||
+    normalized.endsWith(".traefik.me")
   ) {
     return true;
   }

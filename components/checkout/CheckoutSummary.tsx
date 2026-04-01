@@ -52,7 +52,7 @@ export default function CheckoutSummary({
             <div className={theme.summaryRows}>
                 <div className={theme.summaryRow}>
                     <div className={theme.summaryRowLabel}>
-                        <span>Mezisoucet</span>
+                        <span>Mezisoučet</span>
                     </div>
                     <span className={theme.summaryPrice}>{formatPrice(subtotalPrice)}</span>
                 </div>
@@ -60,7 +60,7 @@ export default function CheckoutSummary({
                 {couponDiscountAmount > 0 ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
-                            <span>Kupon</span>
+                            <span>Kupón</span>
                         </div>
                         <span className={theme.summaryPrice}>- {formatPrice(couponDiscountAmount)}</span>
                     </div>
@@ -69,7 +69,7 @@ export default function CheckoutSummary({
                 {firstPurchaseDiscountAmount > 0 ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
-                            <span>Sleva po registraci na prvni nakup</span>
+                            <span>Sleva po registraci na první nákup</span>
                         </div>
                         <span className={theme.summaryPrice}>- {formatPrice(firstPurchaseDiscountAmount)}</span>
                     </div>
@@ -90,7 +90,7 @@ export default function CheckoutSummary({
                 {hasAnyDiscount ? (
                     <div className={theme.summaryRow}>
                         <div className={theme.summaryRowLabel}>
-                            <span>Po slevach</span>
+                            <span>Po slevách</span>
                         </div>
                         <span className={theme.summaryPrice}>{formatPrice(discountedSubtotal)}</span>
                     </div>
@@ -107,7 +107,7 @@ export default function CheckoutSummary({
                     <div className={theme.summaryRowLabel}>
                         <span>Doprava</span>
                         <small className={theme.summaryRowMeta}>
-                            {selectedShippingMethod?.label || 'Zatim neni vybrana'}
+                            {selectedShippingMethod?.label || 'Zatím není vybraná'}
                         </small>
                         {selectedShippingMethod && formData.pickupPoint ? (
                             <small className={theme.summaryRowMeta}>
@@ -133,8 +133,8 @@ export default function CheckoutSummary({
                 <Info size={16} className="mt-[2px] shrink-0 text-[#b98743]" />
                 <p>
                     {isCashOnDelivery
-                        ? 'Objednavku odeslete bez online platby. Castku uhradite pri prevzeti, vsechny ceny jsou vcetne DPH.'
-                        : 'Objednavku dokoncite pres zabezpecenou platebni branu. Vsechny ceny jsou vcetne DPH.'}
+                        ? 'Objednávku odešlete bez online platby. Částku uhradíte při převzetí, všechny ceny jsou včetně DPH.'
+                        : 'Objednávku dokončíte přes zabezpečenou platební bránu. Všechny ceny jsou včetně DPH.'}
                 </p>
             </div>
 
@@ -148,15 +148,15 @@ export default function CheckoutSummary({
                     <div className={theme.summarySelected}>
                         <Info size={14} />
                         <span>
-                            Bonusy: {loyaltySummary.balance} na uctu
-                            {loyaltySummary.earned > 0 ? `, +${loyaltySummary.earned} po objednavce` : ''}
+                            Bonusy: {loyaltySummary.balance} na účtu
+                            {loyaltySummary.earned > 0 ? `, +${loyaltySummary.earned} po objednávce` : ''}
                         </span>
                     </div>
                 ) : null}
 
                 <Link href="/shop" className={theme.secondary}>
                     <ArrowLeft size={14} />
-                    Pokracovat v nakupu
+                    Pokračovat v nákupu
                 </Link>
             </div>
         </aside>

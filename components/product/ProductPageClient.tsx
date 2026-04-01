@@ -210,6 +210,19 @@ export default function ProductPageClient({
 
       <div className="mt-[20px]">
         <Features />
+
+        <section className="mb-16 mt-[36px]">
+          <ProductTabs
+            productId={product.id}
+            contentHtml={descriptionHtml}
+            specifications={specifications}
+            reviews={reviews}
+          />
+        </section>
+      </div>
+
+      <div className="mt-[20px]">
+        <Features />
       </div>
 
       {recommendedProducts.length > 0 ? (
@@ -217,7 +230,7 @@ export default function ProductPageClient({
           <ProductGrid
             title="Novinky"
             products={recommendedProducts}
-            description="Podivejte se na nejnovejsi modely, ktere prave dorazily z Italie"
+            description="Podívejte se na nejnovější modely, které právě dorazily z Itálie"
             isSlider={true}
             alignLeft={true}
             variant="novinky"
@@ -242,7 +255,7 @@ export default function ProductPageClient({
               id="add-to-cart-modal-title"
               className="font-serif text-[34px] font-bold leading-[1.1] text-[#111111] sm:text-[52px]"
             >
-              Pridano do kosiku
+              Přidáno do košíku
             </h2>
 
             <p className="mx-auto mt-6 max-w-[620px] text-[20px] leading-[1.5] text-[#2f2a24] sm:text-[24px]">
@@ -250,7 +263,7 @@ export default function ProductPageClient({
             </p>
 
             <p className="mt-8 text-[18px] font-semibold text-[#2f2a24] sm:text-[22px]">
-              {hasFreeShippingInAddConfirmation ? "Dopravu mate zdarma!" : "Doprava zdarma od 1 500 Kc"}
+              {hasFreeShippingInAddConfirmation ? "Dopravu máte zdarma!" : "Doprava zdarma od 1 500 Kč"}
             </p>
 
             <p className="mt-5 text-[18px] leading-[1.5] text-[#3f382f] sm:text-[20px]">
@@ -263,7 +276,7 @@ export default function ProductPageClient({
                 onClick={() => setIsAddConfirmationOpen(false)}
                 className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] border border-[#7da07e] px-8 text-[16px] font-medium text-[#628163] transition-colors hover:bg-[#f5faf5]"
               >
-                Zpet do obchodu
+                Zpět do obchodu
               </button>
 
               <button
@@ -271,7 +284,7 @@ export default function ProductPageClient({
                 onClick={openCartDrawer}
                 className="inline-flex min-h-[54px] items-center justify-center rounded-[16px] bg-[#222222] px-8 text-[16px] font-semibold text-white transition-colors hover:bg-black"
               >
-                Nakupni kosik
+                Nákupní košík
               </button>
             </div>
           </div>
