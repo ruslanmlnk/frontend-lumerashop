@@ -28,8 +28,7 @@ const Reviews = ({ user }: ReviewsProps) => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const payloadUrl = getPayloadApiUrl();
-        const response = await fetch(`${payloadUrl}/api/product-reviews?where[user][equals]=${user.id}&depth=1`);
+        const response = await fetch(`/api/product-reviews?where[user][equals]=${user.id}&depth=1`);
         if (!response.ok) {
           throw new Error('Failed to fetch reviews');
         }
