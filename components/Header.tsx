@@ -544,7 +544,7 @@ const Header = () => {
                               </div>
                             </div>
                             <div className="flex min-h-[72px] flex-col items-end justify-between">
-                              <button onClick={() => removeFromCart(item.id)} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f3f3f3] text-[#111111] transition-colors hover:bg-[#e6e6e6]"><X size={13} /></button>
+                              <button onClick={() => removeFromCart(item.id)} className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#c79200] text-[#111111] transition-colors hover:bg-[#ba8a08]"><X size={13} /></button>
                               <p className="text-[14px] font-semibold leading-none text-[#111111]">{formatPrice(item.price * item.quantity)}</p>
                             </div>
                           </article>
