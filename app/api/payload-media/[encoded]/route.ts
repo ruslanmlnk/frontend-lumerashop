@@ -55,16 +55,18 @@ export async function GET(
   if (!targetUrl) {
     return new NextResponse('Invalid media target.', { status: 400 });
   }
-
   const payloadOrigin = new URL(payloadBaseUrl).origin;
   if (targetUrl.origin !== payloadOrigin) {
     return new NextResponse('External media source is not allowed.', { status: 400 });
   }
 
+  const range = request.headers.get('range');
+
   let upstream: Response;
 
   try {
     upstream = await fetch(targetUrl.toString(), {
+      headers: range ? { range } : undefined,
       next: { revalidate: MEDIA_REVALIDATE_SECONDS },
       signal: request.signal,
     });
@@ -72,8 +74,12 @@ export async function GET(
     return new NextResponse('Media upstream is unavailable.', { status: 502 });
   }
 
-  if (!upstream.ok || !upstream.body) {
+  if (!upstream.ok && upstream.status !== 206) {
     return new NextResponse('Media not found.', { status: upstream.status || 404 });
+  }
+
+  if (!upstream.body) {
+    return new NextResponse('Media body is empty.', { status: 404 });
   }
 
   const headers = new Headers();
@@ -84,7 +90,7 @@ export async function GET(
     headers.set('content-type', contentType);
   }
 
-  for (const headerName of PASSTHROUGH_HEADERS) {
+  for (const headerName of [...PASSTHROUGH_HEADERS, 'content-range'] as const) {
     const headerValue = upstream.headers.get(headerName);
     if (headerValue) {
       headers.set(headerName, headerValue);
