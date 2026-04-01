@@ -106,18 +106,18 @@ export default async function Home() {
       : 'Co o nás říkají naše zákaznice';
   const testimonials: Testimonial[] = Array.isArray(testimonialsSection?.items)
     ? testimonialsSection.items
-        .filter(
-          (item): item is { text: string; author: string; location?: string } =>
-            typeof item?.text === 'string' &&
-            item.text.trim().length > 0 &&
-            typeof item?.author === 'string' &&
-            item.author.trim().length > 0,
-        )
-        .map((item: { text: string; author: string; location?: string }) => ({
-          text: item.text.trim(),
-          author: item.author.trim(),
-          location: typeof item.location === 'string' ? item.location.trim() : '',
-        }))
+      .filter(
+        (item): item is { text: string; author: string; location?: string } =>
+          typeof item?.text === 'string' &&
+          item.text.trim().length > 0 &&
+          typeof item?.author === 'string' &&
+          item.author.trim().length > 0,
+      )
+      .map((item: { text: string; author: string; location?: string }) => ({
+        text: item.text.trim(),
+        author: item.author.trim(),
+        location: typeof item.location === 'string' ? item.location.trim() : '',
+      }))
     : [];
   const blogSection = typeof homePageData?.blogSection === 'object' && homePageData.blogSection ? homePageData.blogSection : null;
   const blogSectionTitle =
@@ -130,14 +130,14 @@ export default async function Home() {
       : 'Styl, inspirace a péče o vaše kožené doplňky.';
   const selectedBlogSlugs = Array.isArray(blogSection?.featuredArticles)
     ? blogSection.featuredArticles
-        .map((item: HomePageFeaturedArticle) => {
-          if (typeof item === 'object' && item && typeof item.slug === 'string') {
-            return item.slug.trim();
-          }
+      .map((item: HomePageFeaturedArticle) => {
+        if (typeof item === 'object' && item && typeof item.slug === 'string') {
+          return item.slug.trim();
+        }
 
-          return '';
-        })
-        .filter((slug: string): slug is string => slug.length > 0)
+        return '';
+      })
+      .filter((slug: string): slug is string => slug.length > 0)
     : [];
   const blogPosts: BlogPost[] = selectedBlogSlugs.length > 0 ? await fetchPayloadArticles() : [];
   const blogPostMap = new Map<string, BlogPost>(blogPosts.map((post: BlogPost) => [post.slug, post] as const));
@@ -177,7 +177,7 @@ export default async function Home() {
             <div className="relative mt-[20px] mb-0 flex flex-col lg:flex-row">
               <div className="flex min-h-[100px] w-full flex-col p-[10px] md:min-h-[396px] md:p-[30px] lg:w-1/2">
                 <h2
-                  className="mb-0 font-serif text-[30px] leading-[1.1] font-normal text-[#111111] md:text-[36px] lg:text-[48px]"
+                  className="mb-0 font-serif text-[30px] leading-[1.1] font-bold text-[#111111] md:text-[36px] lg:text-[48px]"
                   style={{ fontFamily: '"Cormorant Garamond", serif' }}
                 >
                   {aboutTitle}
