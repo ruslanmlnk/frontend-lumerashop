@@ -19,7 +19,7 @@ const Hero = () => {
         >
             <div className="lumera-container">
                 <div className="flex flex-col items-start gap-[31px] lg:flex-row lg:gap-6">
-                    <div className="relative h-[480px] w-full overflow-hidden bg-[#d9c2b2] group lg:h-[567px] lg:w-[810.2px]">
+                    <div className="relative h-[480px] w-full overflow-hidden bg-[#d9c2b2] group lg:h-[442px] lg:w-[810.2px]">
                         <div className="absolute inset-0 z-0">
                             <Image
                                 src="/assets/bg/hero-slider-1.webp"
@@ -76,7 +76,7 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    <div className="flex h-auto w-full flex-col gap-6 lg:grid lg:h-[567px] lg:w-[305.8px] lg:grid-rows-[126.5fr_126.5fr_110fr_107fr] lg:gap-[24px]">
+                    <div className="flex h-auto w-full flex-col gap-6 lg:grid lg:h-[542px] lg:w-[305.8px] lg:grid-rows-[126.5fr_126.5fr_110fr_107fr] lg:gap-[24px]">
                         {HERO_CATEGORIES.map((cat, idx) => {
                             const mobileHeights = ['104px', '104px', '104px', '104px'];
                             const pcImgW = ['80px', '88px', '89px', '90px'];
