@@ -19,7 +19,7 @@ const Hero = () => {
         >
             <div className="lumera-container">
                 <div className="flex flex-col items-start gap-[31px] lg:flex-row lg:gap-6">
-                    <div className="relative h-[480px] w-full overflow-hidden bg-[#d9c2b2] group lg:h-[442px] lg:w-[810.2px]">
+                    <div className="relative h-[480px] w-full overflow-hidden bg-[#d9c2b2] group lg:h-[542px] lg:w-[810.2px]">
                         <div className="absolute inset-0 z-0">
                             <Image
                                 src="/assets/bg/hero-slider-1.webp"
