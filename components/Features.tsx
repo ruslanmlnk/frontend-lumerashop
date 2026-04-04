@@ -23,7 +23,7 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
                 {feature.title}
             </h3>
             <p
-                className="text-[#8d97a8] text-[14px] md:text-[16px] leading-[1.6] font-normal mt-0"
+                className="text-[#3b2f2f] text-[14px] md:text-[16px] leading-[1.6] font-normal mt-0"
                 style={{ fontFamily: '"Work Sans", sans-serif' }}
             >
                 {feature.description}
