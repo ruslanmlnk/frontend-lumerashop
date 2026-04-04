@@ -193,7 +193,7 @@ const ProductGrid = ({
     }
 
     return (
-        <section className="bg-white py-12 text-center md:py-20" id="block-5">
+        <section className="bg-white py-12 text-center md:py-[43px]" id="block-5">
             <div className="lumera-container">
                 {gridHeader}
 
