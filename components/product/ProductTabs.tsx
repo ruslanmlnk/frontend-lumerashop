@@ -391,7 +391,7 @@ const ProductTabs = ({ productId, contentHtml, specifications, reviews }: Produc
                     </button>
 
                     {/* <p className="text-[13px] leading-[1.6] text-[#6b645d]">
-                      Recenze se na webu zobrazi az po schvaleni v administraci.
+                      Recenze se na webu zobrazí až po schválení v administraci.
                     </p> */}
                   </div>
                 </form>

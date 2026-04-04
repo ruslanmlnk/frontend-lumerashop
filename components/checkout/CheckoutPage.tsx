@@ -799,7 +799,7 @@ export default function CheckoutPage({
     const isCustomerStep = currentStep === 'customer';
     const paymentLabel = getPaymentLabel(isCashOnDelivery ? 'cash-on-delivery' : formData.paymentProvider);
     const submitButtonLabel = isCashOnDelivery
-        ? `Odeslat objednavku ${formatPrice(orderTotal)}`
+        ? `Odeslat objednávku ${formatPrice(orderTotal)}`
         : `Objednat a zaplatit ${formatPrice(orderTotal)}`;
     const description =
         variant === 'minimal'
@@ -1312,23 +1312,23 @@ export default function CheckoutPage({
             variant={variant}
             stepNumber={4}
             eyebrow="Krok 4"
-            title="Platba a potvrzeni"
+            title="Platba a potvrzení"
             active={currentStep === 'payment'}
             completed={completedSteps.includes('payment')}
             onOpen={() => goToStep('payment')}
-            summary="Platebni branu a finalni potvrzeni vyberete v poslednim kroku."
+            summary="Platební bránu a finální potvrzení vyberete v posledním kroku."
         >
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Sleva</p>
-                    <h3 className={theme.stageTitle}>Darkovy nebo slevovy kod</h3>
+                    <h3 className={theme.stageTitle}>Dárkový nebo slevový kód</h3>
                 </div>
 
                 <div className={theme.inlineGrid}>
                     <input
                         type="text"
                         className={theme.input}
-                        placeholder="Kod kuponu"
+                        placeholder="Kód kupónu"
                         value={formData.promoCode}
                         onChange={(event) => updateFormData('promoCode', event.target.value)}
                     />
@@ -1338,13 +1338,13 @@ export default function CheckoutPage({
                         onClick={handleApplyCoupon}
                         disabled={isQuoteLoading}
                     >
-                        {isQuoteLoading ? 'Pockam...' : 'Pouzit'}
+                        {isQuoteLoading ? 'Počkám...' : 'Použít'}
                     </button>
                 </div>
 
                 {appliedPromoCode ? (
                     <p className="text-[13px] text-[#6b6257]">
-                        Aktivni kod: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
+                        Aktivní kód: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
                     </p>
                 ) : null}
 
@@ -1365,22 +1365,22 @@ export default function CheckoutPage({
                 <div className={theme.surface}>
                     <div>
                         <p className={theme.eyebrow}>Bonusy</p>
-                        <h3 className={theme.stageTitle}>Vyuziti bonusnich jednotek</h3>
+                        <h3 className={theme.stageTitle}>Využití bonusních jednotek</h3>
                     </div>
 
                     <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
                         <p>
-                            Na uctu mas{' '}
+                            Na účtu máš{' '}
                             <span className="font-semibold text-[#111111]">
                                 {quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0}
                             </span>{' '}
-                            bonusnich jednotek.
+                            bonusních jednotek.
                         </p>
                         <p className="mt-1 text-[12px] text-[#6b6257]">
                             {effectiveLoyaltySettings.redemptionBonusUnits} bonusu ={' '}
-                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za kazdych{' '}
-                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech ziskas{' '}
-                            {effectiveLoyaltySettings.earningBonusUnits} bonusu.
+                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za každých{' '}
+                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech získáš{' '}
+                            {effectiveLoyaltySettings.earningBonusUnits} bonusů.
                         </p>
                     </div>
 
@@ -1391,18 +1391,18 @@ export default function CheckoutPage({
                             checked={formData.useBonusBalance}
                             onChange={(event) => updateFormData('useBonusBalance', event.target.checked)}
                         />
-                        <span>Pouzit bonusni jednotky na tuto objednavku</span>
+                        <span>Použít bonusní jednotky na tuto objednávku</span>
                     </label>
 
                     {formData.useBonusBalance ? (
                         <p className="text-[13px] leading-5 text-[#6b6257]">
-                            Pri teto objednavce se pouzije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusu a odecte se{' '}
+                            Při této objednávce se použije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusů a odečte se{' '}
                             {formatPrice(quote?.discounts?.bonusDiscountAmount ?? 0)}.
                         </p>
                     ) : null}
 
                     <p className="text-[13px] leading-5 text-[#6b6257]">
-                        Po uspesne platbe se pripise {quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.
+                        Po úspěšné platbě se připíše {quote?.loyalty?.bonusUnitsEarned ?? 0} bonusních jednotek.
                     </p>
                 </div>
             ) : null}
@@ -1410,19 +1410,19 @@ export default function CheckoutPage({
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Platba</p>
-                    <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+                    <h3 className={theme.stageTitle}>Vyberte platební bránu</h3>
                 </div>
 
                 {([
                     {
                         value: 'stripe',
                         title: 'Online karta / Apple Pay (Stripe)',
-                        copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
+                            copy: 'Rychlé dokončení objednávky s okamžitým potvrzením.',
                     },
                     {
                         value: 'global-payments',
                         title: 'Global Payments (GP webpay)',
-                        copy: 'Tradicni platebni brana pro karty i lokalni metody.',
+                            copy: 'Tradiční platební brána pro karty i lokální metody.',
                     },
                 ] as const).map((option) => {
                     const isSelected = formData.paymentProvider === option.value;
@@ -1454,13 +1454,13 @@ export default function CheckoutPage({
                     onChange={(event) => updateFormData('termsAccepted', event.target.checked)}
                 />
                 <span>
-                    Souhlasim s{' '}
+                    Souhlasím s{' '}
                     <a href="/obchodni-podminky" className="underline decoration-[#b98743]/60 underline-offset-4">
-                        obchodnimi podminkami
+                        obchodními podmínkami
                     </a>{' '}
                     a{' '}
                     <a href="/ochrana-osobnich-udaju" className="underline decoration-[#b98743]/60 underline-offset-4">
-                        ochranou osobnich udaju
+                        ochranou osobních údajů
                     </a>{' '}
                     *
                 </span>
@@ -1481,7 +1481,7 @@ export default function CheckoutPage({
                 {isSubmitting ? (
                     <span className="inline-flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin" />
-                        Presmerovani...
+                        Přesměrování...
                     </span>
                 ) : (
                     `Objednat a zaplatit ${formatPrice(orderTotal)}`
@@ -1491,10 +1491,10 @@ export default function CheckoutPage({
     );
 
     const billingSummaryText = formData.billingSameAsShipping
-        ? 'Fakturacni adresa se prevezme z doruceni.'
+        ? 'Fakturační adresa se převezme z doručení.'
         : formData.billingFirstName || formData.billingLastName || formData.billingAddress || formData.billingCity || formData.billingZip
           ? `${formData.billingFirstName} ${formData.billingLastName}, ${formData.billingAddress}, ${formData.billingCity} ${formData.billingZip}`
-          : 'Fakturacni udaje doplnite v prvnim kroku.';
+          : 'Fakturační údaje doplníte v prvním kroku.';
 
     const customerSummary = (
         <>
@@ -1541,11 +1541,11 @@ export default function CheckoutPage({
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Kontakt</p>
-                    <h3 className={theme.stageTitle}>Muj kontakt</h3>
+                    <h3 className={theme.stageTitle}>Můj kontakt</h3>
                 </div>
 
                 <div className={theme.field}>
-                    <label className={theme.label}>E-mailova adresa *</label>
+                    <label className={theme.label}>E-mailová adresa *</label>
                     <input
                         type="email"
                         className={theme.input}
@@ -1553,7 +1553,7 @@ export default function CheckoutPage({
                         value={formData.email}
                         onChange={(event) => updateFormData('email', event.target.value)}
                     />
-                    <p className={theme.help}>Na tento e-mail posleme potvrzeni objednavky i dalsi informace.</p>
+                    <p className={theme.help}>Na tento e-mail pošleme potvrzení objednávky i další informace.</p>
                 </div>
 
                 <div className={theme.field}>
@@ -1574,19 +1574,19 @@ export default function CheckoutPage({
                         checked={formData.createAccount}
                         onChange={(event) => updateFormData('createAccount', event.target.checked)}
                     />
-                    <span>Vytvorit ucet po dokonceni objednavky</span>
+                    <span>Vytvořit účet po dokončení objednávky</span>
                 </label>
             </div>
 
             <div className={theme.surface}>
                 <div>
-                    <p className={theme.eyebrow}>Doruceni</p>
-                    <h3 className={theme.stageTitle}>Kontakt pro doruceni a adresa</h3>
+                    <p className={theme.eyebrow}>Doručení</p>
+                    <h3 className={theme.stageTitle}>Kontakt pro doručení a adresa</h3>
                 </div>
 
                 <div className={theme.inputGrid}>
                     <div className={theme.field}>
-                        <label className={theme.label}>Jmeno *</label>
+                        <label className={theme.label}>Jméno *</label>
                         <input
                             type="text"
                             className={theme.input}
@@ -1595,7 +1595,7 @@ export default function CheckoutPage({
                         />
                     </div>
                     <div className={theme.field}>
-                        <label className={theme.label}>Prijmeni *</label>
+                        <label className={theme.label}>Příjmení *</label>
                         <input
                             type="text"
                             className={theme.input}
@@ -1607,13 +1607,13 @@ export default function CheckoutPage({
 
                 <div className={theme.inputGrid}>
                     <div className={theme.field}>
-                        <label className={theme.label}>Zeme *</label>
+                        <label className={theme.label}>Země *</label>
                         <select className={theme.input} value={formData.country} disabled aria-disabled="true">
-                            <option value="CZ">Ceska republika</option>
+                            <option value="CZ">Česká republika</option>
                         </select>
                     </div>
                     <div className={theme.field}>
-                        <label className={theme.label}>PSC *</label>
+                        <label className={theme.label}>PSČ *</label>
                         <input
                             type="text"
                             className={theme.input}
@@ -1624,7 +1624,7 @@ export default function CheckoutPage({
                 </div>
 
                 <div className={theme.field}>
-                    <label className={theme.label}>Ulice a cislo popisne *</label>
+                    <label className={theme.label}>Ulice a číslo popisné *</label>
                     <input
                         type="text"
                         className={theme.input}
@@ -1634,7 +1634,7 @@ export default function CheckoutPage({
                 </div>
 
                 <div className={theme.field}>
-                    <label className={theme.label}>Mesto *</label>
+                    <label className={theme.label}>Město *</label>
                     <input
                         type="text"
                         className={theme.input}
@@ -1644,10 +1644,10 @@ export default function CheckoutPage({
                 </div>
 
                 <div className={theme.field}>
-                    <label className={theme.label}>Poznamka k objednavce</label>
+                    <label className={theme.label}>Poznámka k objednávce</label>
                     <textarea
                         className={theme.textarea}
-                        placeholder="Upresneni k doruceni, jmeno na zvonku a podobne."
+                        placeholder="Upřesnění k doručení, jméno na zvonku a podobně."
                         value={formData.notes}
                         onChange={(event) => updateFormData('notes', event.target.value)}
                     />
@@ -1657,7 +1657,7 @@ export default function CheckoutPage({
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Fakturace</p>
-                    <h3 className={theme.stageTitle}>Fakturacni udaje</h3>
+                    <h3 className={theme.stageTitle}>Fakturační údaje</h3>
                 </div>
 
                 <div className={theme.toggleGrid}>
@@ -1675,7 +1675,7 @@ export default function CheckoutPage({
                 {formData.isCompany ? (
                     <div className="mt-6 flex flex-col gap-5 border-t border-black/8 pt-6">
                         <div className={theme.field}>
-                            <label className={theme.label}>Nazev firmy *</label>
+                            <label className={theme.label}>Název firmy *</label>
                             <input
                                 type="text"
                                 className={theme.input}
@@ -1686,7 +1686,7 @@ export default function CheckoutPage({
 
                         <div className={theme.inputGrid}>
                             <div className={theme.field}>
-                                <label className={theme.label}>IC *</label>
+                                <label className={theme.label}>IČ *</label>
                                 <input
                                     type="text"
                                     className={theme.input}
@@ -1695,7 +1695,7 @@ export default function CheckoutPage({
                                 />
                             </div>
                             <div className={theme.field}>
-                                <label className={theme.label}>DIC</label>
+                                <label className={theme.label}>DIČ</label>
                                 <input
                                     type="text"
                                     className={theme.input}
@@ -1725,7 +1725,7 @@ export default function CheckoutPage({
                     nextStep('customer', 'order');
                 }}
             >
-                Pokracovat k doprave a platbe
+                Pokračovat k dopravě a platbě
             </button>
         </CheckoutSectionCard>
     );
@@ -1735,7 +1735,7 @@ export default function CheckoutPage({
             variant={variant}
             stepNumber={2}
             eyebrow="Krok 2"
-            title={isCashOnDelivery ? 'Doprava a potvrzeni' : 'Doprava a platba'}
+            title={isCashOnDelivery ? 'Doprava a potvrzení' : 'Doprava a platba'}
             active={currentStep === 'order'}
             completed={completedSteps.includes('order')}
             onOpen={() => goToStep('order')}
@@ -1744,7 +1744,7 @@ export default function CheckoutPage({
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Doprava</p>
-                    <h3 className={theme.stageTitle}>Zpusob doruceni</h3>
+                    <h3 className={theme.stageTitle}>Způsob doručení</h3>
                 </div>
 
                 {availableShippingMethods.map((method) => {
@@ -1806,14 +1806,14 @@ export default function CheckoutPage({
             <div className={theme.surface}>
                 <div>
                     <p className={theme.eyebrow}>Sleva</p>
-                    <h3 className={theme.stageTitle}>Darkovy nebo slevovy kod</h3>
+                    <h3 className={theme.stageTitle}>Dárkový nebo slevový kód</h3>
                 </div>
 
                 <div className={theme.inlineGrid}>
                     <input
                         type="text"
                         className={theme.input}
-                        placeholder="Kod kuponu"
+                        placeholder="Kód kupónu"
                         value={formData.promoCode}
                         onChange={(event) => updateFormData('promoCode', event.target.value)}
                     />
@@ -1823,13 +1823,13 @@ export default function CheckoutPage({
                         onClick={handleApplyCoupon}
                         disabled={isQuoteLoading}
                     >
-                        {isQuoteLoading ? 'Pockam...' : 'Pouzit'}
+                        {isQuoteLoading ? 'Počkám...' : 'Použít'}
                     </button>
                 </div>
 
                 {appliedPromoCode ? (
                     <p className="text-[13px] text-[#6b6257]">
-                        Aktivni kod: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
+                        Aktivní kód: <span className="font-semibold text-[#111111]">{appliedPromoCode}</span>
                     </p>
                 ) : null}
 
@@ -1850,22 +1850,22 @@ export default function CheckoutPage({
                 <div className={theme.surface}>
                     <div>
                         <p className={theme.eyebrow}>Bonusy</p>
-                        <h3 className={theme.stageTitle}>Vyuziti bonusnich jednotek</h3>
+                        <h3 className={theme.stageTitle}>Využití bonusních jednotek</h3>
                     </div>
 
                     <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
                         <p>
-                            Na uctu mas{' '}
+                            Na účtu máš{' '}
                             <span className="font-semibold text-[#111111]">
                                 {quote?.loyalty?.bonusBalance ?? currentUser.bonusBalance ?? 0}
                             </span>{' '}
-                            bonusnich jednotek.
+                            bonusních jednotek.
                         </p>
                         <p className="mt-1 text-[12px] text-[#6b6257]">
-                            {effectiveLoyaltySettings.redemptionBonusUnits} bonusu ={' '}
-                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za kazdych{' '}
-                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech ziskas{' '}
-                            {effectiveLoyaltySettings.earningBonusUnits} bonusu.
+                            {effectiveLoyaltySettings.redemptionBonusUnits} bonusů ={' '}
+                            {formatPrice(effectiveLoyaltySettings.redemptionAmount)} slevy. Za každých{' '}
+                            {formatPrice(effectiveLoyaltySettings.earningSpendAmount)} v produktech získáš{' '}
+                            {effectiveLoyaltySettings.earningBonusUnits} bonusů.
                         </p>
                     </div>
 
@@ -1876,20 +1876,20 @@ export default function CheckoutPage({
                             checked={formData.useBonusBalance}
                             onChange={(event) => updateFormData('useBonusBalance', event.target.checked)}
                         />
-                        <span>Pouzit bonusni jednotky na tuto objednavku</span>
+                        <span>Použít bonusní jednotky na tuto objednávku</span>
                     </label>
 
                     {formData.useBonusBalance ? (
                         <p className="text-[13px] leading-5 text-[#6b6257]">
-                            Pri teto objednavce se pouzije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusu a odecte se{' '}
+                            Při této objednávce se použije {quote?.loyalty?.bonusUnitsSpent ?? 0} bonusů a odečte se{' '}
                             {formatPrice(quote?.discounts?.bonusDiscountAmount ?? 0)}.
                         </p>
                     ) : null}
 
                     <p className="text-[13px] leading-5 text-[#6b6257]">
                         {isCashOnDelivery
-                            ? `Po potvrzeni a uhrade objednavky se pripise ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.`
-                            : `Po uspesne platbe se pripise ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusnich jednotek.`}
+                            ? `Po potvrzení a úhradě objednávky se připíše ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusních jednotek.`
+                            : `Po úspěšné platbě se připíše ${quote?.loyalty?.bonusUnitsEarned ?? 0} bonusních jednotek.`}
                     </p>
                 </div>
             ) : null}
@@ -1898,31 +1898,31 @@ export default function CheckoutPage({
                 <div className={theme.surface}>
                     <div>
                         <p className={theme.eyebrow}>Platba</p>
-                        <h3 className={theme.stageTitle}>Platba pri prevzeti</h3>
+                        <h3 className={theme.stageTitle}>Platba při převzetí</h3>
                     </div>
 
                     <div className="rounded-[16px] border border-[#111111]/8 bg-[#fffaf3] px-4 py-4 text-[14px] leading-[1.7] text-[#3f382f]">
-                        Vybrana doprava je nastavena jako na dobirku, proto se online platba nezobrazuje. Castku
-                        uhradite az pri prevzeti zasilky.
+                        Vybraná doprava je nastavena jako na dobírku, proto se online platba nezobrazuje. Částku
+                        uhradíte až při převzetí zásilky.
                     </div>
                 </div>
             ) : (
                 <div className={theme.surface}>
                     <div>
                         <p className={theme.eyebrow}>Platba</p>
-                        <h3 className={theme.stageTitle}>Vyberte platebni branu</h3>
+                        <h3 className={theme.stageTitle}>Vyberte platební bránu</h3>
                     </div>
 
                     {([
                         {
                             value: 'stripe',
                             title: 'Online karta / Apple Pay (Stripe)',
-                            copy: 'Rychle dokonceni objednavky s okamzitym potvrzenim.',
+                            copy: 'Rychlé dokončení objednávky s okamžitým potvrzením.',
                         },
                         {
                             value: 'global-payments',
                             title: 'Global Payments (GP webpay)',
-                            copy: 'Tradicni platebni brana pro karty i lokalni metody.',
+                            copy: 'Tradiční platební brána pro karty i lokální metody.',
                         },
                     ] as const).map((option) => {
                         const isSelected = formData.paymentProvider === option.value;
@@ -1955,13 +1955,13 @@ export default function CheckoutPage({
                     onChange={(event) => updateFormData('termsAccepted', event.target.checked)}
                 />
                 <span>
-                    Souhlasim s{' '}
+                    Souhlasím s{' '}
                     <a href="/obchodni-podminky" className="underline decoration-[#b98743]/60 underline-offset-4">
-                        obchodnimi podminkami
+                        obchodními podmínkami
                     </a>{' '}
                     a{' '}
                     <a href="/ochrana-osobnich-udaju" className="underline decoration-[#b98743]/60 underline-offset-4">
-                        ochranou osobnich udaju
+                        ochranou osobních údajů
                     </a>{' '}
                     *
                 </span>
@@ -1982,7 +1982,7 @@ export default function CheckoutPage({
                 {isSubmitting ? (
                     <span className="inline-flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin" />
-                        Presmerovani...
+                        Přesměrování...
                     </span>
                 ) : (
                     submitButtonLabel
@@ -2047,7 +2047,7 @@ export default function CheckoutPage({
                                         {isCustomerStep
                                             ? 'Kontakt a fakturace'
                                             : isCashOnDelivery
-                                              ? 'Doprava a potvrzeni'
+                                              ? 'Doprava a potvrzení'
                                               : 'Doprava a platba'}
                                     </h2>
                                 </div>
@@ -2055,7 +2055,7 @@ export default function CheckoutPage({
                                 {!isCustomerStep && (
                                     <button type="button" className={theme.stageBack} onClick={() => goToStep('customer')}>
                                         <ArrowLeft size={14} />
-                                        Zpet na kontakt a fakturaci
+                                        Zpět na kontakt a fakturaci
                                     </button>
                                 )}
                             </section>

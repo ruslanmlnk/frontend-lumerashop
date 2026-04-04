@@ -40,35 +40,35 @@ export const INFO_PAGE_CONFIGS = {
     globalSlug: 'shipping-and-payment-page',
     fallbackTitle: 'Doprava a platba',
     fallbackDescription:
-      'Informace o moznostech dopravy, zpusobech platby, dodacich podminkach a kontaktech pro nakup v Lumera.',
+      'Informace o možnostech dopravy, způsobech platby, dodacích podmínkách a kontaktech pro nákup v Lumera.',
     fallbackHeroImageUrl: 'https://lumerashop.cz/wp-content/uploads/2025/11/doprava-platba-4.webp',
   },
   returnsAndComplaints: {
     globalSlug: 'returns-and-complaints-page',
-    fallbackTitle: 'Reklamace a vraceni',
+    fallbackTitle: 'Reklamace a vrácení',
     fallbackDescription:
-      'Postup pro vraceni zbozi, reklamace, formulare ke stazeni a kontaktni informace pro Lumera.',
+      'Postup pro vrácení zboží, reklamace, formuláře ke stažení a kontaktní informace pro Lumera.',
     fallbackHeroImageUrl: 'https://lumerashop.cz/wp-content/uploads/2025/11/reklamace-bg-4.webp',
   },
   termsAndConditions: {
     globalSlug: 'terms-and-conditions-page',
-    fallbackTitle: 'Obchodni podminky',
+    fallbackTitle: 'Obchodní podmínky',
     fallbackDescription:
-      'Aktualni obchodni podminky e-shopu Lumera vcetne dopravy, plateb, reklamaci a odstoupeni od smlouvy.',
+      'Aktuální obchodní podmínky e-shopu Lumera včetně dopravy, plateb, reklamací a odstoupení od smlouvy.',
     fallbackHeroImageUrl: 'https://lumerashop.cz/wp-content/uploads/2025/11/obchodni-podminky-bg-4.webp',
   },
   privacyPolicy: {
     globalSlug: 'privacy-policy-page',
-    fallbackTitle: 'Ochrana osobnich udaju',
+    fallbackTitle: 'Ochrana osobních údajů',
     fallbackDescription:
-      'Jak Lumera zpracovava osobni udaje zakazniku, pravni zaklady, doba uchovavani a vase prava podle GDPR.',
+      'Jak Lumera zpracovává osobní údaje zákazníků, právní základy, doba uchovávání a vaše práva podle GDPR.',
     fallbackHeroImageUrl: 'https://lumerashop.cz/wp-content/uploads/2025/11/privacy-policy-bg-4.webp',
   },
   cookies: {
     globalSlug: 'cookies-page',
-    fallbackTitle: 'Zasady pouzivani souboru cookies',
+    fallbackTitle: 'Zásady používání souborů cookies',
     fallbackDescription:
-      'Prehled pouzivanych cookies, jejich typu, spravy souhlasu a prav uzivatelu na webu Lumera.',
+      'Přehled používaných cookies, jejich typů, správy souhlasu a práv uživatelů na webu Lumera.',
     fallbackHeroImageUrl: 'https://lumerashop.cz/wp-content/uploads/2025/11/cookies-bg-4.webp',
   },
 } as const satisfies Record<string, InfoPageConfig>
@@ -161,7 +161,7 @@ export async function renderInfoPage(config: InfoPageConfig) {
       {page.contentHtml ? (
         <div dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
       ) : (
-        <p>Obsah teto stranky zatim neni k dispozici.</p>
+        <p>Obsah této stránky zatím není k dispozici.</p>
       )}
     </GeneralInfoLayout>
   )

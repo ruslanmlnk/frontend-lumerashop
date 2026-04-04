@@ -35,7 +35,7 @@ const LoginForm = () => {
       const payload = (await response.json().catch(() => null)) as LoginApiResponse | null;
 
       if (!response.ok) {
-        setErrorMessage(payload?.error || 'Login failed. Please try again.');
+        setErrorMessage(payload?.error || 'Přihlášení se nezdařilo. Zkuste to prosím znovu.');
         setIsSubmitting(false);
         return;
       }
@@ -43,14 +43,14 @@ const LoginForm = () => {
       window.location.replace('/my-account');
       return;
     } catch {
-      setErrorMessage('Login service is currently unavailable.');
+      setErrorMessage('Služba přihlášení je momentálně nedostupná.');
       setIsSubmitting(false);
     }
   };
 
   return (
     <div className="bg-[#F9F9F9] p-8 rounded-sm border border-gray-100">
-      <h2 className="text-[32px] font-normal mb-8 leading-tight">Prihlaseni</h2>
+      <h2 className="text-[32px] font-normal mb-8 leading-tight">Přihlášení</h2>
 
       <form className="space-y-6" onSubmit={onSubmit}>
         <div>
@@ -95,7 +95,7 @@ const LoginForm = () => {
             disabled={isSubmitting}
           />
           <label htmlFor="remember" className="text-[14px]">
-            Zapamatovat si me
+            Zapamatovat si mě
           </label>
         </div>
 
@@ -110,12 +110,12 @@ const LoginForm = () => {
           disabled={isSubmitting}
           className="bg-[#E1B12C] text-white px-8 h-[50px] font-bold text-[14px] hover:bg-[#c79a24] transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'PRIHLASUJI...' : 'PRIHLASIT SE'}
+          {isSubmitting ? 'PŘIHLAŠUJI...' : 'PŘIHLÁSIT SE'}
         </button>
 
         <div className="pt-2">
           <Link href="#" className="text-[14px] text-gray-500 hover:text-black transition-colors underline underline-offset-4">
-            Zapomneli jste heslo?
+            Zapomněli jste heslo?
           </Link>
         </div>
       </form>

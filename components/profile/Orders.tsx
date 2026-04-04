@@ -35,9 +35,9 @@ const getStatusLabel = (value: string) => {
         case 'failed':
             return 'Platba selhala';
         case 'canceled':
-            return 'Zruseno';
+            return 'Zrušeno';
         default:
-            return 'Ceka na potvrzeni';
+            return 'Čeká na potvrzení';
     }
 };
 
@@ -50,7 +50,7 @@ export default async function Orders({ showBonusProgram = true }: { showBonusPro
         return (
             <div className="space-y-6">
                 <div className="border-t-4 border-blue-400 bg-blue-50 p-4 text-[15px] text-blue-700">
-                    Pro zobrazeni objednavek je potreba byt prihlaseny.
+                    Pro zobrazení objednávek je potřeba být přihlášený.
                 </div>
             </div>
         );
@@ -71,12 +71,12 @@ export default async function Orders({ showBonusProgram = true }: { showBonusPro
             return (
                 <div className="space-y-6">
                     <div className="flex items-center justify-between border-t-4 border-blue-400 bg-blue-50 p-4">
-                        <span className="text-[15px] text-blue-700">Zatim nebyly vytvoreny zadne objednavky.</span>
+                        <span className="text-[15px] text-blue-700">Zatím nebyly vytvořeny žádné objednávky.</span>
                         <Link
                             href="/shop"
                             className="rounded-sm bg-[#E1B12C] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#c79a24]"
                         >
-                            ZPET DO OBCHODU
+                            ZPĚT DO OBCHODU
                         </Link>
                     </div>
                 </div>
@@ -131,13 +131,13 @@ export default async function Orders({ showBonusProgram = true }: { showBonusPro
                                         {formatMoney(Number.isFinite(total) ? total : 0, currency)}
                                     </p>
                                     {couponCode ? (
-                                        <p className="text-[13px] text-[#6b6257]">Kupon: {couponCode}</p>
+                                        <p className="text-[13px] text-[#6b6257]">Kupón: {couponCode}</p>
                                     ) : null}
                                     {showBonusProgram && (bonusSpent > 0 || bonusEarned > 0) ? (
                                         <p className="text-[13px] text-[#6b6257]">
-                                            {bonusSpent > 0 ? `-${bonusSpent} bonusu` : ''}
+                                            {bonusSpent > 0 ? `-${bonusSpent} bonusů` : ''}
                                             {bonusSpent > 0 && bonusEarned > 0 ? ' | ' : ''}
-                                            {bonusEarned > 0 ? `+${bonusEarned} bonusu` : ''}
+                                            {bonusEarned > 0 ? `+${bonusEarned} bonusů` : ''}
                                         </p>
                                     ) : null}
                                 </div>
@@ -150,7 +150,7 @@ export default async function Orders({ showBonusProgram = true }: { showBonusPro
     } catch {
         return (
             <div className="rounded-[18px] border border-[#b42318]/10 bg-[#fff4f2] p-5 text-[15px] text-[#b42318]">
-                Nepodarilo se nacist objednavky. Zkus to prosim znovu o neco pozdeji.
+                Nepodařilo se načíst objednávky. Zkus to prosím znovu o něco později.
             </div>
         );
     }

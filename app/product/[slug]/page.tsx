@@ -33,7 +33,7 @@ export default async function ProductPage({
             href="/shop"
             className="bg-black px-8 py-3 text-[14px] uppercase tracking-wider text-white"
           >
-            Zpet do obchodu
+            Zpět do obchodu
           </Link>
         </main>
         <Footer />

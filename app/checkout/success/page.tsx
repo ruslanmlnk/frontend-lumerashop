@@ -7,7 +7,7 @@ import { fetchPaymentOrder, type PaymentOrderStatus } from '@/lib/payments/inter
 
 const getProviderLabel = (provider?: string) => {
     if (provider === 'cash-on-delivery') {
-        return 'Dobirka / platba pri prevzeti';
+        return 'Dobírka / platba při převzetí';
     }
 
     if (provider === 'global-payments') {
@@ -23,7 +23,7 @@ const getProviderLabel = (provider?: string) => {
 
 const getPaymentStatusLabel = (status?: PaymentOrderStatus, provider?: string) => {
     if (provider === 'cash-on-delivery' && status !== 'paid') {
-        return 'Platba pri prevzeti';
+        return 'Platba při převzetí';
     }
 
     if (status === 'paid') {
@@ -54,16 +54,16 @@ export default async function CheckoutSuccessPage({
     const displayOrderId = order?.orderId || params.orderId || '';
     const title =
         provider === 'cash-on-delivery'
-            ? 'Objednavku jsme prijali'
+            ? 'Objednávku jsme přijali'
             : paymentStatus === 'paid'
               ? 'Platba proběhla úspěšně'
               : 'Objednávku jsme přijali';
     const description =
         provider === 'cash-on-delivery'
-            ? 'Dekujeme za objednavku. Jde o dobirku, takze zaplatite az pri prevzeti zasilky.'
+            ? 'Děkujeme za objednávku. Jde o dobírku, takže zaplatíte až při převzetí zásilky.'
             : paymentStatus === 'paid'
-              ? 'Dekujeme za objednavku. Platba byla prijata a objednavku jsme zaevidovali.'
-              : 'Dekujeme za objednavku. Platbu jeste potvrzujeme.';
+              ? 'Děkujeme za objednávku. Platba byla přijata a objednávku jsme zaevidovali.'
+              : 'Děkujeme za objednávku. Platbu ještě potvrzujeme.';
 
     return (
         <div className="flex min-h-screen flex-col bg-white">

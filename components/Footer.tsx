@@ -88,7 +88,7 @@ const Footer = () => {
                                 <Image src="/assets/icons/ppl.png" alt="PPL" width={62} height={22} className="object-contain" />
                             </div>
                             <div className="flex h-[30.98] items-center justify-center border border-[#eee6db] bg-white px-1 shadow-[0_2px_10px_rgba(17,17,17,0.05)]">
-                                <Image src="/assets/icons/zasilkovna.png" alt="Zasilkovna" width={64} height={20} className="object-contain" />
+                                <Image src="/assets/icons/zasilkovna.png" alt="Zásilkovna" width={64} height={20} className="object-contain" />
                             </div>
                         </div>
                     </div>

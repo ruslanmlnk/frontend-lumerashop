@@ -239,7 +239,7 @@ const ShopSidebarComponent = ({
                         type="button"
                         onClick={() => setIsMobileFiltersOpen(false)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#111111]/10 text-[#111111]"
-                        aria-label={"ZavĹ™Ă­t filtry"}
+                        aria-label={"Zavřít filtry"}
                     >
                         <X size={15} />
                     </button>

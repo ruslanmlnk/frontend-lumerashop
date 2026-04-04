@@ -86,8 +86,8 @@ const formatAddressLines = (address?: AuthAddress) => {
         [address?.zip, address?.city].filter(Boolean).join(' ').trim(),
         DEFAULT_COUNTRY_LABEL,
         address?.phone?.trim() ? `Tel: ${address.phone.trim()}` : '',
-        address?.companyId?.trim() ? `IC: ${address.companyId.trim()}` : '',
-        address?.vatId?.trim() ? `DIC: ${address.vatId.trim()}` : '',
+        address?.companyId?.trim() ? `IČ: ${address.companyId.trim()}` : '',
+        address?.vatId?.trim() ? `DIČ: ${address.vatId.trim()}` : '',
     ];
 
     return lines.filter((line) => line.length > 0);
@@ -115,7 +115,7 @@ const AddressSection = ({
                     className="text-[#E1B12C] text-[14px] font-medium hover:underline"
                     onClick={isEditing ? onCancel : onEdit}
                 >
-                    {isEditing ? 'Zavrit' : 'Upravit'}
+                    {isEditing ? 'Zavřít' : 'Upravit'}
                 </button>
             </div>
 
@@ -155,13 +155,13 @@ const AddressFormPanel = ({
                     onClick={onCancel}
                     disabled={isSubmitting}
                 >
-                    Zavrit
+                    Zavřít
                 </button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Krestni jmeno</label>
+                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Křestní jméno</label>
                     <input
                         type="text"
                         className={inputClassName}
@@ -171,7 +171,7 @@ const AddressFormPanel = ({
                     />
                 </div>
                 <div>
-                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Prijmeni</label>
+                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Příjmení</label>
                     <input
                         type="text"
                         className={inputClassName}
@@ -194,7 +194,7 @@ const AddressFormPanel = ({
                     />
                 </div>
                 <div>
-                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Zeme / region</label>
+                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Země / region</label>
                     <select
                         className={inputClassName}
                         value={form.country}
@@ -211,7 +211,7 @@ const AddressFormPanel = ({
             </div>
 
             <div>
-                <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Ulice a cislo popisne</label>
+                <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Ulice a číslo popisné</label>
                 <input
                     type="text"
                     className={inputClassName}
@@ -223,7 +223,7 @@ const AddressFormPanel = ({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Mesto</label>
+                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">Město</label>
                     <input
                         type="text"
                         className={inputClassName}
@@ -233,7 +233,7 @@ const AddressFormPanel = ({
                     />
                 </div>
                 <div>
-                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">PSC</label>
+                    <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">PSČ</label>
                     <input
                         type="text"
                         className={inputClassName}
@@ -257,7 +257,7 @@ const AddressFormPanel = ({
                         />
                     </div>
                     <div>
-                        <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">IC</label>
+                        <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">IČ</label>
                         <input
                             type="text"
                             className={inputClassName}
@@ -267,7 +267,7 @@ const AddressFormPanel = ({
                         />
                     </div>
                     <div>
-                        <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">DIC</label>
+                        <label className="mb-2 block text-[13px] font-medium text-[#3b352e]">DIČ</label>
                         <input
                             type="text"
                             className={inputClassName}
@@ -288,7 +288,7 @@ const AddressFormPanel = ({
                     className="inline-flex h-[48px] items-center justify-center rounded-[12px] bg-[#E1B12C] px-6 text-[13px] font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#c79a24] disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isSubmitting}
                 >
-                    {isSubmitting ? 'Ukladam...' : 'Ulozit adresu'}
+                    {isSubmitting ? 'Ukládám...' : 'Uložit adresu'}
                 </button>
                 <button
                     type="button"
@@ -296,7 +296,7 @@ const AddressFormPanel = ({
                     onClick={onCancel}
                     disabled={isSubmitting}
                 >
-                    Zrusit
+                    Zrušit
                 </button>
             </div>
         </form>
@@ -368,7 +368,7 @@ const Addresses = ({ user }: AddressesProps) => {
             if (!response.ok) {
                 setErrorMessage((prev) => ({
                     ...prev,
-                    [type]: payload?.error || 'Adresu se nepodarilo ulozit.',
+                    [type]: payload?.error || 'Adresu se nepodařilo uložit.',
                 }));
                 setIsSubmitting(null);
                 return;
@@ -376,14 +376,14 @@ const Addresses = ({ user }: AddressesProps) => {
 
             setSuccessMessage((prev) => ({
                 ...prev,
-                [type]: payload?.message || 'Adresa byla ulozena.',
+                [type]: payload?.message || 'Adresa byla uložena.',
             }));
             setEditingSection(null);
             router.refresh();
         } catch {
             setErrorMessage((prev) => ({
                 ...prev,
-                [type]: 'Sluzba pro ukladani adres je momentalne nedostupna.',
+                [type]: 'Služba pro ukládání adres je momentálně nedostupná.',
             }));
         } finally {
             setIsSubmitting(null);
@@ -391,7 +391,7 @@ const Addresses = ({ user }: AddressesProps) => {
     };
 
     const activeType = editingSection;
-    const activeTitle = activeType === 'billing' ? 'Fakturacni adresa' : 'Dorucovaci adresa';
+    const activeTitle = activeType === 'billing' ? 'Fakturační adresa' : 'Doručovací adresa';
     const activeForm = activeType === 'billing' ? billingForm : shippingForm;
     const activeSuccessMessage = activeType === 'billing' ? successMessage.billing : successMessage.shipping;
     const activeErrorMessage = activeType === 'billing' ? errorMessage.billing : errorMessage.shipping;
@@ -400,12 +400,12 @@ const Addresses = ({ user }: AddressesProps) => {
     return (
         <div className="space-y-8">
             <p className="text-[15px] leading-relaxed text-gray-600">
-                Nasledujici adresy budou pouzity na strance pokladny pro vychozi nastaveni.
+                Následující adresy budou použity na stránce pokladny pro výchozí nastavení.
             </p>
 
             <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
                 <AddressSection
-                    title="Fakturacni adresa"
+                    title="Fakturační adresa"
                     type="billing"
                     value={user.billingAddress}
                     isEditing={editingSection === 'billing'}
@@ -418,7 +418,7 @@ const Addresses = ({ user }: AddressesProps) => {
                 />
 
                 <AddressSection
-                    title="Dorucovaci adresa"
+                    title="Doručovací adresa"
                     type="shipping"
                     value={user.shippingAddress}
                     isEditing={editingSection === 'shipping'}

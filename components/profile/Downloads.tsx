@@ -30,9 +30,9 @@ const getStatusLabel = (value: string) => {
         case 'failed':
             return 'Platba selhala';
         case 'canceled':
-            return 'Zruseno';
+            return 'Zrušeno';
         default:
-            return 'Ceka na potvrzeni';
+            return 'Čeká na potvrzení';
     }
 };
 
@@ -45,7 +45,7 @@ export default async function Downloads() {
         return (
             <div className="space-y-6">
                 <div className="border-t-4 border-blue-400 bg-blue-50 p-4 text-[15px] text-blue-700">
-                    Pro zobrazeni faktur je potreba byt prihlaseny.
+                    Pro zobrazení faktur je potřeba být přihlášený.
                 </div>
             </div>
         );
@@ -73,7 +73,7 @@ export default async function Downloads() {
         if (!response.ok) {
             return (
                 <div className="rounded-[18px] border border-[#b42318]/10 bg-[#fff4f2] p-5 text-[15px] text-[#b42318]">
-                    Nepodarilo se nacist faktury. Zkus to prosim znovu o neco pozdeji.
+                    Nepodařilo se načíst faktury. Zkus to prosím znovu o něco později.
                 </div>
             );
         }
@@ -83,13 +83,13 @@ export default async function Downloads() {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between border-t-4 border-blue-400 bg-blue-50 p-4">
                         <span className="text-[15px] text-blue-700">
-                            Faktury se tu objevi po jejich vystaveni v administraci.
+                            Faktury se tu objeví po jejich vystavení v administraci.
                         </span>
                         <Link
                             href="/shop"
                             className="rounded-sm bg-[#E1B12C] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#c79a24]"
                         >
-                            ZPET DO OBCHODU
+                            ZPĚT DO OBCHODU
                         </Link>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ export default async function Downloads() {
                                         </p>
                                     ) : createdAt ? (
                                         <p className="text-[13px] text-[#8a8275]">
-                                            Objednavka z {createdAt.toLocaleDateString('cs-CZ')}
+                                            Objednávka z {createdAt.toLocaleDateString('cs-CZ')}
                                         </p>
                                     ) : null}
                                 </div>
@@ -154,7 +154,7 @@ export default async function Downloads() {
                                         className="inline-flex items-center justify-center rounded-sm bg-[#111111] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#2c2c2c]"
                                         download
                                     >
-                                        Stahnout fakturu
+                                        Stáhnout fakturu
                                     </a>
                                 </div>
                             </div>
@@ -166,7 +166,7 @@ export default async function Downloads() {
     } catch {
         return (
             <div className="rounded-[18px] border border-[#b42318]/10 bg-[#fff4f2] p-5 text-[15px] text-[#b42318]">
-                Nepodarilo se nacist faktury. Zkus to prosim znovu o neco pozdeji.
+                Nepodařilo se načíst faktury. Zkus to prosím znovu o něco později.
             </div>
         );
     }

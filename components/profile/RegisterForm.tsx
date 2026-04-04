@@ -56,11 +56,11 @@ const RegisterForm = () => {
         return;
       }
 
-      setSuccessMessage('Account created. You are now signed in.');
+      setSuccessMessage('Účet byl vytvořen. Nyní jste přihlášeni.');
       window.location.replace('/my-account');
       return;
     } catch {
-      setErrorMessage('Registration service is currently unavailable.');
+      setErrorMessage('Registrační služba je momentálně nedostupná.');
       setIsSubmitting(false);
     }
   };
@@ -73,7 +73,7 @@ const RegisterForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="register-first-name" className="block text-[14px] mb-2 font-medium">
-              Jmeno
+              Jméno
             </label>
             <input
               id="register-first-name"
@@ -88,7 +88,7 @@ const RegisterForm = () => {
 
           <div>
             <label htmlFor="register-last-name" className="block text-[14px] mb-2 font-medium">
-              Prijmeni
+              Příjmení
             </label>
             <input
               id="register-last-name"
@@ -133,13 +133,13 @@ const RegisterForm = () => {
             disabled={isSubmitting}
           />
           <p className="mt-2 text-[12px] text-gray-500">
-            Vice nez 5 znaku, mezery se nepocitaji.
+            Více než 5 znaků, mezery se nepočítají.
           </p>
         </div>
 
         <div>
           <label htmlFor="register-confirm-password" className="block text-[14px] mb-2 font-medium">
-            Potvrzeni hesla <span className="text-red-500">*</span>
+            Potvrzení hesla <span className="text-red-500">*</span>
           </label>
           <input
             id="register-confirm-password"
@@ -154,9 +154,9 @@ const RegisterForm = () => {
         </div>
 
         <p className="text-[14px] text-gray-600 leading-relaxed italic">
-          Vytvorenim uctu souhlasite s podminkami zpracovani osobnich udaju dle{' '}
+          Vytvořením účtu souhlasíte s podmínkami zpracování osobních údajů dle{' '}
           <Link href="/ochrana-osobnich-udaju" className="underline hover:text-black">
-            zasad ochrany osobnich udaju
+            zásad ochrany osobních údajů
           </Link>
           .
         </p>

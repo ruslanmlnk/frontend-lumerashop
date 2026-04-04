@@ -8,7 +8,7 @@ import {
 
 const getProviderLabel = (provider?: string) => {
     if (provider === 'cash-on-delivery') {
-        return 'Dobirka / platba pri prevzeti';
+        return 'Dobírka / platba při převzetí';
     }
 
     if (provider === 'global-payments') {

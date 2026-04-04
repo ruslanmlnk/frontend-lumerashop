@@ -60,12 +60,12 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
             const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | null;
 
             if (!response.ok) {
-                setErrorMessage(payload?.error || 'Nepodarilo se ulozit zmeny uctu.');
+                setErrorMessage(payload?.error || 'Nepodařilo se uložit změny účtu.');
                 setIsSubmitting(false);
                 return;
             }
 
-            setSuccessMessage(payload?.message || 'Zmeny byly ulozeny.');
+            setSuccessMessage(payload?.message || 'Změny byly uloženy.');
             setFormData((prev) => ({
                 ...prev,
                 currentPassword: '',
@@ -74,7 +74,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
             }));
             router.refresh();
         } catch {
-            setErrorMessage('Sluzba pro upravu uctu je momentalne nedostupna.');
+            setErrorMessage('Služba pro úpravu účtu je momentálně nedostupná.');
         } finally {
             setIsSubmitting(false);
         }
@@ -86,7 +86,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                         <label className="mb-2 block text-[14px] font-medium">
-                            Krestni jmeno <span className="text-red-500">*</span>
+                            Křestní jméno <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -98,7 +98,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                     </div>
                     <div>
                         <label className="mb-2 block text-[14px] font-medium">
-                            Prijmeni <span className="text-red-500">*</span>
+                            Příjmení <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -112,7 +112,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
 
                 <div>
                     <label className="mb-2 block text-[14px] font-medium">
-                        Zobrazovane jmeno <span className="text-red-500">*</span>
+                        Zobrazované jméno <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -122,13 +122,13 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                         disabled={isSubmitting}
                     />
                     <p className="mt-1 text-[13px] italic text-gray-500">
-                        Toto jmeno bude zobrazeno v uzivatelskem uctu a u recenzi.
+                        Toto jméno bude zobrazeno v uživatelském účtu a u recenzí.
                     </p>
                 </div>
 
                 <div>
                     <label className="mb-2 block text-[14px] font-medium">
-                        E-mailova adresa <span className="text-red-500">*</span>
+                        E-mailová adresa <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="email"
@@ -140,11 +140,11 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                 </div>
 
                 <fieldset className="space-y-6 rounded-[18px] border border-[#111111]/8 bg-[#faf8f4] p-6">
-                    <legend className="px-2 text-[18px] font-medium">Zmena hesla</legend>
+                    <legend className="px-2 text-[18px] font-medium">Změna hesla</legend>
 
                     <div>
                         <label className="mb-2 block text-[14px] font-medium">
-                            Soucasne heslo (ponechte prazdne, pokud jej nechcete menit)
+                            Současné heslo (ponechte prázdné, pokud jej nechcete měnit)
                         </label>
                         <input
                             type="password"
@@ -157,7 +157,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
 
                     <div>
                         <label className="mb-2 block text-[14px] font-medium">
-                            Nove heslo (ponechte prazdne, pokud jej nechcete menit)
+                            Nové heslo (ponechte prázdné, pokud jej nechcete měnit)
                         </label>
                         <input
                             type="password"
@@ -167,12 +167,12 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                             disabled={isSubmitting}
                         />
                         <p className="mt-2 text-[12px] text-gray-500">
-                            Vice nez 5 znaku, mezery se nepocitaji.
+                            Více než 5 znaků, mezery se nepočítají.
                         </p>
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-[14px] font-medium">Potvrdit nove heslo</label>
+                        <label className="mb-2 block text-[14px] font-medium">Potvrdit nové heslo</label>
                         <input
                             type="password"
                             className={inputClassName}
@@ -191,7 +191,7 @@ const AccountDetails = ({ user }: AccountDetailsProps) => {
                     disabled={isSubmitting}
                     className="inline-flex h-[50px] items-center justify-center rounded-[12px] bg-[#E1B12C] px-8 text-[14px] font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#c79a24] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    {isSubmitting ? 'Ukladam zmeny...' : 'Ulozit zmeny'}
+                    {isSubmitting ? 'Ukládám změny...' : 'Uložit změny'}
                 </button>
             </form>
         </div>
