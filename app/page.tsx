@@ -172,7 +172,7 @@ export default async function Home() {
           </div>
         )}
 
-        <section className="mt-[20px] flex justify-center overflow-hidden bg-white" id="block-6">
+        <section className="flex justify-center overflow-hidden bg-white" id="block-6">
           <div className="lumera-container">
             <div className="relative mt-[20px] mb-0 flex flex-col lg:flex-row">
               <div className="flex min-h-[100px] w-full flex-col p-[10px] md:min-h-[396px] md:p-[30px] lg:w-1/2">
@@ -212,12 +212,12 @@ export default async function Home() {
           </div>
         </section>
 
-        <div className="mt-[20px]">
+        <div>
           <Features />
         </div>
 
         {recommendedProducts.length > 0 && (
-          <div className="mt-[20px]">
+          <div>
             <ProductGrid
               title="Naše doporučení"
               products={recommendedProducts}
@@ -229,7 +229,7 @@ export default async function Home() {
         {testimonials.length > 0 && <Testimonials title={testimonialsTitle} testimonials={testimonials} />}
 
         {selectedBlogPosts.length > 0 && (
-          <section className="mt-[20px] bg-white py-[30px] md:py-[40px]" id="block-9">
+          <section className="bg-white py-[30px] md:py-[40px]" id="block-9">
             <div className="lumera-container">
               <h2
                 className="mb-[20px] font-serif text-[30px] leading-[1.1] font-bold text-[#111111] md:text-[36px]"
@@ -282,7 +282,7 @@ export default async function Home() {
           </section>
         )}
 
-        <section className="mt-[30px] mb-[40px] bg-white py-0" id="block-10">
+        <section className="bg-white py-0" id="block-10">
           <div className="lumera-container">
             <div className="relative flex h-[220px] w-full flex-col justify-center px-[20px] md:h-[340px] md:px-[40px] lg:px-[40px] lg:pr-[129.1px]">
               <div className="absolute inset-0 z-0">

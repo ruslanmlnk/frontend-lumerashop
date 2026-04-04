@@ -41,7 +41,7 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
   };
 
   return (
-    <section className="mt-[20px] bg-white py-[42px] md:py-[60px]" id="block-8">
+    <section className="bg-white py-[42px] md:py-[60px]" id="block-8">
       <div className="lumera-container">
         <div className="mx-auto max-w-[1140px]">
           <h2
