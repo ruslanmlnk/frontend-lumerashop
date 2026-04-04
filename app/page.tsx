@@ -160,7 +160,7 @@ export default async function Home() {
               title={'Oblíbené modely'}
               products={featuredForView}
               description={
-                'Nejoblíbenější produkty z administrace seřazené podle počtu nákupů.'
+                'Nejoblíbenější kožené kabelky, peněženky a doplňky od italských výrobců.'
               }
               isSlider={true}
               autoPlay={false}

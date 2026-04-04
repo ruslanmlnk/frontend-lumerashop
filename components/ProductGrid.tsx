@@ -121,9 +121,10 @@ const ProductGrid = ({
             </h2>
             {description && (
                 <p
-                    className={`mt-[20px] mb-0 text-[14px] font-normal leading-[1.6] text-[#111111] md:text-[16px] ${isNovinky ? 'max-w-[720px]' : 'max-w-[578px]'} ${alignLeft ? '' : 'mx-auto'}`}
+                    className={`mt-[20px] mb-0 text-[14px] font-normal leading-[1.6] text-[#111111] md:text-[16px] ${alignLeft ? '' : 'mx-auto'}`}
                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
+                    {/* ${isNovinky ? 'max-w-[720px]' : 'max-w-[578px]'} */}
                     {description}
                 </p>
             )}
