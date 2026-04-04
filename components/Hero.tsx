@@ -14,7 +14,7 @@ const Hero = () => {
 
     return (
         <section
-            className="relative overflow-hidden bg-white pt-0 pb-0"
+            className="relative overflow-hidden bg-white pt-0 pb-0 md:mt-1"
             id="block-12"
         >
             <div className="lumera-container">
@@ -43,7 +43,7 @@ const Hero = () => {
                             <div className="absolute inset-0 bg-black/35" />
                         </div>
 
-                        <div className="absolute inset-x-0 top-0 z-10 flex flex-col pt-[94px] pr-6 pl-6 text-white md:pl-[40px] md:pr-0 lg:pt-[59px]">
+                        <div className="absolute inset-x-0 top-0 z-10 flex flex-col pt-[94px] pr-6 pl-6 text-white md:pl-[30px] md:pr-0 lg:pt-[47px]">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ const Hero = () => {
                                 className="w-full"
                             >
                                 <h1
-                                    className="font-serif text-[36px] leading-[1.1] text-white font-bold lg:mr-[210px] lg:text-[72px]"
+                                    className="font-serif text-[36px] leading-[1.1] text-white font-bold lg:mr-[210px] lg:text-[72px] md:ml-[10px]"
                                     style={{
                                         fontFamily: '"Cormorant Garamond", serif',
                                         textShadow: 'rgb(64, 64, 64) 0px 0px 8px',
@@ -61,10 +61,10 @@ const Hero = () => {
                                 </h1>
 
                                 <p
-                                    className="mt-4 font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px]"
+                                    className="mt-4 font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px] md:max-w-[627px] md:leading-[25.6px] md:tracking-[0.4px] md:ml-[10px]"
                                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                                 >
-                                    {'Objevte jedinečné modely od malých italských výrobců – kvalita, styl a originalita v každém detailu.'}
+                                    Objevte jedinečné modely od malých italských výrobců – kvalita, styl a originalita v každém detailu.
                                 </p>
 
                                 <div className="mt-8 md:mt-[39px]">
