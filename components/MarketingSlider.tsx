@@ -258,7 +258,7 @@ const MarketingSlider = ({ slides }: MarketingSliderProps) => {
                         </button>
 
                         {/* Pagination Dots */}
-                        <div className="absolute bottom-4 md:bottom-[20px] left-1/2 -translate-x-1/2 flex gap-[6px] z-20">
+                        <div className="absolute bottom-4 md:bottom-[10px] left-1/2 -translate-x-1/2 flex gap-[6px] z-20">
                             {sliderSlides.map((_, idx) => (
                                 <button
                                     key={idx}

@@ -151,12 +151,11 @@ export default async function Home() {
       <main>
         <Hero />
 
-        <div className="mt-[20px]">
+        <div className="mt-[22px]">
           <MarketingSlider slides={homePageData?.marketingSlides} />
         </div>
 
         {featuredForView.length > 0 && (
-          <div className="mt-[20px]">
             <ProductGrid
               title={'Oblíbené modely'}
               products={featuredForView}
@@ -169,7 +168,6 @@ export default async function Home() {
               arrowTheme="gold"
               showShopButton={true}
             />
-          </div>
         )}
 
         <section className="flex justify-center overflow-hidden bg-white" id="block-6">

@@ -141,7 +141,7 @@ const ProductGrid = ({
     if (isSlider) {
         return (
             <section
-                className={`${isNovinky ? 'pt-[35px] pb-[10px]' : 'py-12 md:py-20'} overflow-hidden bg-white text-center`}
+                className={`${isNovinky ? 'pt-[35px] pb-[10px]' : 'py-12 md:py-15'} overflow-hidden bg-white text-center`}
                 id="block-5"
             >
                 <div className="lumera-container relative">
