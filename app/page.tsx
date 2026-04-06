@@ -154,7 +154,7 @@ export default async function Home() {
         <div className="mt-10">
           <MarketingSlider slides={homePageData?.marketingSlides} />
         </div>
-
+<div className='md:mt-15'>
         {featuredForView.length > 0 && (
             <ProductGrid
               title={'Oblíbené modely'}
@@ -169,8 +169,8 @@ export default async function Home() {
               showShopButton={true}
             />
         )}
-
-        <section className="flex justify-center overflow-hidden bg-white" id="block-6">
+</div>
+        <section className="flex justify-center overflow-hidden bg-white md:mt-[40px]" id="block-6">
           <div className="lumera-container">
             <div className="relative mb-0 flex flex-col lg:flex-row tracking-[0.1px]">
               <div className="flex min-h-[100px] w-full flex-col p-[10px] md:min-h-[396px] md:p-[30px] lg:w-1/2">
