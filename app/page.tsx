@@ -170,7 +170,7 @@ export default async function Home() {
             />
         )}
 </div>
-        <section className="flex justify-center overflow-hidden bg-white md:mb-[40px]" id="block-6">
+        <section className="flex justify-center overflow-hidden bg-white" id="block-6">
           <div className="lumera-container">
             <div className="relative mb-0 flex flex-col lg:flex-row tracking-[0.1px]">
               <div className="flex min-h-[100px] w-full flex-col p-[10px] md:min-h-[396px] md:p-[30px] lg:w-1/2">
@@ -210,7 +210,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <div>
+        <div className='mt-[70px]'>
           <Features />
         </div>
 
@@ -218,6 +218,7 @@ export default async function Home() {
           <div>
             <ProductGrid
               title="Naše doporučení"
+              alignLeft={true}
               products={recommendedProducts}
               description="Vybrali jsme pro vás několik oblíbených modelů z Itálie. Každý z nich spojuje kvalitu, styl a poctivou ruční práci."
             />
