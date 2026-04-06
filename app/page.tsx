@@ -243,7 +243,7 @@ export default async function Home() {
                 {blogSectionDescription}
               </p>
 
-              <div className="mb-[40px] grid grid-cols-1 gap-[10px] md:grid-cols-3 px-[10px]">
+              <div className="mb-[40px] grid grid-cols-1 gap-[85px] md:gap-[10px] md:grid-cols-3 px-[10px]">
                 {selectedBlogPosts.map((post: BlogPost, idx: number) => (
                   <div key={idx} className="flex flex-col">
                     <h3 className="mb-[40.5px] font-serif text-[24px] tracking-[0.1px] leading-[1.2] font-normal">
