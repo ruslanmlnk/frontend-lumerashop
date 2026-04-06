@@ -89,7 +89,7 @@ const Hero = () => {
                                 <Link
                                     key={idx}
                                     href={cat.href}
-                                    className="relative block h-[var(--h-m)] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-full"
+                                    className="relative block h-[340px] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-full"
                                     style={{
                                         '--h-m': mobileHeights[idx],
                                     } as CSSVars}
