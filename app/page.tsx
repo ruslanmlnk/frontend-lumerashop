@@ -172,7 +172,7 @@ export default async function Home() {
 
         <section className="flex justify-center overflow-hidden bg-white" id="block-6">
           <div className="lumera-container">
-            <div className="relative mt-[20px] mb-0 flex flex-col lg:flex-row">
+            <div className="relative mb-0 flex flex-col lg:flex-row tracking-[0.1px]">
               <div className="flex min-h-[100px] w-full flex-col p-[10px] md:min-h-[396px] md:p-[30px] lg:w-1/2">
                 <h2
                   className="mb-0 font-serif text-[30px] leading-[1.1] font-bold text-[#111111] md:text-[36px] lg:text-[48px]"

@@ -132,7 +132,7 @@ const ProductGrid = ({
     );
 
     const shopButton = shouldShowShopButton ? (
-        <div className="mt-[30px] mb-[40px] text-center">
+        <div className="mt-[28px] mb-[40px] text-center">
             <Link href="/shop" className="lumera-btn">
                 {'Zobrazit celý obchod'}
             </Link>
@@ -142,7 +142,7 @@ const ProductGrid = ({
     if (isSlider) {
         return (
             <section
-                className={`${isNovinky ? 'pt-[35px] pb-[10px]' : 'pb-12 md:pb-15'} overflow-hidden bg-white text-center`}
+                className={`${isNovinky ? 'pt-[35px] pb-[10px]' : 'pb-[39px] md:pb-15'} overflow-hidden bg-white text-center`}
                 id="block-5"
             >
                 <div className="lumera-container relative">

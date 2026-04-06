@@ -92,7 +92,7 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                     ) : null}
                 </Link>
 
-                <div className="flex flex-grow flex-col items-center px-[12px] pt-[20px] text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
+                <div className="flex flex-grow flex-col items-center md:px-[12px] pt-[20px] text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
                     <h3
                         className="mb-0 font-serif text-[20px] font-bold leading-[1.2] text-[#111111]"
                         style={{ fontFamily: '"Cormorant Garamond", serif' }}
@@ -102,7 +102,7 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
                         </Link>
                     </h3>
 
-                    <div className="mt-[9px] flex items-baseline gap-[8px]">
+                    <div className="mt-5 flex items-baseline gap-[8px]">
                         {hasDiscount ? (
                             <span
                                 className="text-[14px] font-normal leading-none text-[#9ca3af] line-through"
