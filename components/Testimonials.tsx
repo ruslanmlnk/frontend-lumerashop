@@ -41,11 +41,11 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
   };
 
   return (
-    <section className="bg-white py-[42px] md:py-[60px]" id="block-8">
+    <section className="bg-white py-[60px]" id="block-8">
       <div className="lumera-container">
         <div className="mx-auto max-w-[1140px]">
           <h2
-            className="mx-auto max-w-[900px] text-center font-serif text-[34px] leading-[1.05] font-bold tracking-[-0.02em] text-[#111111] md:text-[42px] lg:text-[48px]"
+            className="mx-auto max-w-[900px] text-center font-serif text-[30px] leading-[1.05] font-bold text-[#111111] md:text-[42px] lg:text-[48px]"
             style={{ fontFamily: '"Cormorant Garamond", serif' }}
           >
             {title}
@@ -74,7 +74,7 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
             )}
 
             <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-6 pt-[34px] pb-[28px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
-              <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[14px] h-[116px] w-[116px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]">
+              <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[14px] h-[160px] w-[160px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]">
                 <Image
                   src="/assets/icons/testimonials-quotes.svg"
                   alt=""
