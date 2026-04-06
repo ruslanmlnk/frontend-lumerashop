@@ -243,7 +243,7 @@ export default async function Home() {
                 {blogSectionDescription}
               </p>
 
-              <div className="mb-[40px] grid grid-cols-1 gap-[85px] md:gap-[10px] md:grid-cols-3 px-[10px]">
+              <div className="mb-[51px] grid grid-cols-1 gap-[85px] md:gap-[10px] md:grid-cols-3 px-[10px]">
                 {selectedBlogPosts.map((post: BlogPost, idx: number) => (
                   <div key={idx} className="flex flex-col">
                     <h3 className="mb-[40.5px] font-serif text-[24px] tracking-[0.1px] leading-[1.2] font-normal">
@@ -272,7 +272,7 @@ export default async function Home() {
                 ))}
               </div>
 
-              <div className="mt-[30px] text-center">
+              <div className="text-center">
                 <Link href="/blog" className="lumera-btn">
                   Objevte více inspirace
                 </Link>
@@ -281,9 +281,9 @@ export default async function Home() {
           </section>
         )}
 
-        <section className="bg-white py-0" id="block-10">
+        <section className="bg-white py-0 mt-[17px] md:mt-0" id="block-10">
           <div className="lumera-container">
-            <div className="relative flex h-[220px] w-full flex-col justify-center px-[20px] md:h-[340px] md:px-[40px] lg:px-[40px] lg:pr-[129.1px]">
+            <div className="relative flex h-[343px] w-full flex-col justify-center px-[20px] md:h-[340px] md:px-[40px] lg:px-[40px] lg:pr-[129.1px]">
               <div className="absolute inset-0 z-0">
                 <Image
                   src="/assets/bg/cta-home.webp"
