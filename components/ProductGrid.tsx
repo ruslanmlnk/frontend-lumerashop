@@ -114,14 +114,14 @@ const ProductGrid = ({
     const gridHeader = (
         <div className={`mb-0 ${alignLeft ? 'text-left' : 'text-center'}`}>
             <h2
-                className={`${isNovinky ? 'text-[36px] md:text-[48px]' : 'text-[30px] md:text-[36px]'} mb-0 font-serif font-bold max-w-[435px] leading-[1.1] text-[#111111]`}
+                className={`${isNovinky ? 'text-[36px] md:text-[48px]' : 'text-[30px] md:text-[36px]'} mb-0 font-serif font-bold leading-[1.1] text-[#111111]`}
                 style={{ fontFamily: '"Cormorant Garamond", serif', marginTop: 0 }}
             >
                 {title}
             </h2>
             {description && (
                 <p
-                    className={`mt-[20px] mb-0 text-base font-normal leading-[1.6] text-[#111111] max-w-[340px] md:max-w-full ${alignLeft ? '' : 'mx-auto'}`}
+                    className={`mt-[20px] mb-0 text-base font-normal leading-[1.6] text-[#111111] max-w-[340px] ${alignLeft ? 'md:max-w-[435px]' : 'mx-auto md:max-w-full'}`}
                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                     {/* ${isNovinky ? 'max-w-[720px]' : 'max-w-[578px]'} */}
