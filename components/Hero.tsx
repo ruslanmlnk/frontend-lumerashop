@@ -61,7 +61,7 @@ const Hero = () => {
                                 </h1>
 
                                 <p
-                                    className="mt-[34px] font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px] md:max-w-[627px] md:leading-[25.6px] md:tracking-[0.4px] md:ml-[10px]"
+                                    className="mt-[34px] tracking-[0.5px] font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px] md:max-w-[627px] md:leading-[25.6px] md:tracking-[0.4px] md:ml-[10px]"
                                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                                 >
                                     Objevte jedinečné modely od malých italských výrobců – kvalita, styl a originalita v každém detailu.
