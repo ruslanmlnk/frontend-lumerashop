@@ -228,7 +228,7 @@ export default async function Home() {
         {testimonials.length > 0 && <Testimonials title={testimonialsTitle} testimonials={testimonials} />}
 
         {selectedBlogPosts.length > 0 && (
-          <section className="bg-white py-[30px] md:py-[23px]" id="block-9">
+          <section className="bg-white py-[23px] md:py-[40px]" id="block-9">
             <div className="lumera-container">
               <h2
                 className="mb-[13px] font-serif text-[30px] font-bold text-[#111111] md:text-[36px]"
@@ -237,7 +237,7 @@ export default async function Home() {
                 {blogSectionTitle}
               </h2>
               <p
-                className="mb-[30px] text-[16px] leading-[1.6] text-[#111111] tracking-[0.07px]"
+                className="mb-[52px] text-[16px] leading-[1.6] text-[#111111] tracking-[0.07px]"
                 style={{ fontFamily: '"Work Sans", sans-serif' }}
               >
                 {blogSectionDescription}
@@ -251,7 +251,7 @@ export default async function Home() {
                         {post.title}
                       </Link>
                     </h3>
-                    <Link href={`/blog/${post.slug}`} className="relative mb-[20px] block h-[142px] w-full">
+                    <Link href={`/blog/${post.slug}`} className="relative block h-[142px] w-full">
                       <Image
                         src={post.image}
                         alt={post.title}
@@ -263,7 +263,7 @@ export default async function Home() {
                       />
                     </Link>
                     <p
-                      className="text-[14px] leading-[1.6] text-[#111111] md:text-[16px]"
+                      className="text-[16px] leading-[1.6] text-[#111111] tracking-[0.1px]"
                       style={{ fontFamily: '"Work Sans", sans-serif' }}
                     >
                       {post.excerpt}
