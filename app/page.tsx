@@ -231,13 +231,13 @@ export default async function Home() {
           <section className="bg-white py-[30px] md:py-[40px]" id="block-9">
             <div className="lumera-container">
               <h2
-                className="mb-[20px] font-serif text-[30px] leading-[1.1] font-bold text-[#111111] md:text-[36px]"
+                className="mb-[18px] font-serif text-[30px] font-bold text-[#111111] md:text-[36px]"
                 style={{ fontFamily: '"Cormorant Garamond", serif' }}
               >
                 {blogSectionTitle}
               </h2>
               <p
-                className="mb-[30px] text-[14px] leading-[1.6] text-[#111111] md:text-[16px]"
+                className="mb-[30px] text-[16px] leading-[1.6] text-[#111111] tracking-[0.07px]"
                 style={{ fontFamily: '"Work Sans", sans-serif' }}
               >
                 {blogSectionDescription}

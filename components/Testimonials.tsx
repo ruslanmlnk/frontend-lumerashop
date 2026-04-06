@@ -74,10 +74,10 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
               </>
             )}
 
-            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-[52px] pt-[34px] pb-[28px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
+            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-[52px] pt-[34px] pb-[16px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 top-[30px] h-[116px] w-[116px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]"
+                className="pointer-events-none absolute left-1/2 top-[30px] h-[160px] w-[160px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]"
               >
                 <Image
                   src="/assets/icons/testimonials-quotes.svg"
@@ -102,7 +102,7 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
                 </p>
 
                 <p
-                  className="relative mt-[69px] text-[19px] leading-[1.35] font-bold tracking-[0.6px] text-[#111111] md:text-[20px] md:leading-[1.6]"
+                  className="relative mt-[69px] text-[19px] leading-[1.35] font-bold tracking-[0.2px] text-[#111111] md:text-[20px] md:leading-[1.6]"
                   style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                   {activeTestimonial.author}
