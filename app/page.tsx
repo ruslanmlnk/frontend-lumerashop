@@ -228,10 +228,10 @@ export default async function Home() {
         {testimonials.length > 0 && <Testimonials title={testimonialsTitle} testimonials={testimonials} />}
 
         {selectedBlogPosts.length > 0 && (
-          <section className="bg-white py-[30px] md:py-[40px]" id="block-9">
+          <section className="bg-white py-[30px] md:py-[23px]" id="block-9">
             <div className="lumera-container">
               <h2
-                className="mb-[18px] font-serif text-[30px] font-bold text-[#111111] md:text-[36px]"
+                className="mb-[13px] font-serif text-[30px] font-bold text-[#111111] md:text-[36px]"
                 style={{ fontFamily: '"Cormorant Garamond", serif' }}
               >
                 {blogSectionTitle}
@@ -243,15 +243,15 @@ export default async function Home() {
                 {blogSectionDescription}
               </p>
 
-              <div className="mb-[40px] grid grid-cols-1 gap-[10px] md:grid-cols-3">
+              <div className="mb-[40px] grid grid-cols-1 gap-[10px] md:grid-cols-3 px-[10px]">
                 {selectedBlogPosts.map((post: BlogPost, idx: number) => (
                   <div key={idx} className="flex flex-col">
-                    <h3 className="mb-[20px] font-serif text-[20px] leading-[1.2] font-normal md:text-[24px]">
+                    <h3 className="mb-[40.5px] font-serif text-[24px] tracking-[0.1px] leading-[1.2] font-normal">
                       <Link href={`/blog/${post.slug}`} className="text-[#111111] hover:text-[#111111]">
                         {post.title}
                       </Link>
                     </h3>
-                    <Link href={`/blog/${post.slug}`} className="relative mb-[20px] block h-[240px] w-full">
+                    <Link href={`/blog/${post.slug}`} className="relative mb-[20px] block h-[142px] w-full">
                       <Image
                         src={post.image}
                         alt={post.title}

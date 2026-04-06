@@ -74,7 +74,7 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
               </>
             )}
 
-            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-[52px] pt-[34px] pb-[16px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
+            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-[16px] pt-[34px] pb-[16px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute left-1/2 top-[30px] h-[160px] w-[160px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]"
