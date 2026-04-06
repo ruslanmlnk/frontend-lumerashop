@@ -186,18 +186,18 @@ export default async function Home() {
                 >
                   {aboutDescription}
                 </p>
-                <div className="mt-[30px]">
+                <div className="mt-[33px]">
                   <Link href={aboutButtonLink} className="lumera-btn">
                     {aboutButtonText}
                   </Link>
                 </div>
               </div>
 
-              <div className="relative flex min-h-[100px] w-full items-end justify-center p-0 md:min-h-[396px] md:items-center md:p-[30px] lg:w-1/2">
-                <div className="relative h-[275px] w-full overflow-hidden bg-transparent md:h-[336px]">
+              <div className="relative flex min-h-[100px] mt-[50px] md:mt-[0px] w-full items-end justify-center p-0 md:min-h-[396px] md:items-center md:p-[30px] lg:w-1/2">
+                <div className="relative h-[336px] w-full overflow-hidden bg-transparent md:h-[336px]">
                   <LazyAutoplayVideo
                     src="/assets/videos/about.mp4"
-                    className="h-full w-full object-contain md:object-cover"
+                    className="h-full w-full object-cover md:object-cover"
                     placeholderClassName="h-full w-full bg-[#f6f3ef]"
                     posterSrc="/assets/bg/about-hero.webp"
                     posterClassName="object-cover"
