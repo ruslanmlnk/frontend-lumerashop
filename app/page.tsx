@@ -151,7 +151,7 @@ export default async function Home() {
       <main>
         <Hero />
 
-        <div className="mt-[22px]">
+        <div className="mt-10">
           <MarketingSlider slides={homePageData?.marketingSlides} />
         </div>
 
