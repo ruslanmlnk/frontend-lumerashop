@@ -18,7 +18,7 @@ const Hero = () => {
             id="block-12"
         >
             <div className="lumera-container">
-                <div className="flex flex-col items-start gap-[31px] lg:flex-row lg:gap-6">
+                <div className="flex flex-col items-start gap-6 lg:flex-row lg:gap-6">
                     <div className="relative h-[480px] w-full overflow-hidden bg-[#d9c2b2] group lg:h-[542px] lg:w-[810.2px]">
                         <div className="absolute inset-0 z-0">
                             <Image
@@ -43,7 +43,7 @@ const Hero = () => {
                             <div className="absolute inset-0 bg-black/35" />
                         </div>
 
-                        <div className="absolute inset-x-0 top-0 z-10 flex flex-col pt-[94px] pr-6 pl-6 text-white md:pl-[30px] md:pr-0 lg:pt-[47px]">
+                        <div className="absolute inset-x-0 top-0 z-10 flex flex-col pt-[119px] pr-6 pl-6 text-white md:pl-[30px] md:pr-0 lg:pt-[47px]">
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -61,13 +61,13 @@ const Hero = () => {
                                 </h1>
 
                                 <p
-                                    className="mt-4 font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px] md:max-w-[627px] md:leading-[25.6px] md:tracking-[0.4px] md:ml-[10px]"
+                                    className="mt-[34px] font-sans text-[16px] leading-[1.6] text-white font-light md:mt-[20px] lg:mr-[113px] md:max-w-[627px] md:leading-[25.6px] md:tracking-[0.4px] md:ml-[10px]"
                                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                                 >
                                     Objevte jedinečné modely od malých italských výrobců – kvalita, styl a originalita v každém detailu.
                                 </p>
 
-                                <div className="mt-8 md:mt-[39px]">
+                                <div className="mt-[29px] md:mt-[39px]">
                                     <Link href="/shop" className="lumera-btn lumera-btn--light">
                                         {'Prohlédnout kolekci'}
                                     </Link>
@@ -112,7 +112,9 @@ const Hero = () => {
                                                 fontFamily: '"Cormorant Garamond", serif',
                                             } as CSSVars}
                                         >
-                                            {idx < 2 ? cat.name.replace(' ', '\n') : cat.name}
+                                            <span className='md:hidden'>{cat.name}</span>
+                                        
+                                            <span className='hidden md:block'>{idx < 2 ? cat.name.replace(' ', '\n') : cat.name}</span>
                                         </h2>
 
                                         {cat.product && (
