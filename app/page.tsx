@@ -281,7 +281,7 @@ export default async function Home() {
           </section>
         )}
 
-        <section className="bg-white py-0 mt-[17px] md:mt-0" id="block-10">
+        <section className="bg-white py-0 mt-[17px] md:mt-0 mb-[20px]" id="block-10">
           <div className="lumera-container">
             <div className="relative flex h-[343px] w-full flex-col justify-center px-[20px] md:h-[340px] md:px-[40px] lg:px-[40px] lg:pr-[129.1px]">
               <div className="absolute inset-0 z-0">
