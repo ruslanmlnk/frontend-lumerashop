@@ -78,7 +78,7 @@ const Hero = () => {
 
                     <div className="flex h-auto w-full flex-col gap-6 lg:grid lg:h-[542px] lg:w-[305.8px] lg:grid-rows-[126.5fr_126.5fr_110fr_107fr] lg:gap-[24px]">
                         {HERO_CATEGORIES.map((cat, idx) => {
-                            const mobileHeights = ['104px', '104px', '104px', '104px'];
+                            const mobileHeights = ['106px', '98px', '96px', '96px'];
                             const pcImgW = ['80px', '88px', '89px', '90px'];
                             const pcImgTop = ['18px', '18px', '14.5px', '35px'];
                             const pcImgRight = ['30px', '26px', '26px', '25px'];
@@ -89,7 +89,7 @@ const Hero = () => {
                                 <Link
                                     key={idx}
                                     href={cat.href}
-                                    className="relative block h-[340px] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-full"
+                                    className="relative block h-[var(--h-m)] w-full overflow-hidden border-l border-white/5 bg-[#F5F5F5] group lg:h-full"
                                     style={{
                                         '--h-m': mobileHeights[idx],
                                     } as CSSVars}
