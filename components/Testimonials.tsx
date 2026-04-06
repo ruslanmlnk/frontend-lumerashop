@@ -91,14 +91,14 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
                 }`}
               >
                 <p
-                  className="relative mt-[54px] max-w-[504px] text-[15px] leading-[1.7] font-normal text-[#111111] md:mt-[66px] md:text-[16px] md:leading-[1.6]"
+                  className="relative mt-[64px] tracking-[0.5px] max-w-[504px] text-[15px] leading-[1.7] font-normal text-[#111111] md:mt-[66px] md:text-[16px] md:leading-[1.6]"
                   style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                   {`"${activeTestimonial.text}"`}
                 </p>
 
                 <p
-                  className="relative mt-[42px] text-[19px] leading-[1.35] font-bold text-[#111111] md:text-[20px] md:leading-[1.6]"
+                  className="relative mt-[69px] text-[19px] leading-[1.35] tracking-[0.6px] font-bold text-[#111111] md:text-[20px] md:leading-[1.6]"
                   style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                   {activeTestimonial.author}
