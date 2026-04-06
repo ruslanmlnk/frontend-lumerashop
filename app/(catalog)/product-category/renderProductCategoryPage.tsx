@@ -52,7 +52,6 @@ export async function renderProductCategoryPage({
         <CatalogListingPage
             title={title}
             breadcrumbs={[
-                { label: 'Obchod', href: '/shop' },
                 {
                     label: category.name,
                     href: categoryGroup || subcategory ? category.href : undefined,

@@ -133,7 +133,6 @@ export default function ProductPageClient({
   const breadcrumbItems = useMemo(() => {
     const items = [
       { label: "Domů", href: "/" },
-      { label: "Obchod", href: "/shop" },
     ];
 
     if (product.category && product.categorySlug) {
