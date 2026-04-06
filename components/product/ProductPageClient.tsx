@@ -210,19 +210,6 @@ export default function ProductPageClient({
 
       <div className="mt-[20px]">
         <Features />
-
-        <section className="mb-16 mt-[36px]">
-          <ProductTabs
-            productId={product.id}
-            contentHtml={descriptionHtml}
-            specifications={specifications}
-            reviews={reviews}
-          />
-        </section>
-      </div>
-
-      <div className="mt-[20px]">
-        <Features />
       </div>
 
       {recommendedProducts.length > 0 ? (
