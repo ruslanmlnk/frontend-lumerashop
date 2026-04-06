@@ -61,7 +61,7 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
     if (variant === 'featured') {
         return (
             <div className="group flex h-full flex-col bg-transparent px-[18px] pb-[19px] pt-[30px] transition-transform duration-300 ease-out will-change-transform hover:-translate-y-[3px]">
-                <Link href={`/product/${product.slug}`} className="relative block h-[194px] w-full overflow-hidden">
+                <Link href={`/product/${product.slug}`} className="relative block h-[220px] w-full overflow-hidden">
                     <div className="absolute inset-0 px-[24px]">
                         <Image
                             src={product.image}
@@ -94,7 +94,7 @@ const ProductCardComponent = ({ product, variant = 'default', showDiscount = fal
 
                 <div className="flex flex-grow flex-col items-center px-[12px] pt-[20px] text-center transition-transform duration-300 ease-out group-hover:-translate-y-[1px]">
                     <h3
-                        className="mb-0 font-serif text-[18px] font-bold leading-[1.2] text-[#111111]"
+                        className="mb-0 font-serif text-[20px] font-bold leading-[1.2] text-[#111111]"
                         style={{ fontFamily: '"Cormorant Garamond", serif' }}
                     >
                         <Link href={`/product/${product.slug}`} className="transition-colors duration-200 hover:text-[#6f5640]">
