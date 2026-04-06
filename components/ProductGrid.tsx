@@ -132,7 +132,7 @@ const ProductGrid = ({
     );
 
     const shopButton = shouldShowShopButton ? (
-        <div className="mt-[17px] mb-[40px] text-center">
+        <div className="mt-[17px] text-center">
             <Link href="/shop" className="lumera-btn">
                 {'Zobrazit celý obchod'}
             </Link>
