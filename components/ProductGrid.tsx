@@ -121,7 +121,7 @@ const ProductGrid = ({
             </h2>
             {description && (
                 <p
-                    className={`mt-[20px] mb-0 text-[14px] font-normal leading-[1.6] text-[#111111] md:text-[16px] ${alignLeft ? '' : 'mx-auto'}`}
+                    className={`mt-[20px] mb-0 text-base font-normal leading-[1.6] text-[#111111] max-w-[340px] md:max-w-full ${alignLeft ? '' : 'mx-auto'}`}
                     style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                     {/* ${isNovinky ? 'max-w-[720px]' : 'max-w-[578px]'} */}
@@ -148,7 +148,7 @@ const ProductGrid = ({
                 <div className="lumera-container relative">
                     {gridHeader}
 
-                    <div className={`group relative ${isNovinky ? 'mt-[10px]' : 'mt-[30px]'} mb-0`}>
+                    <div className={`group relative mt-[10px] mb-0`}>
                         <button
                             onClick={prevSlide}
                             className={`absolute top-1/2 left-[10px] z-20 flex h-[40px] w-[40px] -translate-y-1/2 items-center justify-center rounded-full text-white transition-all disabled:opacity-50 ${resolvedArrowTheme === 'gold' ? 'bg-[#E3A651]/70 hover:bg-[#E3A651]' : 'bg-black/50 hover:bg-black/70'}`}
