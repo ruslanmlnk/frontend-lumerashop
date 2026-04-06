@@ -57,15 +57,16 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="absolute left-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-[6px] items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111] md:inline-flex"
+                  className="absolute left-0 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-[6px] items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111] md:left-0"
                   aria-label="Previous testimonial"
                 >
                   <ChevronLeft className="h-[18px] w-[18px] stroke-[1.6]" />
                 </button>
+
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="absolute right-0 top-1/2 z-10 hidden h-9 w-9 -translate-y-[6px] items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111] md:inline-flex"
+                  className="absolute right-0 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-[6px] items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111] md:right-0"
                   aria-label="Next testimonial"
                 >
                   <ChevronRight className="h-[18px] w-[18px] stroke-[1.6]" />
@@ -73,8 +74,11 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
               </>
             )}
 
-            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-6 pt-[34px] pb-[28px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
-              <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[30px] h-[160px] w-[160px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]">
+            <div className="relative mx-auto flex min-h-[238px] max-w-[760px] flex-col items-center justify-start px-[52px] pt-[34px] pb-[28px] text-center md:min-h-[285px] md:max-w-[820px] md:px-[72px] md:pt-[30px] md:pb-[44px]">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-[30px] h-[116px] w-[116px] -translate-x-1/2 md:top-[2px] md:h-[160px] md:w-[160px]"
+              >
                 <Image
                   src="/assets/icons/testimonials-quotes.svg"
                   alt=""
@@ -91,14 +95,14 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
                 }`}
               >
                 <p
-                  className="relative mt-[64px] tracking-[0.5px] max-w-[504px] text-[15px] leading-[1.7] font-normal text-[#111111] md:mt-[66px] md:text-[16px] md:leading-[1.6]"
+                  className="relative mt-[64px] max-w-[504px] tracking-[0.5px] text-[15px] leading-[1.7] font-normal text-[#111111] md:mt-[66px] md:text-[16px] md:leading-[1.6]"
                   style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                   {`"${activeTestimonial.text}"`}
                 </p>
 
                 <p
-                  className="relative mt-[69px] text-[19px] leading-[1.35] tracking-[0.6px] font-bold text-[#111111] md:text-[20px] md:leading-[1.6]"
+                  className="relative mt-[69px] text-[19px] leading-[1.35] font-bold tracking-[0.6px] text-[#111111] md:text-[20px] md:leading-[1.6]"
                   style={{ fontFamily: '"Work Sans", sans-serif' }}
                 >
                   {activeTestimonial.author}
@@ -108,44 +112,23 @@ const Testimonials = ({ title, testimonials }: TestimonialsProps) => {
             </div>
 
             {testimonials.length > 1 && (
-              <>
-                <div className="mt-1 flex items-center justify-center gap-3 md:hidden">
-                  <button
-                    type="button"
-                    onClick={handlePrev}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111]"
-                    aria-label="Previous testimonial"
-                  >
-                    <ChevronLeft className="h-[18px] w-[18px] stroke-[1.6]" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#666666] bg-white text-[#666666] transition-colors hover:border-[#111111] hover:text-[#111111]"
-                    aria-label="Next testimonial"
-                  >
-                    <ChevronRight className="h-[18px] w-[18px] stroke-[1.6]" />
-                  </button>
-                </div>
+              <div className="mt-[14px] flex items-center justify-center gap-0">
+                {testimonials.map((testimonial, index) => {
+                  const isActive = index === activeIndex;
 
-                <div className="mt-[14px] flex items-center justify-center gap-0">
-                  {testimonials.map((testimonial, index) => {
-                    const isActive = index === activeIndex;
-
-                    return (
-                      <button
-                        key={`${testimonial.author}-${testimonial.location}-${index}`}
-                        type="button"
-                        onClick={() => handleSelect(index)}
-                        className={`mx-[3px] h-[3px] rounded-none transition-colors ${
-                          isActive ? 'w-[30px] bg-[#8f8f8f]' : 'w-[30px] bg-[#b3b3b3]'
-                        }`}
-                        aria-label={`Show testimonial ${index + 1}`}
-                      />
-                    );
-                  })}
-                </div>
-              </>
+                  return (
+                    <button
+                      key={`${testimonial.author}-${testimonial.location}-${index}`}
+                      type="button"
+                      onClick={() => handleSelect(index)}
+                      className={`mx-[3px] h-[3px] rounded-none transition-colors ${
+                        isActive ? 'w-[30px] bg-[#8f8f8f]' : 'w-[30px] bg-[#b3b3b3]'
+                      }`}
+                      aria-label={`Show testimonial ${index + 1}`}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
