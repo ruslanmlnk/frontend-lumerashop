@@ -83,7 +83,7 @@ body {
   .max-w-3xl,
   .max-w-2xl,
   .max-w-xl {
-    max-width: 340px !important;
+    max-width: 360px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     padding-left: 10px !important;
