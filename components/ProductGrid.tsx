@@ -114,7 +114,7 @@ const ProductGrid = ({
     const gridHeader = (
         <div className={`mb-0 ${alignLeft ? 'text-left' : 'text-center'}`}>
             <h2
-                className={`${isNovinky ? 'text-[36px] md:text-[48px]' : 'text-[30px] md:text-[36px]'} mb-0 font-serif font-bold leading-[1.1] text-[#111111]`}
+                className={`${isNovinky ? 'text-[36px] md:text-[48px]' : 'text-[30px] md:text-[36px]'} mb-0 font-serif font-bold leading-[1.1] mt-10 md:mt-0 text-[#111111]`}
                 style={{ fontFamily: '"Cormorant Garamond", serif', marginTop: 0 }}
             >
                 {title}
