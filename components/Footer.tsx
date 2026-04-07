@@ -154,10 +154,7 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 text-[15px] text-[#7a6f67] md:flex-row md:items-center md:justify-between">
-                        <p>Tvorba webovych stranek Taras Snitynskyi</p>
-                        <p>Agentura digitalniho marketingu Whowhere.online</p>
-                    </div>
+                   
                 </div>
             </div>
         </footer>
