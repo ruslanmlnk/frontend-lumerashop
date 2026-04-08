@@ -223,14 +223,29 @@ body {
 
 .lumera-article-content {
   color: #111111;
-  font-size: clamp(1.0625rem, 1.02rem + 0.25vw, 1.125rem);
-  line-height: 1.85;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
 }
 
 .lumera-article-content h2,
 .lumera-article-content h3,
 .lumera-article-content h4 {
-  margin-top: 3rem;
+  margin: 2.8rem 0 0.95rem;
+  line-height: 1.12;
+}
+
+.lumera-article-content h2 {
+  font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+}
+
+.lumera-article-content h3 {
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+}
+
+.lumera-article-content h4 {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
 }
 
 .lumera-article-content p + h2,
@@ -242,6 +257,22 @@ body {
 .lumera-article-content blockquote + h2,
 .lumera-article-content blockquote + h3 {
   margin-top: 3.4rem;
+}
+
+.lumera-article-content p,
+.lumera-article-content ul,
+.lumera-article-content ol,
+.lumera-article-content blockquote {
+  margin-bottom: 1.35rem;
+}
+
+.lumera-article-content ul,
+.lumera-article-content ol {
+  padding-left: 1.5rem;
+}
+
+.lumera-article-content li {
+  margin: 0.35rem 0;
 }
 
 .lumera-article-content a {
