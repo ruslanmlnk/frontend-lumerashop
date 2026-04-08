@@ -11,10 +11,40 @@ const escapeHtml = (value: string) =>
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
+const maybeParseStructuredString = (value: string) => {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+        return null;
+    }
+
+    if (
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+        try {
+            return JSON.parse(trimmed);
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
+};
+
+const looksLikeHtml = (value: string) => /<([a-z][a-z0-9-]*)(\s[^>]*)?>/i.test(value);
+
 export function renderLexicalToHTML(node: unknown): string {
     if (!node) return '';
 
-    if (typeof node === 'string') return escapeHtml(node);
+    if (typeof node === 'string') {
+        const parsed = maybeParseStructuredString(node);
+        if (parsed) {
+            return renderLexicalToHTML(parsed);
+        }
+
+        return looksLikeHtml(node) ? node : escapeHtml(node);
+    }
 
     if (Array.isArray(node)) {
         return node.map(renderLexicalToHTML).join('');

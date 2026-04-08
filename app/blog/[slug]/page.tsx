@@ -81,7 +81,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                         {/* Main Body */}
                         <div
-                            className="prose prose-lg max-w-none text-gray-600 leading-relaxed font-sans text-[17px] md:text-[18px]"
+                            className="lumera-info-content lumera-article-content"
                             dangerouslySetInnerHTML={{ __html: post.content || '' }}
                         />
                     </article>
