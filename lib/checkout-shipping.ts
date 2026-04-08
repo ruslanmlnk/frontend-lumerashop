@@ -10,6 +10,7 @@ export type CheckoutPickupPoint = {
   carrier: PickupCarrier;
   id: string;
   code?: string;
+  carrierId?: string;
   name: string;
   street?: string;
   city?: string;

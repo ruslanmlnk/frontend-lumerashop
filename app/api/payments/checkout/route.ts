@@ -208,6 +208,17 @@ export async function POST(request: NextRequest) {
                     { status: 400 },
                 );
             }
+
+            if (
+                expectedPickupCarrier === 'zasilkovna' &&
+                pickupPoint.type?.trim().toLowerCase() === 'external' &&
+                !pickupPoint.carrierId?.trim()
+            ) {
+                return NextResponse.json(
+                    { error: 'Selected external Zasilkovna pickup point is missing its carrier ID.' },
+                    { status: 400 },
+                );
+            }
         }
 
         const quote = await buildCheckoutQuote({
@@ -320,6 +331,8 @@ export async function POST(request: NextRequest) {
                     pickupCarrier: pickupPoint?.carrier || '',
                     pickupPointId: pickupPoint?.id || '',
                     pickupPointCode: pickupPoint?.code || '',
+                    pickupPointType: pickupPoint?.type || '',
+                    pickupPointCarrierId: pickupPoint?.carrierId || '',
                     pickupPointName: pickupPoint?.name?.slice(0, 500) || '',
                     couponCode: quote.coupon?.code || '',
                     couponDiscountAmount: String(quote.discounts.couponDiscountAmount),

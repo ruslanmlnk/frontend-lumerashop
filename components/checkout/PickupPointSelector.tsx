@@ -105,6 +105,7 @@ const normalizePacketaPickupPoint = (value: unknown): CheckoutPickupPoint | null
         carrier: 'zasilkovna',
         id: id || code || name,
         code: code || id || undefined,
+        carrierId: pickString(point.carrierId) || undefined,
         name: name || code || id,
         street: pickString(point.street, point.address),
         city: pickString(point.city, point.cityName),
