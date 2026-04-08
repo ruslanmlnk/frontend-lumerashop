@@ -41,14 +41,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </nav>
 
                     {/* Post Content Area */}
-                    <article className="max-w-[720px] mx-auto">
+                    <article className="max-w-[1140px] mx-auto">
                         {/* Featured Image - Top (as in original theme) */}
                         <div className="relative aspect-[16/9] mb-10 overflow-hidden bg-gray-50 shadow-sm">
                             <Image
                                 src={post.image}
                                 alt={post.title}
                                 fill
-                                sizes="(min-width: 1024px) 720px, 100vw"
+                                sizes="(min-width: 1024px) 1140px, 100vw"
                                 className="object-cover"
                                 priority
                                 unoptimized={isPayloadMediaProxyPath(post.image)}
@@ -88,7 +88,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                     {/* Section 2: CTA (Objevte naši kolekci) */}
                     <section className="mt-32 py-20 bg-gray-50/50 border-t border-b border-gray-100 text-center rounded-sm">
-                        <div className="max-w-[720px] mx-auto px-6">
+                        <div className="max-w-[1140px] mx-auto px-6">
                             <h2
                                 className="text-[28px] md:text-[36px] font-serif font-bold text-[#111111] mb-6 tracking-tight"
                                 style={{ fontFamily: '"Cormorant Garamond", serif' }}
@@ -108,7 +108,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </section>
 
                     {/* Simple Bottom Navigation - "Předchozí / Následující" placeholder */}
-                    <div className="mt-20 mx-auto max-w-[720px] border-t border-gray-100 pt-10 flex justify-between items-center text-[12px] uppercase tracking-widest font-bold">
+                    <div className="mt-20 mx-auto max-w-[1140px] border-t border-gray-100 pt-10 flex justify-between items-center text-[12px] uppercase tracking-widest font-bold">
                         <Link href="/blog" className="text-gray-400 hover:text-[#c8a16a] transition-colors">
                             ← Předchozi
                         </Link>
