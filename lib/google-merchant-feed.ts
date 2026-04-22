@@ -24,6 +24,12 @@ type PayloadGalleryItem = {
     image?: PayloadMediaDoc | number | null;
 };
 
+type PayloadGalleryEntry = PayloadGalleryItem | PayloadMediaDoc | number | null;
+
+type PayloadCategoryDoc = {
+    name?: unknown;
+};
+
 export type PayloadFeedProductDoc = {
     id?: unknown;
     name?: unknown;
@@ -37,13 +43,8 @@ export type PayloadFeedProductDoc = {
     deliveryTime?: unknown;
     imageUrl?: unknown;
     mainImage?: PayloadMediaDoc | number | null;
-    gallery?: PayloadGalleryItem[] | null;
-    category?:
-        | {
-              name?: unknown;
-          }
-        | number
-        | null;
+    gallery?: PayloadGalleryEntry[] | null;
+    category?: PayloadCategoryDoc | PayloadCategoryDoc[] | number | number[] | null;
 };
 
 const DEFAULT_PAYLOAD_API_URL = 'http://127.0.0.1:3001';
@@ -66,9 +67,7 @@ const FEED_PRODUCT_SELECT: PayloadSelect = {
         url: true,
     },
     gallery: {
-        image: {
-            url: true,
-        },
+        url: true,
     },
     category: {
         name: true,
@@ -139,19 +138,38 @@ const resolvePayloadAssetUrl = (value: unknown, baseUrl: string): string | null 
     return getRenderablePayloadMediaPath(normalized, baseUrl);
 };
 
-const resolvePayloadGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
+const resolvePayloadGallery = (gallery: PayloadGalleryEntry[] | null | undefined, baseUrl: string): string[] => {
     if (!Array.isArray(gallery)) {
         return [];
     }
 
     return gallery
-        .map((item) => {
+        .map((entry) => {
+            if (typeof entry === 'number') {
+                return null;
+            }
+
+            const directDoc = typeof entry === 'object' && entry && 'url' in entry ? entry : null;
+            const item = typeof entry === 'object' && entry ? (entry as PayloadGalleryItem) : null;
             const uploaded =
-                typeof item?.image === 'object' && item.image ? resolvePayloadAssetUrl(item.image.url, baseUrl) : null;
+                directDoc || (typeof item?.image === 'object' && item.image ? item.image : null);
+            const uploadedUrl = uploaded ? resolvePayloadAssetUrl(uploaded.url, baseUrl) : null;
             const linked = resolvePayloadAssetUrl(item?.imageUrl, baseUrl);
-            return uploaded || linked;
+            return uploadedUrl || linked;
         })
         .filter((value): value is string => Boolean(value));
+};
+
+const resolvePrimaryCategoryName = (value: PayloadFeedProductDoc['category']) => {
+    const entries = Array.isArray(value) ? value : [value];
+
+    for (const entry of entries) {
+        if (typeof entry === 'object' && entry && typeof entry.name === 'string' && entry.name.trim()) {
+            return entry.name.trim();
+        }
+    }
+
+    return 'Uncategorized';
 };
 
 const resolvePrimaryImage = (doc: PayloadFeedProductDoc, baseUrl: string) => {
@@ -174,10 +192,7 @@ export const mapPayloadFeedProduct = (doc: PayloadFeedProductDoc, baseUrl: strin
 
     const numericPrice = typeof doc.price === 'number' ? doc.price : Number(doc.price);
     const safePrice = Number.isFinite(numericPrice) ? numericPrice : 0;
-    const category =
-        typeof doc.category === 'object' && doc.category && typeof doc.category.name === 'string'
-            ? doc.category.name
-            : 'Uncategorized';
+    const category = resolvePrimaryCategoryName(doc.category);
 
     return {
         id,

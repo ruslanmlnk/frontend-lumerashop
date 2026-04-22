@@ -26,6 +26,8 @@ type PayloadGalleryItem = {
     image?: PayloadMediaDoc | number | null;
 };
 
+type PayloadGalleryEntry = PayloadGalleryItem | PayloadMediaDoc | number | null;
+
 type PayloadFilterOption = {
     name?: unknown;
     slug?: unknown;
@@ -43,6 +45,7 @@ type PayloadCategoryRelation = {
 type PayloadCategoryGroupRelation = {
     name?: unknown;
     slug?: unknown;
+    category?: PayloadCategoryRelation | number | null;
 };
 
 type PayloadSubcategoryRelation = {
@@ -55,7 +58,7 @@ type PayloadVariantDoc = {
     slug?: unknown;
     imageUrl?: unknown;
     mainImage?: PayloadMediaDoc | number | null;
-    gallery?: PayloadGalleryItem[] | null;
+    gallery?: PayloadGalleryEntry[] | null;
 };
 
 type PayloadReviewItem = {
@@ -76,8 +79,8 @@ type PayloadProductDoc = PayloadVariantDoc & {
     description?: unknown;
     descriptionContent?: unknown;
     shortDescription?: unknown;
-    category?: PayloadCategoryRelation | number | null;
-    categoryGroup?: PayloadCategoryGroupRelation | number | null;
+    category?: Array<PayloadCategoryRelation | number> | PayloadCategoryRelation | number | null;
+    categoryGroup?: Array<PayloadCategoryGroupRelation | number> | PayloadCategoryGroupRelation | number | null;
     subcategories?: Array<PayloadSubcategoryRelation | number> | null;
     specifications?: Array<{
         key?: unknown;
@@ -116,6 +119,10 @@ const PRODUCT_LIST_SELECT: PayloadSelect = {
     categoryGroup: {
         name: true,
         slug: true,
+        category: {
+            name: true,
+            slug: true,
+        },
     },
     subcategories: {
         slug: true,
@@ -140,11 +147,9 @@ const PRODUCT_LIST_SELECT: PayloadSelect = {
         alt: true,
     },
     gallery: {
-        image: {
-            url: true,
-            mimeType: true,
-            alt: true,
-        },
+        url: true,
+        mimeType: true,
+        alt: true,
     },
     isFeatured: true,
     isRecommended: true,
@@ -164,11 +169,9 @@ const PRODUCT_DETAIL_SELECT: PayloadSelect = {
             alt: true,
         },
         gallery: {
-            image: {
-                url: true,
-                mimeType: true,
-                alt: true,
-            },
+            url: true,
+            mimeType: true,
+            alt: true,
         },
     },
 };
@@ -233,7 +236,7 @@ const resolveMediaType = (url: string, mimeType?: unknown): ProductMedia['type']
 };
 
 const resolveGalleryMedia = (
-    gallery: PayloadGalleryItem[] | null | undefined,
+    gallery: PayloadGalleryEntry[] | null | undefined,
     baseUrl: string,
 ): ProductMedia[] => {
     if (!Array.isArray(gallery)) {
@@ -242,8 +245,14 @@ const resolveGalleryMedia = (
 
     const resolved = new Map<string, ProductMedia>();
 
-    for (const item of gallery) {
-        const uploadedDoc = typeof item?.image === 'object' && item.image ? item.image : null;
+    for (const entry of gallery) {
+        if (typeof entry === 'number') {
+            continue;
+        }
+
+        const directDoc = typeof entry === 'object' && entry && 'url' in entry ? entry : null;
+        const item = typeof entry === 'object' && entry ? (entry as PayloadGalleryItem) : null;
+        const uploadedDoc = directDoc ?? (typeof item?.image === 'object' && item.image ? item.image : null);
         const uploadedUrl = uploadedDoc ? resolveUrl(uploadedDoc.url, baseUrl) : null;
         const linkedUrl = resolveUrl(item?.imageUrl, baseUrl);
         const url = uploadedUrl || linkedUrl;
@@ -268,7 +277,7 @@ const resolveGalleryMedia = (
     return Array.from(resolved.values());
 };
 
-const resolveGallery = (gallery: PayloadGalleryItem[] | null | undefined, baseUrl: string): string[] => {
+const resolveGallery = (gallery: PayloadGalleryEntry[] | null | undefined, baseUrl: string): string[] => {
     return resolveGalleryMedia(gallery, baseUrl)
         .filter((item) => item.type === 'image')
         .map((item) => item.url);
@@ -337,6 +346,16 @@ const toHighlights = (highlights: PayloadProductDoc['highlights']): string[] | u
 
     return result.length ? result : undefined;
 };
+
+const toRelationArray = <T,>(value: T | T[] | null | undefined): T[] => {
+    if (Array.isArray(value)) {
+        return value;
+    }
+
+    return value == null ? [] : [value];
+};
+
+const uniqueStrings = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
 
 const mapPayloadReviewDocs = (reviews: PayloadReviewItem[] | undefined): ProductReview[] | undefined => {
     if (!Array.isArray(reviews) || reviews.length === 0) {
@@ -413,22 +432,85 @@ const mapPayloadProduct = (
     const name = typeof doc.name === 'string' ? doc.name.trim() : '';
     const slug = typeof doc.slug === 'string' ? doc.slug.trim() : '';
     const id = doc.id != null ? String(doc.id) : '';
+    const resolvedCategories = toRelationArray(doc.category)
+        .map((entry) => {
+            if (!entry || typeof entry !== 'object') {
+                return null;
+            }
+
+            const categoryName = typeof entry.name === 'string' ? entry.name.trim() : '';
+            const categorySlug = typeof entry.slug === 'string' ? entry.slug.trim() : '';
+
+            if (!categoryName && !categorySlug) {
+                return null;
+            }
+
+            return {
+                name: categoryName,
+                slug: categorySlug,
+            };
+        })
+        .filter((entry): entry is { name: string; slug: string } => Boolean(entry));
+    const categories = uniqueStrings(resolvedCategories.map((entry) => entry.name));
+    const categorySlugs = uniqueStrings(resolvedCategories.map((entry) => entry.slug));
+    const resolvedCategoryGroups = toRelationArray(doc.categoryGroup)
+        .map((entry) => {
+            if (!entry || typeof entry !== 'object') {
+                return null;
+            }
+
+            const categoryGroupName = typeof entry.name === 'string' ? entry.name.trim() : '';
+            const categoryGroupSlug = typeof entry.slug === 'string' ? entry.slug.trim() : '';
+            const parentCategoryName =
+                entry.category && typeof entry.category === 'object' && typeof entry.category.name === 'string'
+                    ? entry.category.name.trim()
+                    : '';
+            const parentCategorySlug =
+                entry.category && typeof entry.category === 'object' && typeof entry.category.slug === 'string'
+                    ? entry.category.slug.trim()
+                    : '';
+
+            if (!categoryGroupName && !categoryGroupSlug) {
+                return null;
+            }
+
+            return {
+                name: categoryGroupName,
+                slug: categoryGroupSlug,
+                parentCategoryName,
+                parentCategorySlug,
+            };
+        })
+        .filter(
+            (
+                entry,
+            ): entry is {
+                name: string;
+                slug: string;
+                parentCategoryName: string;
+                parentCategorySlug: string;
+            } => Boolean(entry),
+        );
+    const categoryGroups = uniqueStrings(resolvedCategoryGroups.map((entry) => entry.name));
+    const categoryGroupSlugs = uniqueStrings(resolvedCategoryGroups.map((entry) => entry.slug));
+    const primaryCategorySlug =
+        resolvedCategoryGroups.find(
+            (entry) => entry.parentCategorySlug && categorySlugs.includes(entry.parentCategorySlug),
+        )?.parentCategorySlug ||
+        categorySlugs[0] ||
+        resolvedCategoryGroups.find((entry) => entry.parentCategorySlug)?.parentCategorySlug ||
+        undefined;
     const category =
-        typeof doc.category === 'object' && doc.category && typeof doc.category.name === 'string'
-            ? doc.category.name.trim()
-            : 'Nezařazené';
-    const categorySlug =
-        typeof doc.category === 'object' && doc.category && typeof doc.category.slug === 'string'
-            ? doc.category.slug.trim()
-            : undefined;
-    const categoryGroup =
-        typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.name === 'string'
-            ? doc.categoryGroup.name.trim()
-            : undefined;
-    const categoryGroupSlug =
-        typeof doc.categoryGroup === 'object' && doc.categoryGroup && typeof doc.categoryGroup.slug === 'string'
-            ? doc.categoryGroup.slug.trim()
-            : undefined;
+        resolvedCategories.find((entry) => entry.slug === primaryCategorySlug)?.name ||
+        resolvedCategoryGroups.find((entry) => entry.parentCategorySlug === primaryCategorySlug)?.parentCategoryName ||
+        categories[0] ||
+        'Nezařazené';
+    const categorySlug = primaryCategorySlug;
+    const primaryCategoryGroup =
+        resolvedCategoryGroups.find((entry) => !primaryCategorySlug || entry.parentCategorySlug === primaryCategorySlug) ||
+        resolvedCategoryGroups[0];
+    const categoryGroup = primaryCategoryGroup?.name || undefined;
+    const categoryGroupSlug = primaryCategoryGroup?.slug || undefined;
     const subcategorySlugs = Array.isArray(doc.subcategories)
         ? doc.subcategories
               .map((subcategory) =>
@@ -490,9 +572,13 @@ const mapPayloadProduct = (
         image,
         slug,
         category,
+        categories: categories.length ? categories : undefined,
         categorySlug,
+        categorySlugs: categorySlugs.length ? categorySlugs : undefined,
         categoryGroup,
+        categoryGroups: categoryGroups.length ? categoryGroups : undefined,
         categoryGroupSlug,
+        categoryGroupSlugs: categoryGroupSlugs.length ? categoryGroupSlugs : undefined,
         subcategorySlugs: subcategorySlugs?.length ? subcategorySlugs : undefined,
         sku: typeof doc.sku === 'string' ? doc.sku : undefined,
         description,

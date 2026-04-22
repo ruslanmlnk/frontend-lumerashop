@@ -41,9 +41,13 @@ export interface Product {
     image: string;
     slug: string;
     category: string;
+    categories?: string[];
     categorySlug?: string;
+    categorySlugs?: string[];
     categoryGroup?: string;
+    categoryGroups?: string[];
     categoryGroupSlug?: string;
+    categoryGroupSlugs?: string[];
     subcategorySlugs?: string[];
     sku?: string;
     description?: string;

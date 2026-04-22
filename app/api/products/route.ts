@@ -28,11 +28,23 @@ export async function GET(request: NextRequest) {
     }
 
     if (category) {
-        result = result.filter((product) => product.category === category);
+        result = result.filter(
+            (product) =>
+                product.category === category ||
+                product.categorySlug === category ||
+                product.categories?.includes(category) ||
+                product.categorySlugs?.includes(category),
+        );
     }
 
     if (categoryGroup) {
-        result = result.filter((product) => product.categoryGroupSlug === categoryGroup);
+        result = result.filter(
+            (product) =>
+                product.categoryGroup === categoryGroup ||
+                product.categoryGroupSlug === categoryGroup ||
+                product.categoryGroups?.includes(categoryGroup) ||
+                product.categoryGroupSlugs?.includes(categoryGroup),
+        );
     }
 
     if (subcategory) {

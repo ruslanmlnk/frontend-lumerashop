@@ -15,6 +15,8 @@ const getProductSearchIndex = (product: Product) =>
         [
             product.name,
             product.category,
+            ...(product.categories || []),
+            ...(product.categoryGroups || []),
             product.slug,
             product.sku,
             product.description,

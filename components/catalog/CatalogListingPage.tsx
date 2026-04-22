@@ -109,11 +109,22 @@ export default function CatalogListingPage({
 
     const scopedProducts = useMemo(() => {
         return products.filter((product) => {
-            if (selectedCategorySlug && product.categorySlug !== selectedCategorySlug) {
+            const categorySlugs = product.categorySlugs?.length
+                ? product.categorySlugs
+                : product.categorySlug
+                  ? [product.categorySlug]
+                  : [];
+            const categoryGroupSlugs = product.categoryGroupSlugs?.length
+                ? product.categoryGroupSlugs
+                : product.categoryGroupSlug
+                  ? [product.categoryGroupSlug]
+                  : [];
+
+            if (selectedCategorySlug && !categorySlugs.includes(selectedCategorySlug)) {
                 return false;
             }
 
-            if (selectedCategoryGroupSlug && product.categoryGroupSlug !== selectedCategoryGroupSlug) {
+            if (selectedCategoryGroupSlug && !categoryGroupSlugs.includes(selectedCategoryGroupSlug)) {
                 return false;
             }
 
